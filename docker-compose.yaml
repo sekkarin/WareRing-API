@@ -10,7 +10,7 @@ services:
     ports:
       - 27018:27017
     volumes:
-      - ./mongodata:/data/db
+      - mongodb:/data/db
 
   emqx:
       container_name: emqx
@@ -85,7 +85,7 @@ services:
         # EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: 1000
 
 volumes:
-  mongodb-ebook:
+  mongodb:
   vol-emqx-data:
     name: foo-emqx-data
   vol-emqx-log:
