@@ -33,7 +33,7 @@ export class AuthService {
       payload = {
         sub: user.id,
         username: user.username,
-        role: user.roles,
+        roles: user.roles,
       };
       const refresh_token = await this.jwtService.signAsync(payload, {
         expiresIn: this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN'),
@@ -62,7 +62,6 @@ export class AuthService {
     return this.usersService.createUser({
       ...Body,
       password: hashPassword,
-  
     });
   }
   async logOut(username: string): Promise<User | undefined> {
@@ -74,8 +73,6 @@ export class AuthService {
       fondUser.refreshToken = '';
       return await fondUser.save();
     } catch (error) {
-      console.log(error);
-
       if (error instanceof TokenExpiredError) {
         throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
       }

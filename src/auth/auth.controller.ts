@@ -9,7 +9,7 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -101,7 +101,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async signUp(@Body(ValidationPipe) signUpDto: CreateUserDto) {
-    return  this.authService.signUp(signUpDto);
+    return this.authService.signUp(signUpDto);
   }
 
   @Post('logout')
@@ -114,6 +114,7 @@ export class AuthController {
   async logOut(@Req() req: Request, @Res() res: Response) {
     const { username } = req['user'];
     await this.authService.logOut(username);
+    res.clearCookie('refresh_token');
     res.status(200).json({ message: "logout's" });
   }
 

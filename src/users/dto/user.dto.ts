@@ -10,7 +10,6 @@ import {
   MinLength,
   MaxLength,
 } from 'class-validator';
-import { Role } from 'src/auth/enums/role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -51,7 +50,7 @@ export class CreateUserDto {
   @MaxLength(30)
   @Matches('^[a-zA-Z\\s]+$', undefined)
   readonly lastName?: string;
-  
+
   @ApiProperty({
     description: 'Username of the user',
     example: 'johndoe',
