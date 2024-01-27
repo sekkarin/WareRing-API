@@ -37,12 +37,12 @@ export class UserResponseDto {
 export class BodyUserLoginDto {
   @ApiProperty({
     description: 'Username of the user',
-    example: 'john_doe',
+    example: 'johndoe',
   })
   username: string;
   @ApiProperty({
     description: 'Password of the user',
-    example: 'password123',
+    example: 'Password123',
   })
   readonly password: string;
 }

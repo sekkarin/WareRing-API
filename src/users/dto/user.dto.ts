@@ -23,7 +23,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'Password for the user',
-    example: 'password123',
+    example: 'Password123',
   })
   @IsNotEmpty()
   @Length(8)
@@ -51,11 +51,10 @@ export class CreateUserDto {
   @MaxLength(30)
   @Matches('^[a-zA-Z\\s]+$', undefined)
   readonly lastName?: string;
-
-
+  
   @ApiProperty({
     description: 'Username of the user',
-    example: 'john_doe',
+    example: 'johndoe',
   })
   @IsString()
   @MinLength(3)
