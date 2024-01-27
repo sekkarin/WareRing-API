@@ -91,7 +91,7 @@ export class AuthService {
 
       try {
         const verifyToken = this.jwtService.verify(refreshToken, {
-          secret: this.configService.get<string>('SECRET_TOKEN'),
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         });
         if (verifyToken.username != foundUser.username) {
           throw new ForbiddenException();
@@ -99,20 +99,22 @@ export class AuthService {
         const payload = {
           sub: foundUser.id,
           username: foundUser.username,
-          // roles: roles,
+          roles: foundUser.roles,
         };
 
         const access_token = await this.jwtService.signAsync(payload, {
           expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
-          secret: this.configService.get<string>('SECRET_TOKEN'),
+          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         });
         return access_token;
       } catch (error) {
         console.log(error);
-
+        
         throw new ForbiddenException();
       }
     } catch (error) {
+      console.log(error);
+      
       if (error instanceof TokenExpiredError) {
         throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
       }
