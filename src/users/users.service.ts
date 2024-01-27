@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -72,19 +73,19 @@ export class UsersService {
       throw new UnauthorizedException('username or email has been used');
     }
 
-    const createdUser = new this.userModel(crateUserDto);
-
+    const createdUser = new this.userModel({
+      ...crateUserDto,
+      roles: [Role.User],
+      isActive: true,
+    });
     await createdUser.save();
+    
     const userResponse: UserResponseDto = {
       _id: createdUser._id,
       email: createdUser.email,
-      fname: createdUser.fname,
-      lname: createdUser.lname,
-      role: createdUser.role,
       username: createdUser.username,
-      nameTitle: createdUser.nameTitle,
-      isAlive: createdUser.isAlive,
-      profileUrl: createdUser.profileUrl,
+      fname: createdUser.firstName,
+      lname: createdUser.lastName,
     };
 
     return userResponse;

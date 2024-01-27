@@ -6,8 +6,11 @@ import {
   IsBoolean,
   IsOptional,
   Length,
-  Matches
+  Matches,
+  MinLength,
+  MaxLength,
 } from 'class-validator';
+import { Role } from 'src/auth/enums/role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -24,77 +27,42 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @Length(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {message: 'password too weak'})
-  password: string;
-
-  @ApiProperty({
-    description: 'Phone of the user',
-    example: '0800000000',
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
   })
-  @IsString()
-  @Length(10, 10)
-  phone: string;
+  password: string;
 
   @ApiProperty({
     description: 'First name of the user',
     example: 'John',
   })
   @IsString()
-  @Length(3, 30)
-  fname: string;
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+  readonly firstName?: string;
 
   @ApiProperty({
     description: 'Last name of the user',
     example: 'Doe',
   })
-  @IsNotEmpty()
   @IsString()
-  @Length(3, 30)
-  lname: string;
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+  readonly lastName?: string;
 
-  @ApiProperty({
-    description: 'Role of the user',
-    example: { User: 'USER', Admin: 'ADMIN' },
-  })
-  role: {
-    User: string;
-    Admin: string;
-  };
 
   @ApiProperty({
     description: 'Username of the user',
     example: 'john_doe',
   })
-  @IsNotEmpty()
   @IsString()
-  @Length(5, 30)
-  username: string;
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z0-9\\s]+$', undefined)
+  readonly username?: string;
 
-  @ApiProperty({
-    description: 'Title or salutation of the user',
-    example: 'Mr',
-  })
-  @IsNotEmpty()
-  @IsString()
-  nameTitle: string;
-
-  @ApiProperty({
-    description: 'Flag indicating whether the user is alive or not',
-    example: true,
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isAlive?: boolean;
-
-  @ApiProperty({
-    description: "URL for the user's profile picture",
-    example: 'https://example.com/profile.jpg',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  profileUrl?: string;
 }
 
 export class UpdateUserDto {

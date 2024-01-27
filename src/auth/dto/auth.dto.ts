@@ -3,30 +3,22 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UserResponseDto {
   @ApiProperty({
+    description: 'Unique identifier of the user',
+    example: '652f70eff9c12a76d1b46b22',
+  })
+  _id: string;
+  
+  @ApiProperty({
     description: 'Email of the user',
     example: 'user@example.com',
   })
   email: string;
 
   @ApiProperty({
-    description: 'Role of the user',
-    example: { User: 'USER' },
-  })
-  role: {
-    User: string;
-  };
-
-  @ApiProperty({
     description: 'Username of the user',
     example: 'john_doe',
   })
   username: string;
-
-  @ApiProperty({
-    description: 'first name of the user',
-    example: 'john',
-  })
-  nameTitle: string;
 
   @ApiProperty({
     description: 'first name of the user',
@@ -40,23 +32,7 @@ export class UserResponseDto {
   })
   lname: string;
 
-  @ApiProperty({
-    description: 'Flag indicating whether the user is alive or not',
-    example: true,
-  })
-  isAlive: boolean;
 
-  @ApiProperty({
-    description: "URL for the user's profile picture",
-    example: 'https://example.com/profile.jpg',
-  })
-  profileUrl: string;
-
-  @ApiProperty({
-    description: 'Unique identifier of the user',
-    example: '652f70eff9c12a76d1b46b22',
-  })
-  _id: string;
 }
 export class BodyUserLoginDto {
   @ApiProperty({

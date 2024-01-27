@@ -1,20 +1,15 @@
 import { Document } from 'mongoose';
-
+export type role = 'user' | 'admin';
 export interface User extends Document {
-  email: string;
-  password: string;
-  fname: string;
-  lname: string;
-  role: {
-    User: string;
-    Admin: string;
-  };
-  username: string;
-  phone: string;
-  nameTitle: string;
-  refreshToken?: string;
-  isAlive: boolean;
-  profileUrl: string;
-  createdAt: Date;
-  updatedAt: Date;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly email: string;
+  readonly username: string;
+  readonly password: string;
+  readonly roles: role[];
+  readonly profileUrl: string;
+  readonly tokenEMQX: string;
+  readonly isActive: boolean;
+  refreshToken: string;
+  createdAt: string;
 }

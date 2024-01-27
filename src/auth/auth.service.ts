@@ -13,6 +13,7 @@ import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
+import { Role } from './enums/role.enum';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,26 +29,19 @@ export class AuthService {
       if (!isMath) {
         throw new UnauthorizedException();
       }
-
       let payload: any = {};
-      let roles: any = [];
-      if (user.role.Admin) {
-        roles = [user.role.Admin, user.role.User];
-      } else {
-        roles = [user.role.User];
-      }
       payload = {
         sub: user.id,
         username: user.username,
-        roles,
+        role: user.roles,
       };
       const refresh_token = await this.jwtService.signAsync(payload, {
         expiresIn: this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN'),
-        secret: this.configService.get<string>('SECRET_TOKEN'),
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
       const access_token = await this.jwtService.signAsync(payload, {
         expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
-        secret: this.configService.get<string>('SECRET_TOKEN'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       });
       user.refreshToken = refresh_token;
       await user.save();
@@ -68,7 +62,7 @@ export class AuthService {
     return this.usersService.createUser({
       ...Body,
       password: hashPassword,
-      isAlive: true,
+  
     });
   }
   async logOut(username: string): Promise<User | undefined> {
@@ -105,16 +99,10 @@ export class AuthService {
         if (verifyToken.username != foundUser.username) {
           throw new ForbiddenException();
         }
-        let roles: any = [];
-        if (foundUser.role.Admin) {
-          roles = [foundUser.role.Admin, foundUser.role.User];
-        } else {
-          roles = [foundUser.role.User];
-        }
         const payload = {
           sub: foundUser.id,
           username: foundUser.username,
-          roles: roles,
+          // roles: roles,
         };
 
         const access_token = await this.jwtService.signAsync(payload, {
