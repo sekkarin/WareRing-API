@@ -13,7 +13,7 @@ import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
-import { Role } from './enums/role.enum';
+
 @Injectable()
 export class AuthService {
   constructor(
