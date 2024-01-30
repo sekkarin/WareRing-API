@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-
+import {
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UserResponseDto {
   @ApiProperty({
@@ -7,7 +14,7 @@ export class UserResponseDto {
     example: '652f70eff9c12a76d1b46b22',
   })
   _id: string;
-  
+
   @ApiProperty({
     description: 'Email of the user',
     example: 'user@example.com',
@@ -31,20 +38,28 @@ export class UserResponseDto {
     example: 'doe',
   })
   lname: string;
-
-
 }
 export class BodyUserLoginDto {
   @ApiProperty({
     description: 'Username of the user',
     example: 'johndoe',
   })
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   username: string;
+  
   @ApiProperty({
     description: 'Password of the user',
     example: 'Password123',
   })
-  readonly password: string;
+  @IsNotEmpty()
+  @Length(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password: string;
 }
 export class AccessTokenResponseDto {
   @ApiProperty({

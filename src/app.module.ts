@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
+// import { CommonModule } from './common/common.module';
+import { DeviceModule } from './device/device.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // CommonModule,
+    // DeviceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
