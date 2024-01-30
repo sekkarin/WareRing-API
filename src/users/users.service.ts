@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
-import { Role } from 'src/auth/enums/role.enum';
+
 
 @Injectable()
 export class UsersService {
@@ -71,11 +71,10 @@ export class UsersService {
     const user = await this.findOne(crateUserDto.username);
     if (user) {
       throw new UnauthorizedException('username or email has been used');
-    }
-
+    }  
     const createdUser = new this.userModel({
       ...crateUserDto,
-      roles: [Role.User],
+      roles: ["user"],
       isActive: true,
     });
     await createdUser.save();

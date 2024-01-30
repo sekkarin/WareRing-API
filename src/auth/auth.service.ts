@@ -85,6 +85,8 @@ export class AuthService {
   async refresh(refreshToken: string) {
     try {
       const foundUser = await this.usersService.findOneToken(refreshToken);
+    
+      
       if (!foundUser) {
         throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
       }

@@ -113,17 +113,17 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users' }) // Operation summary
-  @ApiResponse({
-    status: 200,
-    description: `Get all users`,
-    type: [GetUserAllDto],
-  }) // Response description
-  @ApiBearerAuth()
-  @Roles(Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiTags("AdminRoles")
+  // @ApiOperation({ summary: 'Get all users' }) // Operation summary
+  // @ApiResponse({
+  //   status: 200,
+  //   description: `Get all users`,
+  //   type: [GetUserAllDto],
+  // }) // Response description
+  // @ApiBearerAuth()
+  // @Roles(Role.Admin)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @HttpCode(HttpStatus.OK)
+  // @ApiTags("AdminRoles")
   async getUsers() {
     return await this.usersService.getAll();
   }
@@ -159,8 +159,8 @@ export class UsersController {
   }
 
   @Get(':username')
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(Role.Admin, Role.User)
+  // @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get user by username' }) // Operation summary
   @ApiParam({
     name: 'username',
