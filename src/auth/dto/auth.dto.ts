@@ -44,6 +44,7 @@ export class BodyUserLoginDto {
     description: 'Username of the user',
     example: 'johndoe',
   })
+  @IsNotEmpty()
   @IsString()
   @MinLength(3)
   @MaxLength(30)

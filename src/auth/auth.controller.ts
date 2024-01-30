@@ -24,7 +24,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,

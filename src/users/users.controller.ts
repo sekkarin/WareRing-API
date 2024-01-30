@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import {
   BadRequestException,
   Body,
@@ -21,13 +22,11 @@ import {
 } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/auth/enums/role.enum';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { CreateUserDto, GetUserAllDto, UpdateUserDto } from './dto/user.dto';
-import { Request } from 'express';
-
+import { Roles } from './../auth/decorator/roles.decorator';
+import { Role } from './../auth/enums/role.enum';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { RolesGuard } from './../auth/guards/roles.guard';
+import {  GetUserAllDto, UpdateUserDto } from './dto/user.dto';
 @ApiTags('User')
 @Controller('users')
 export class UsersController {

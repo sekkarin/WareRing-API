@@ -5,13 +5,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from './../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './../users/interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from 'src/users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 
 @Injectable()
