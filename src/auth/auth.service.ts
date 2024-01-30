@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'src/users/interfaces/user.interface';
+import { User } from './../users/interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
