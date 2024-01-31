@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import * as mongoose from 'mongoose';
+import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import * as mongoose from 'mongoose';
 describe('Auth (e2e)', () => {
   const mongooseConnection = mongoose.connection;
   let app: INestApplication;
@@ -11,8 +12,8 @@ describe('Auth (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     await app.init();
   });
   afterEach(async () => {
@@ -189,6 +190,7 @@ describe('Auth (e2e)', () => {
         await mongooseConnection.db.dropCollection('users');
       });
     });
+
     describe('Logout', () => {
       it('should log out and clear refresh token cookie status 200', async () => {
         await request(app.getHttpServer())
@@ -241,7 +243,7 @@ describe('Auth (e2e)', () => {
           })
           .expect(HttpStatus.CREATED);
         // Sign in a user or use an existing authenticated user for testing
-        const signInResponse = await request(app.getHttpServer())
+        await request(app.getHttpServer())
           .post('/auth/login')
           .send({
             username: 'johndoe',
@@ -255,6 +257,50 @@ describe('Auth (e2e)', () => {
           .expect(HttpStatus.FORBIDDEN);
         expect(logOutResponse.body.message).toEqual('Forbidden');
         await mongooseConnection.db.dropCollection('users');
+      });
+    });
+    describe('Refresh token', () => {
+      it('should return a new access token with a valid refresh token', async () => {
+        await request(app.getHttpServer())
+          .post('/auth/register')
+          .send({
+            email: 'john.doe@example.com',
+            password: '1234567Test',
+            firstName: 'John',
+            lastName: 'Doe',
+            username: 'johndoe',
+          })
+          .expect(HttpStatus.CREATED);
+
+        // Sign in a user
+        const signInResponse = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({
+            username: 'johndoe',
+            password: '1234567Test',
+          })
+          .expect(HttpStatus.OK);
+        const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
+        const refreshToken = /refresh_token=([^;]+);/.exec(
+          refreshTokenCookie,
+        )[1];
+        // console.log(refreshToken);
+
+        // Use the refresh token to get a new access token
+        const refreshResponse = await request(app.getHttpServer())
+          .get('/auth/refresh')
+          .set('Cookie', refreshTokenCookie)
+          .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
+          .expect(HttpStatus.OK);
+        
+        expect(refreshResponse.body.access_token).toBeDefined();
+        await mongooseConnection.db.dropCollection('users');
+      });
+
+      it('should return 401 with missing refresh token', async () => {
+        await request(app.getHttpServer())
+          .get('/auth/refresh')
+          .expect(HttpStatus.UNAUTHORIZED);
       });
     });
   });

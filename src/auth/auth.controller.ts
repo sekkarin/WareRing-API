@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   Req,
   Res,
@@ -69,8 +70,10 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body(ValidationPipe) signInDto: BodyUserLoginDto, @Res() res: Response) {
-  
+  async signIn(
+    @Body(ValidationPipe) signInDto: BodyUserLoginDto,
+    @Res() res: Response,
+  ) {
     const user = await this.authService.signIn(
       signInDto.username,
       signInDto.password,
@@ -93,7 +96,6 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'Array of validation error messages',
-    
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
@@ -135,16 +137,24 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description: 'Unauthorized - missing refresh token',
-    
   })
   @ApiCookieAuth('refresh_token')
   @ApiBearerAuth()
+  @Roles(Role.Admin, Role.User)
+  @UseGuards(AuthGuard, RolesGuard)
   async refresh(@Req() request: Request, @Res() res: Response) {
     const cookies = request.cookies;
-    if (!cookies.refresh_token) {
-      throw new UnauthorizedException();
+
+    try {
+      if (!cookies?.refresh_token) {
+        throw new UnauthorizedException();
+      }
+      const access_token = await this.authService.refresh(
+        cookies.refresh_token,
+      );
+      res.status(200).json({ access_token });
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    const access_token = await this.authService.refresh(cookies.refresh_token);
-    res.status(200).json({ access_token });
   }
 }
