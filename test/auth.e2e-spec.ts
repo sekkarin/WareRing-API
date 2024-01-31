@@ -211,11 +211,11 @@ describe('Auth (e2e)', () => {
           })
           .expect(HttpStatus.OK);
 
-        const refreshTokenCookieHeader = signInResponse.get('Set-Cookie');
-
+        const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
+      
         const logOutResponse = await request(app.getHttpServer())
           .post('/auth/logout')
-          .set('Cookie', refreshTokenCookieHeader[0])
+          .set('Cookie', refreshTokenCookie)
           .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
           .expect(HttpStatus.OK);
 
@@ -280,18 +280,13 @@ describe('Auth (e2e)', () => {
           })
           .expect(HttpStatus.OK);
         const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
-        const refreshToken = /refresh_token=([^;]+);/.exec(
-          refreshTokenCookie,
-        )[1];
-        // console.log(refreshToken);
-
         // Use the refresh token to get a new access token
         const refreshResponse = await request(app.getHttpServer())
           .get('/auth/refresh')
           .set('Cookie', refreshTokenCookie)
           .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
           .expect(HttpStatus.OK);
-        
+
         expect(refreshResponse.body.access_token).toBeDefined();
         await mongooseConnection.db.dropCollection('users');
       });

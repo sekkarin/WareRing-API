@@ -9,7 +9,7 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -24,7 +24,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
@@ -62,19 +62,15 @@ export class AuthController {
     },
   }) // Response description
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - missing username or password',
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Array of validation error messages',
   })
   @ApiResponse({
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body() signInDto: BodyUserLoginDto, @Res() res: Response) {
-    if (!signInDto.password || !signInDto.username) {
-      throw new UnauthorizedException(
-        'Unauthorized - missing username or password',
-      );
-    }
+  async signIn(@Body(ValidationPipe) signInDto: BodyUserLoginDto, @Res() res: Response) {
+  
     const user = await this.authService.signIn(
       signInDto.username,
       signInDto.password,
@@ -95,25 +91,29 @@ export class AuthController {
     type: UserResponseDto,
   }) // Response description
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - missing username or password',
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Array of validation error messages',
+    
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async signUp(@Body(ValidationPipe) signUpDto: CreateUserDto) {
-    return  this.authService.signUp(signUpDto);
+    return this.authService.signUp(signUpDto);
   }
 
   @Post('logout')
   @ApiBearerAuth()
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @ApiTags('UserRoles', 'AdminRoles')
+  @Roles( Role.User,Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-    const { username } = req['user'];
+    console.log("logout");
+    
+    const username = req.user.username;
     await this.authService.logOut(username);
+    res.clearCookie('refresh_token');
     res.status(200).json({ message: "logout's" });
   }
 
@@ -135,8 +135,9 @@ export class AuthController {
     },
   }) // Response description
   @ApiResponse({
-    status: 401,
+    status: 400,
     description: 'Unauthorized - missing refresh token',
+    
   })
   @ApiCookieAuth('refresh_token')
   @ApiBearerAuth()
