@@ -16,18 +16,18 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
-  const config = new DocumentBuilder()
-    .setTitle('Books api')
-    .setDescription('The Book API')
-    .setVersion('1.0')
-    .setExternalDoc('Nestjs', 'https://docs.nestjs.com/')
-    
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-  await app.listen(configService.get<number>('PORT') || process.env.PORT );
 
-  
+  if (process.env.NODE_ENV == 'dev') {
+    const config = new DocumentBuilder()
+      .setTitle('Books api')
+      .setDescription('The Book API')
+      .setVersion('1.0')
+      .setExternalDoc('Nestjs', 'https://docs.nestjs.com/')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
+  await app.listen(configService.get<number>('PORT') || process.env.PORT);
 }
 bootstrap();

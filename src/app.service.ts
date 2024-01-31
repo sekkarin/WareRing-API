@@ -1,11 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { User } from './users/interfaces/user.interface';
-import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
+// import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
-const configService = new ConfigService();
+// const configService = new ConfigService();
 @Injectable()
 export class AppService {
   logger: Logger;
