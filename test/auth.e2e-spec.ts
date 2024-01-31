@@ -190,7 +190,6 @@ describe('Auth (e2e)', () => {
         await mongooseConnection.db.dropCollection('users');
       });
     });
-
     describe('Logout', () => {
       it('should log out and clear refresh token cookie status 200', async () => {
         await request(app.getHttpServer())
