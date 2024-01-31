@@ -24,7 +24,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
@@ -69,7 +69,7 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body() signInDto: BodyUserLoginDto, @Res() res: Response) {
+  async signIn(@Body(ValidationPipe) signInDto: BodyUserLoginDto, @Res() res: Response) {
     if (!signInDto.password || !signInDto.username) {
       throw new UnauthorizedException(
         'Unauthorized - missing username or password',
@@ -106,14 +106,15 @@ export class AuthController {
 
   @Post('logout')
   @ApiBearerAuth()
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @ApiTags('UserRoles', 'AdminRoles')
+  @Roles(Role.Admin, Role.User)
+  @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
     const { username } = req['user'];
     await this.authService.logOut(username);
+    res.clearCookie("refresh_token")
     res.status(200).json({ message: "logout's" });
   }
 

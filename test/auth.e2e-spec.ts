@@ -223,6 +223,7 @@ describe('Auth (e2e)', () => {
         expect(logOutResponse.body.message).toEqual("logout's");
 
         // Check if the 'refresh_token' cookie has been cleared
+        console.log(logOutResponse.header['set-cookie'])
         expect(logOutResponse.header['set-cookie']).toEqual(
           expect.arrayContaining([
             'refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
@@ -280,11 +281,6 @@ describe('Auth (e2e)', () => {
           })
           .expect(HttpStatus.OK);
         const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
-        const refreshToken = /refresh_token=([^;]+);/.exec(
-          refreshTokenCookie,
-        )[1];
-        // console.log(refreshToken);
-
         // Use the refresh token to get a new access token
         const refreshResponse = await request(app.getHttpServer())
           .get('/auth/refresh')
