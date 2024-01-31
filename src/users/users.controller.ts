@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import {
   BadRequestException,
   Body,
@@ -21,13 +22,11 @@ import {
 } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/auth/enums/role.enum';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { CreateUserDto, GetUserAllDto, UpdateUserDto } from './dto/user.dto';
-import { Request } from 'express';
-
+import { Roles } from './../auth/decorator/roles.decorator';
+import { Role } from './../auth/enums/role.enum';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { RolesGuard } from './../auth/guards/roles.guard';
+import {  GetUserAllDto, UpdateUserDto } from './dto/user.dto';
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
@@ -113,17 +112,17 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users' }) // Operation summary
-  @ApiResponse({
-    status: 200,
-    description: `Get all users`,
-    type: [GetUserAllDto],
-  }) // Response description
-  @ApiBearerAuth()
-  @Roles(Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiTags("AdminRoles")
+  // @ApiOperation({ summary: 'Get all users' }) // Operation summary
+  // @ApiResponse({
+  //   status: 200,
+  //   description: `Get all users`,
+  //   type: [GetUserAllDto],
+  // }) // Response description
+  // @ApiBearerAuth()
+  // @Roles(Role.Admin)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @HttpCode(HttpStatus.OK)
+  // @ApiTags("AdminRoles")
   async getUsers() {
     return await this.usersService.getAll();
   }
@@ -159,8 +158,8 @@ export class UsersController {
   }
 
   @Get(':username')
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(Role.Admin, Role.User)
+  // @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get user by username' }) // Operation summary
   @ApiParam({
     name: 'username',

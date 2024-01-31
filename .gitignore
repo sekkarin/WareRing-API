@@ -11,7 +11,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .env
-
+env/dev/.env.dev
+env/prod/.env.rpod
+env/test/.env.test
 
 # OS
 .DS_Store

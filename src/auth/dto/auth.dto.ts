@@ -1,7 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-
+import {
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UserResponseDto {
+  @ApiProperty({
+    description: 'Unique identifier of the user',
+    example: '652f70eff9c12a76d1b46b22',
+  })
+  _id: string;
+
   @ApiProperty({
     description: 'Email of the user',
     example: 'user@example.com',
@@ -9,24 +22,10 @@ export class UserResponseDto {
   email: string;
 
   @ApiProperty({
-    description: 'Role of the user',
-    example: { User: 'USER' },
-  })
-  role: {
-    User: string;
-  };
-
-  @ApiProperty({
     description: 'Username of the user',
     example: 'john_doe',
   })
   username: string;
-
-  @ApiProperty({
-    description: 'first name of the user',
-    example: 'john',
-  })
-  nameTitle: string;
 
   @ApiProperty({
     description: 'first name of the user',
@@ -39,36 +38,29 @@ export class UserResponseDto {
     example: 'doe',
   })
   lname: string;
-
-  @ApiProperty({
-    description: 'Flag indicating whether the user is alive or not',
-    example: true,
-  })
-  isAlive: boolean;
-
-  @ApiProperty({
-    description: "URL for the user's profile picture",
-    example: 'https://example.com/profile.jpg',
-  })
-  profileUrl: string;
-
-  @ApiProperty({
-    description: 'Unique identifier of the user',
-    example: '652f70eff9c12a76d1b46b22',
-  })
-  _id: string;
 }
 export class BodyUserLoginDto {
   @ApiProperty({
     description: 'Username of the user',
-    example: 'john_doe',
+    example: 'johndoe',
   })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   username: string;
+  
   @ApiProperty({
     description: 'Password of the user',
-    example: 'password123',
+    example: 'Password123',
   })
-  readonly password: string;
+  @IsNotEmpty()
+  @Length(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password: string;
 }
 export class AccessTokenResponseDto {
   @ApiProperty({

@@ -2,31 +2,43 @@ import * as mongoose from 'mongoose';
 
 export const UserSchema = new mongoose.Schema(
   {
-    email: String,
-    password: String,
-    fname: String,
-    lname: String,
-    phone: String,
-    role: {
-      User: {
-        default: 'USER',
-        type: String,
-      },
-      Admin: String,
+    firstName: {
+      type: String,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      trim: true,
     },
     username: {
       type: String,
-      unique: true,
+      trim: true,
     },
-    nameTitle: {
+    password: {
       type: String,
+      trim: true,
     },
-    refreshToken: String,
-    isAlive: {
+    email: {
+      type: String,
+      trim: true,
+    },
+    roles: [
+      {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user',
+    
+      },
+    ],
+    isActive: {
       type: Boolean,
       default: false,
     },
-    profileUrl: {
+    profileUrl: String,
+    tokenEMQX: {
+      type: String,
+    },
+    refreshToken: {
       type: String,
     },
   },

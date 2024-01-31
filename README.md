@@ -93,3 +93,6 @@ Docker Compose installed on your system.
 
   ![Ale Text](image/swaggerAPI.png)
 
+### ADMIN
+  username AdminWareringCaxknsa
+  password kmsad9ASdjas0LSJWd9iaa

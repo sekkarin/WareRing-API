@@ -6,7 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
-
+import configuration from './../conf/configuration';
 @Module({
   imports: [
     DatabaseModule,
@@ -14,7 +14,9 @@ import { ConfigModule } from '@nestjs/config';
     UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:[configuration]
     }),
+    
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -20,32 +20,21 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      console.log('UnauthorizedException', token);
-
       throw new UnauthorizedException();
     }
 
-    
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('SECRET_TOKEN'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       });
-    
 
       request['user'] = payload;
     } catch (error) {
-
       throw new ForbiddenException();
     }
     return true;
   }
 
-  /**
-   * The function extracts a token from the authorization header of a request if it is of type "Bearer".
-   * @param {Request} request - The `request` parameter is of type `Request`, which represents an HTTP
-   * request. It likely contains information such as headers, body, and query parameters.
-   * @returns a string if the type of authorization is 'Bearer', otherwise it returns undefined.
-   */
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
