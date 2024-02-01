@@ -15,6 +15,8 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
+  ApiProperty,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -30,12 +32,12 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { DevicesResponseDto } from './dto/get-all-device-dto';
 @ApiTags('Device')
 @Controller('device')
+@Roles(Role.User)
+@UseGuards(AuthGuard, RolesGuard)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @ApiBearerAuth() // Assuming you're using bearer token authentication
-  @Roles(Role.User) // Specify the required roles
-  @UseGuards(AuthGuard, RolesGuard) // Use the specified guards
   @ApiOperation({ summary: 'Create a new device' })
   @ApiBody({ type: CreateDeviceDto }) // Specify the request body DTO
   @ApiResponse({
@@ -64,7 +66,7 @@ export class DeviceController {
     }
   }
 
-  @Get()
+  @ApiBearerAuth() // Assuming you're using bearer token authentication
   @ApiOperation({
     summary: 'Get a paginated list of devices',
     description:
@@ -88,13 +90,16 @@ export class DeviceController {
     type: DevicesResponseDto,
     isArray: true,
   })
+  @Get()
   async findAll(
+    @Req() req: Request,
     @Query('page') page = 1,
     @Query('perPage') perPage = 10,
   ): Promise<DevicesResponseDto> {
     try {
+      const { sub } = req['user'];
       const response: DevicesResponseDto = {
-        data: await this.deviceService.findAll(page, perPage),
+        data: await this.deviceService.findAll(page, perPage, sub),
         metadata: { page: page, perPages: perPage },
       };
       return response;
@@ -103,18 +108,108 @@ export class DeviceController {
     }
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get Device by ID',
+    description:
+      'Fetches details of a device based on the provided ID, requiring user authentication and specific roles.',
+  })
+  @ApiParam({ name: 'id', type: 'string', description: 'ID of the device' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the details of a device by ID',
+    type: DeviceResponseDto, // Assuming you have a DTO for the device response
+  })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.deviceService.findOne(+id);
+  findOne(@Req() req: Request, @Param('id') id: string) {
+    try {
+      const { sub } = req['user'];
+      return this.deviceService.findOne(id, sub);
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDeviceDto: UpdateDeviceDto) {
-    return this.deviceService.update(+id, updateDeviceDto);
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a device by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device updated successfully',
+    type: DeviceResponseDto, // Assuming you have a DeviceResponseDto for the response
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Device not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal Server Error',
+  })
+  update(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() updateDeviceDto: UpdateDeviceDto,
+  ) {
+    try {
+      const { sub } = req['user'];
+      return this.deviceService.update(id, sub, updateDeviceDto);
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.deviceService.remove(+id);
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a device by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device deleted successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid request or parameters',
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden - User does not have permission to delete the device',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Device not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description:
+      'Internal Server Error - Unexpected error during device deletion',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the device to delete',
+  })
+  delete(@Req() req: Request, @Param('id') id: string) {
+    try {
+      const { sub } = req['user'];
+      this.deviceService.delete(id, sub);
+      return {
+        message: 'device deleted',
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }

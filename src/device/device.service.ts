@@ -4,6 +4,7 @@ import {
   Injectable,
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -11,6 +12,8 @@ import { Model } from 'mongoose';
 import { Device } from './interface/device.interface';
 import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
+import { NOTFOUND } from 'dns';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class DeviceService {
@@ -28,7 +31,9 @@ export class DeviceService {
     });
 
     if (findDeviceDuplicates) {
-      throw new BadRequestException('Device with this usernameDevice already exists');
+      throw new BadRequestException(
+        'Device with this usernameDevice already exists',
+      );
     }
     const password_hash = await bcrypt.hash(createDeviceDto.password, 10);
     const device = new this.deviceModel({
@@ -60,6 +65,7 @@ export class DeviceService {
   async findAll(
     page = 1,
     perPage = 10,
+    userID: string,
   ): Promise<DeviceResponseDto[]> {
     try {
       const totalItems = await this.deviceModel.countDocuments();
@@ -68,7 +74,7 @@ export class DeviceService {
         return [];
       }
       const devices = await this.deviceModel
-        .find()
+        .find({ userID })
         .skip((page - 1) * perPage)
         .limit(perPage);
 
@@ -82,15 +88,65 @@ export class DeviceService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} device`;
+  async findOne(id: string, userID: string): Promise<DeviceResponseDto> {
+    try {
+      const device = await this.deviceModel.findOne({ _id: id, userID });
+      if (!device) {
+        throw new NotFoundException('Device not found');
+      }
+      return this.mapToDeviceResponseDto(device);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  update(id: number, updateDeviceDto: UpdateDeviceDto) {
-    return `This action updates a #${id} device`;
+  async update(
+    id: string,
+    userID: string,
+    updateDeviceDto: UpdateDeviceDto,
+  ): Promise<DeviceResponseDto> {
+    try {
+      const usernameDeviceDuplicate = await this.deviceModel.findOne({
+        usernameDevice: updateDeviceDto.usernameDevice,
+        userID,
+      });
+      if (usernameDeviceDuplicate) {
+        throw new BadRequestException('usernameDevice already');
+      }
+      const topicsDuplicates = await this.deviceModel.findOne({
+        topics: { $in: updateDeviceDto.topics },
+        userID,
+      });
+
+      if (topicsDuplicates) {
+        throw new BadRequestException('One or more topics already exist');
+      }
+      const device = await this.deviceModel.findByIdAndUpdate(
+        { _id: id, userID },
+        { $set: updateDeviceDto },
+        { new: true },
+      );
+
+      if (!device) {
+        throw new NotFoundException('Device not found');
+      }
+
+      return this.mapToDeviceResponseDto(device);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} device`;
+  async delete(id: string, userID: string): Promise<void> {
+    try {
+      // Check if the device exists
+      const device = await this.deviceModel.findOne({ _id: id, userID });
+      if (!device) {
+        throw new NotFoundException('Device not found');
+      }
+      await this.deviceModel.deleteOne({ _id: id, userID });
+    } catch (error) {
+      throw error;
+    }
   }
 }
