@@ -11,13 +11,15 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# .env
+
 .env
+env
 
-/env/dev/*
-/env/prod/*
-/env/test/*
-
-
+# Ignore environment-specific .env files
+/env/dev/.env.dev
+/env/prod/.env.prod
+/env/test/.env.test
 # OS
 .DS_Store
 
