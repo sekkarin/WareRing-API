@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Token not valid');
     }
 
     try {
@@ -30,6 +30,14 @@ export class AuthGuard implements CanActivate {
 
       request['user'] = payload;
     } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        console.log(error);
+        throw new ForbiddenException({
+          name: error.name,
+          message: error.message,
+          statusCode:"403"
+        });
+      }
       throw new ForbiddenException();
     }
     return true;

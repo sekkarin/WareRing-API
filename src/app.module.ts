@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './../conf/configuration';
+import { DeviceModule } from './device/device.module';
 @Module({
   imports: [
     DatabaseModule,
@@ -16,6 +17,7 @@ import configuration from './../conf/configuration';
       isGlobal: true,
       envFilePath:[configuration]
     }),
+    DeviceModule
     
   ],
   controllers: [AppController],
