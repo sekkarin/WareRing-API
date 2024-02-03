@@ -10,6 +10,9 @@ import {
   Req,
   InternalServerErrorException,
   Query,
+  HttpStatus,
+  HttpCode,
+  Put,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -24,12 +27,14 @@ import {
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/auth/enums/role.enum';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from './../auth/decorator/roles.decorator';
+import { Role } from './../auth/enums/role.enum';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { RolesGuard } from './../auth/guards/roles.guard';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { DevicesResponseDto } from './dto/get-all-device-dto';
+import { PermissionsDto } from './dto/permission.dto';
+import { StoreDataDto } from './dto/store-data.dto';
 @ApiTags('Device')
 @Controller('device')
 @Roles(Role.User)
@@ -37,9 +42,10 @@ import { DevicesResponseDto } from './dto/get-all-device-dto';
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
-  @ApiBearerAuth() // Assuming you're using bearer token authentication
+  @Post()
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new device' })
-  @ApiBody({ type: CreateDeviceDto }) // Specify the request body DTO
+  @ApiBody({ type: CreateDeviceDto })
   @ApiResponse({
     status: 201,
     description: 'Device created successfully',
@@ -53,7 +59,6 @@ export class DeviceController {
     status: 500,
     description: 'Internal Server Error',
   })
-  @Post()
   async create(
     @Req() req: Request,
     @Body() createDeviceDto: CreateDeviceDto,
@@ -66,7 +71,8 @@ export class DeviceController {
     }
   }
 
-  @ApiBearerAuth() // Assuming you're using bearer token authentication
+  @Get()
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get a paginated list of devices',
     description:
@@ -90,7 +96,6 @@ export class DeviceController {
     type: DevicesResponseDto,
     isArray: true,
   })
-  @Get()
   async findAll(
     @Req() req: Request,
     @Query('page') page = 1,
@@ -108,6 +113,7 @@ export class DeviceController {
     }
   }
 
+  @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get Device by ID',
@@ -120,7 +126,6 @@ export class DeviceController {
     description: 'Returns the details of a device by ID',
     type: DeviceResponseDto, // Assuming you have a DTO for the device response
   })
-  @Get(':id')
   findOne(@Req() req: Request, @Param('id') id: string) {
     try {
       const { sub } = req['user'];
@@ -133,6 +138,7 @@ export class DeviceController {
   }
 
   @Patch(':id')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a device by ID' })
   @ApiResponse({
@@ -209,6 +215,56 @@ export class DeviceController {
       };
     } catch (error) {
       console.log(error);
+      throw error;
+    }
+  }
+
+  @Put('permission/:id')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set permission for a device' }) // Operation summary
+  @ApiResponse({
+    status: 200,
+    description: 'Permission set successfully',
+    type: DeviceResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Device not found' })
+  setStatus(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() setPermissions: PermissionsDto,
+  ) {
+    try {
+      const { sub } = req['user'];
+      const { permission } = setPermissions;
+      return this.deviceService.setPermission(permission, sub, id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Put('store/:id')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Set store data for a device' })
+  @ApiParam({ name: 'id', description: 'ID of the device' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Store data updated successfully',
+    type: DeviceResponseDto, // Your response DTO
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  setStoreData(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() storeDataDto: StoreDataDto,
+  ) {
+    try {
+      const { sub } = req['user'];
+      const { storeData } = storeDataDto;
+
+      return this.deviceService.setStoreData(storeData, sub, id);
+    } catch (error) {
       throw error;
     }
   }

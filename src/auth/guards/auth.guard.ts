@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
-        console.log(error);
+        
         throw new ForbiddenException({
           name: error.name,
           message: error.message,

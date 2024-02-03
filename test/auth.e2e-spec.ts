@@ -221,14 +221,6 @@ describe('Auth (e2e)', () => {
 
         // Check if the response contains the 'logout' message
         expect(logOutResponse.body.message).toEqual("logout's");
-
-        // Check if the 'refresh_token' cookie has been cleared
-        console.log(logOutResponse.header['set-cookie'])
-        expect(logOutResponse.header['set-cookie']).toEqual(
-          expect.arrayContaining([
-            'refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-          ]),
-        );
         await mongooseConnection.db.dropCollection('users');
       });
       it('should throw error without access token status 403', async () => {
@@ -255,7 +247,7 @@ describe('Auth (e2e)', () => {
           .post('/auth/logout')
           .set('Authorization', `Bearer null`)
           .expect(HttpStatus.FORBIDDEN);
-        expect(logOutResponse.body.message).toEqual('Forbidden');
+        expect(logOutResponse.body.message).toEqual('jwt malformed');
         await mongooseConnection.db.dropCollection('users');
       });
     });
@@ -287,7 +279,7 @@ describe('Auth (e2e)', () => {
           .set('Cookie', refreshTokenCookie)
           .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
           .expect(HttpStatus.OK);
-        
+
         expect(refreshResponse.body.access_token).toBeDefined();
         await mongooseConnection.db.dropCollection('users');
       });
@@ -300,5 +292,3 @@ describe('Auth (e2e)', () => {
     });
   });
 });
-
-

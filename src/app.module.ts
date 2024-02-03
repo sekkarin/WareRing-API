@@ -8,6 +8,9 @@ import { LoggerMiddleware } from './utils/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
+import { ApiModule } from './api/api.module';
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -17,10 +20,12 @@ import { DeviceModule } from './device/device.module';
       isGlobal: true,
       envFilePath:[configuration]
     }),
-    DeviceModule
+    DeviceModule,
+    ApiModule,
+    HttpModule
     
   ],
-  controllers: [AppController],
+  // controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {

@@ -1,3 +1,4 @@
+// TODO: add clientID
 import {
   ConflictException,
   Inject,
@@ -12,8 +13,7 @@ import { Model } from 'mongoose';
 import { Device } from './interface/device.interface';
 import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
-import { NOTFOUND } from 'dns';
-import { NotFoundError } from 'rxjs';
+import { Permission } from './types/permission.type';
 
 @Injectable()
 export class DeviceService {
@@ -145,6 +145,52 @@ export class DeviceService {
         throw new NotFoundException('Device not found');
       }
       await this.deviceModel.deleteOne({ _id: id, userID });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async setPermission(
+    permission: Permission,
+    userID: string,
+    deviceID: string,
+  ) {
+    try {
+      const device = await this.deviceModel.findOneAndUpdate(
+        {
+          _id: deviceID,
+          userID,
+        },
+        {
+          permission,
+        },
+        { new: true },
+      );
+      if (!device) {
+        throw new NotFoundException('not found device');
+      }
+      return this.mapToDeviceResponseDto(device);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async setStoreData(isSaveData: boolean, userID: string, deviceID: string) {
+    try {
+      const device = await this.deviceModel.findOneAndUpdate(
+        {
+          _id: deviceID,
+          userID,
+        },
+        {
+          isSaveData,
+        },
+        { new: true },
+      );
+      if (!device) {
+        throw new NotFoundException('not found device');
+      }
+      return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
     }
