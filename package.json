@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "cross-env NODE_ENV=test jest --watch --no-cache --config ./test/jest-e2e.json",
+    "test:e2e": "cross-env NODE_ENV=test jest  --config ./test/jest-e2e.json",
     "db:test:rm": "docker compose rm test-mongo -s -f -v",
     "db:test:up": "docker compose up test-mongo -d",
     "db:test:restart": "npm run db:test:rm && npm run db:test:up && sleep 1",
