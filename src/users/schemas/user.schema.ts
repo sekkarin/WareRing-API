@@ -27,7 +27,6 @@ export const UserSchema = new mongoose.Schema(
         type: String,
         enum: ['user', 'admin'],
         default: 'user',
-    
       },
     ],
     isActive: {
@@ -40,6 +39,10 @@ export const UserSchema = new mongoose.Schema(
     },
     refreshToken: {
       type: String,
+    },
+    verifired: {
+      type: Boolean,
+      default: false,
     },
   },
   {
