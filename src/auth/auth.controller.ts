@@ -4,12 +4,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
   Res,
   UnauthorizedException,
   UseGuards,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -17,17 +18,20 @@ import { Roles } from './decorator/roles.decorator';
 import { Role } from './enums/role.enum';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+
 import {
   ApiBearerAuth,
   ApiCookieAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiParam,
 } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
+  ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
 
@@ -101,7 +105,8 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async signUp(@Body(ValidationPipe) signUpDto: CreateUserDto) {
-    return  this.authService.signUp(signUpDto);
+    await this.authService.sendEmailVerification(signUpDto.email);
+    return this.authService.signUp(signUpDto);
   }
 
   @Post('logout')
@@ -147,5 +152,98 @@ export class AuthController {
     }
     const access_token = await this.authService.refresh(cookies.refresh_token);
     res.status(200).json({ access_token });
+  }
+
+  @Get('email/:token')
+  @ApiOperation({ summary: 'Verify Email using token' })
+  @ApiParam({
+    name: 'token',
+    description: 'Using token for verify your email',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Your email was verifired',
+    schema: {
+      type: 'object',
+      properties: {
+        msg: {
+          type: 'string',
+          description: 'Message for tell your about result',
+          example: 'Your email is verifired',
+        },
+      },
+    },
+  }) // Response description
+  @ApiResponse({
+    status: 403,
+    description: 'Unauthorized - token is not valid',
+  })
+  async verifyEmail(@Param('token') token, @Res() res: Response) {
+    await this.authService.verifyEmail(token);
+    res.status(200).json({ msg: 'Your email is verifired' });
+  }
+
+  @Get('/forget-password/:email')
+  @ApiOperation({ summary: 'Send reset password form using email of user' })
+  @ApiParam({
+    name: 'email',
+    description: 'Email of account that you want to reset password',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Unauthorized - token is not valid',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Registration error mail not sent',
+  })
+  @ApiResponse({
+    status: 404,
+    description: "NotFound - Can't find user account with email that your sent",
+  }) // Response description
+  async sendEmailForgetPassword(@Param('email') email, @Res() res: Response) {
+    try {
+      var isEmailSent = await this.authService.sendEmailForgetPassword(email);
+      if (isEmailSent) {
+        return res.status(200).json({ msg: 'LOGIN_EMAIL_RESENT' });
+      } else {
+        return res
+          .status(401)
+          .json({ msg: 'REGISTRATION_ERROR_MAIL_NOT_SENT' });
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({ msg: 'LOGIN_ERROR_SEND_EMAIL' });
+    }
+  }
+
+  @Post('/reset-password/:token')
+  @ApiOperation({
+    summary: 'Reset User Password',
+  })
+  @ApiParam({
+    name: 'token',
+    description:
+      'token for prove you are email owner it was send in user e-mail after user click forget password and input user email',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset user password successfully',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset user password successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'token is not valid',
+  }) // Response description
+  async setNewPassword(
+    @Param('token') token,
+    @Body(ValidationPipe) resetPasswordDto: ResetPasswordDto,
+    @Res() res: Response,
+  ) {
+    await this.authService.resetPassword(token, resetPasswordDto.newPassword);
+    res.status(200).json({ msg: 'Reset your password already' });
   }
 }

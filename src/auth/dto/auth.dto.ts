@@ -50,7 +50,7 @@ export class BodyUserLoginDto {
   @MaxLength(30)
   @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   username: string;
-  
+
   @ApiProperty({
     description: 'Password of the user',
     example: 'Password123',
@@ -69,4 +69,17 @@ export class AccessTokenResponseDto {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NTJjYjliOTdkMDMxZGY5ODhiNDQ0OWQiLCJ1c2VybmFtZSI6InVzZXIxIiwicm9sZXMiOlsiQURNSU4iLCJVU0VSIl0sImlhdCI6MTY5NzYwNTQ1OCwiZXhwIjoxNjk4MTIzODU4fQ.hYwDpaFwBBrprOIy5q2aBvnsVyadQZXI8xXZJMpXKrw',
   })
   access_token: string;
+}
+
+export class ResetPasswordDto {
+  @IsNotEmpty()
+  @Length(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  @ApiProperty({
+    description: 'new password of the user',
+    example: 'NewPassword123',
+  })
+  newPassword: string;
 }

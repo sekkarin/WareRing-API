@@ -15,7 +15,8 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
-  app.enableCors({ ...corsOptions });
+  // app.enableCors({ ...corsOptions });
+  app.enableCors();
 
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()

@@ -11,6 +11,12 @@ import {
   MaxLength,
 } from 'class-validator';
 
+export class ForgetPassDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
 export class CreateUserDto {
   @ApiProperty({
     description: 'Email of the user',
