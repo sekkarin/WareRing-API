@@ -13,6 +13,9 @@ import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
+import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailerService: MailerService,
   ) {}
   async signIn(username: string, pass: string) {
     try {
@@ -117,6 +121,84 @@ export class AuthService {
       throw new HttpException(
         'INTERNAL_SERVER_ERROR',
         HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async sendEmailVerification(email: string) {
+    const uniqueString = await this.jwtService.signAsync(
+      { email },
+      {
+        expiresIn: this.configService.get<string>('EXPIRES_IN_EMAIL_TOKEN'),
+        secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
+      },
+    );
+    const mail = await this.mailerService.sendMail({
+      from: this.configService.get<string>('EMAIL_AUTH'),
+      to: email,
+      subject: 'Verify Your Email',
+      html: FORM_VERIFY_EMAIL(uniqueString),
+    });
+    return;
+  }
+
+  async verifyEmail(uniqueString: string) {
+    try {
+      const { email } = await this.jwtService.verify(uniqueString, {
+        secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
+      });
+      this.usersService.verifiredUserEmail(email);
+      return;
+    } catch (err) {
+      throw new HttpException(
+        'Unauthorized - token is not valid',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+  }
+
+  async sendEmailForgetPassword(email: string): Promise<boolean> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new HttpException('LOGIN_USER_NOT_FOUND', HttpStatus.NOT_FOUND);
+    }
+
+    try {
+      const resetPassToken = await this.jwtService.signAsync(
+        { email },
+        {
+          expiresIn: this.configService.get<string>(
+            'EXPIRES_IN_RESET_PASS_TOKEN',
+          ),
+          secret: this.configService.get<string>('SECRET_RESET_PASS'),
+        },
+      );
+      const mail = await this.mailerService.sendMail({
+        from: this.configService.get<string>('EMAIL_AUTH'),
+        to: email,
+        subject: 'Reset your password',
+        html: FORM_FORGET_PASS(resetPassToken),
+      });
+      return mail;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('SECRET_RESET_PASS'),
+      });
+      const hashPassword = await bcrypt.hash(newPassword, 10);
+      return await this.usersService.setNewPassword(
+        payload.email,
+        hashPassword,
+      );
+    } catch (error) {
+      throw new HttpException(
+        'Unauthorized - token is not valid',
+        HttpStatus.FORBIDDEN,
       );
     }
   }

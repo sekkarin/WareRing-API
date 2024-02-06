@@ -7,6 +7,9 @@ import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './../conf/configuration';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { transportOptions } from './utils/transportOptions';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -14,9 +17,9 @@ import configuration from './../conf/configuration';
     UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath:[configuration]
+      envFilePath: [configuration],
     }),
-    
+    MailerModule.forRoot({ ...transportOptions }),
   ],
   controllers: [AppController],
   providers: [AppService],

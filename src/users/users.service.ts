@@ -10,7 +10,6 @@ import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -23,6 +22,9 @@ export class UsersService {
   }
   async findOneToken(token: string) {
     return this.userModel.findOne({ refreshToken: token });
+  }
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email: email }).exec();
   }
   async getUserByUserName(username: string) {
     return await this.userModel
@@ -71,14 +73,14 @@ export class UsersService {
     const user = await this.findOne(crateUserDto.username);
     if (user) {
       throw new UnauthorizedException('username or email has been used');
-    }  
+    }
     const createdUser = new this.userModel({
       ...crateUserDto,
-      roles: ["user"],
+      roles: ['user'],
       isActive: true,
     });
     await createdUser.save();
-    
+
     const userResponse: UserResponseDto = {
       _id: createdUser._id,
       email: createdUser.email,
@@ -91,5 +93,24 @@ export class UsersService {
   }
   async deleteUser(id: string) {
     return await this.userModel.deleteOne({ _id: id });
+  }
+
+  async verifiredUserEmail(email: string) {
+    return await this.userModel.findOneAndUpdate(
+      { email },
+      { verifired: true },
+    );
+  }
+
+  async setNewPassword(email, newPassword) {
+    try {
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        { email },
+        { password: newPassword },
+      );
+      return updatedUser;
+    } catch (err) {
+      throw new UnauthorizedException();
+    }
   }
 }

@@ -11,7 +11,7 @@ import { UsersModule } from './../users/users.module';
     UsersModule,
     JwtModule.register({
       global: true,
-    })
+    }),
   ],
 })
 export class AuthModule {}
