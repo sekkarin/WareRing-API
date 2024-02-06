@@ -5,7 +5,7 @@ export const transportOptions = {
     secure: false,
     auth: {
       user: 'warering14@gmail.com',
-      pass: 'qgau suyl xfpd nygk',
+      pass: 'jupk ebhy ffck yyzi',
     },
   },
 };
