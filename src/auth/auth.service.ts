@@ -23,10 +23,16 @@ export class AuthService {
   ) {}
   async signIn(username: string, pass: string) {
     try {
+      // console.log(pass);
+      
       const user = await this.usersService.findOne(username);
 
       const isMath = await bcrypt.compare(pass, user.password);
+      console.log(pass,user.username);
+      
+      
       if (!isMath) {
+        console.log("UnauthorizedException adsad");
         throw new UnauthorizedException();
       }
       let payload: any = {};
@@ -51,6 +57,8 @@ export class AuthService {
         refresh_token: refresh_token,
       };
     } catch (error) {
+      console.log(error);
+      
       throw new HttpException(
         'Unauthorized - incorrect or missing credentials',
         HttpStatus.FORBIDDEN,

@@ -8,9 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
-  InternalServerErrorException,
   Query,
-  HttpStatus,
   HttpCode,
   Put,
 } from '@nestjs/common';
@@ -19,7 +17,6 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
-  ApiProperty,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -43,6 +40,7 @@ export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @Post()
+  @HttpCode(201)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new device' })
   @ApiBody({ type: CreateDeviceDto })

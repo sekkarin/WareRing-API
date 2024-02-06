@@ -1,6 +1,6 @@
 // TODO: Refactor  code duplicates
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
@@ -15,6 +15,7 @@ describe('Auth (e2e)', () => {
     }).compile();
     app = moduleFixture.createNestApplication();
     app.use(cookieParser());
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });
   afterEach(async () => {
