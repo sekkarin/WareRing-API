@@ -14,8 +14,8 @@ import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { FORM_FORGET_PASS } from 'src/utils/forgetPassForm';
-import { FORM_VERIFY_EMAIL } from 'src/utils/emailVerification';
+import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
+import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
 
 @Injectable()
 export class AuthService {
@@ -164,7 +164,7 @@ export class AuthService {
     }
 
     try {
-      var resetPassToken = await this.jwtService.signAsync(
+      const resetPassToken = await this.jwtService.signAsync(
         { email },
         {
           expiresIn: this.configService.get<string>(

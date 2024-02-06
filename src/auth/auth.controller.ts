@@ -27,7 +27,7 @@ import {
   ApiTags,
   ApiParam,
 } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
@@ -203,7 +203,7 @@ export class AuthController {
   }) // Response description
   async sendEmailForgetPassword(@Param('email') email, @Res() res: Response) {
     try {
-      var isEmailSent = await this.authService.sendEmailForgetPassword(email);
+      const isEmailSent = await this.authService.sendEmailForgetPassword(email);
       if (isEmailSent) {
         return res.status(200).json({ msg: 'LOGIN_EMAIL_RESENT' });
       } else {
