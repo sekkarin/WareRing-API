@@ -1,0 +1,130 @@
+@startuml
+title WARERING IOT PLATFORM
+' scale 1.5
+skinparam width 500
+'scale 1.5 | scale 200 width | scale 100 height | scale [max] 200x100
+class User{
+  # ID: String
+  # firstName: String
+  # lastName: String
+  # email: String
+  # userName: String
+  # password: String
+  # roles: Array
+  # refreshToken : String
+  # createAt : Date
+  # register() : Object
+  # login() : Object
+  # logOut():boolean
+  # deleteUser() : boolean
+  # verifyLogin(): Object
+}
+class Adminstrator{
+  + updateClients():boolean
+  + manageDevices():Object
+  + manageRoles():String
+  + manageTopics():String
+  + viewClient():Array
+}
+class Client{
+  - tokenEMQX : String
+  - isActive():boolean
+  + updateProfile() : String
+  + forgotPassword() : Object
+  
+}
+class Device{
+  - deviceID: String
+  - userID: String
+  - nameDevice: String
+  - usernameDevice: String
+  - password_hash: String
+  - desccription: String
+  - createAt: Date
+  - updateAt: Date
+  ' การกำหนดการอนุญาต deny or allow
+  - permission: String
+  ' กำหนด subscribe ,publish เช่น "topics": ["t/1",.....]
+  - subscribe: Array
+  - publish: Array
+  ' การกำหนดใน action publish, subscribe, or all
+  - action: String
+  ' Quality of Service คุณภาพในการส่ง
+  - qos: Array
+  ' ส่งข้อความล่าสุดเมื่อ clinet เชื่อมต่อ
+  - retain: boolean
+  - isSaveData: boolean
+
+  + createDevicce():Object
+  + updateDevice():Object
+  + daleteDevice():boolean
+  + getDevice():Object
+  + getDevices():Array
+  + setRetain():boolean
+  + setPermission():boolean
+  + getPermission():String
+}
+class Widget{
+  - widgetID: String
+  - deviceId: String
+  - nameDevice: String
+  - description: String
+  - configWidget: Object
+  + createWidget(): boolean
+  + updateWidget(): boolean
+  + deleteWidget(): boolean
+  + getWidget(): Object
+  + getWidgets(): Array
+}
+class Data{
+  - id:String
+  - deviceID:String
+  - payload: Object
+  - time: Data
+  + getData():Array
+  + export():Object
+  + updateData():boolean
+  + dateData():boolean
+}
+class Dashboard{
+  - dashboardID:String
+  - userID: String
+  - widgetID: String
+  - nameDashboard: String
+  - description: String
+  - createAt: Data
+  - updateAt: Data
+  - isActive: boolean
+  + createDashboard(): Object
+  + updateDashboard(): boolean
+  + deleteDashboard(): boolean
+  + setIsActive(): boolean
+  + getIsActive(): boolean
+  + getDashboard(): Object
+  + getDashboards():Array
+}
+
+' Association ระบุ class นั้นมีความสัมพันธ์กัน
+' Aggregation หายไปแต่ยังทํางานได้ ต่างคนต่างอยู่กันได้
+' Composition ถ้าคลาสหนึ่งหายไป อีกคลาสหนึ่งจะอยู่ไม่ได้
+' Dependency ขึ้นตรงอีกคลาสหนึ่ง เปลี่ยนแปลงไปตามคลาสที่พึ่งพา
+' Generalization สืบทอดคุณสมบัติ
+' Reallization สืบทอดจาก interface
+
+' class Adminstrator สืบทอดคุณสมบัติของ class User 
+User <|-right- Adminstrator
+' class Client สืบทอดคุณสมบัติของ class User
+User <|-down- Client
+' ภายใน Device มี Client ประกอบอยู่ 1 , 0..many
+Client "1" -left-* "0..*" Device 
+' ภายใน Dashboard มี Client ประกอบอยู่ 1, 0..many
+Client "1" -right-* "0..*" Dashboard
+' ภายใน Dashboard มี Widget ประกอบอยู่ ไม่มีหรือมีแค่ 1, 0..many
+Dashboard "1" o-- "0..*" Widget
+' ภายใน Widget มี Device ประกอบอยู่ 1, 0..many
+Device "1" --* "0..*" Widget
+' ภายใน Data มี Device ประกอบอยู่ 1, 0..many
+Device "1" -left-* "0..*" Data
+
+
+@enduml

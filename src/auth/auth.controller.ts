@@ -114,8 +114,7 @@ export class AuthController {
   @Roles( Role.User,Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-    console.log("logout");
-    
+  
     const username = req.user.username;
     await this.authService.logOut(username);
     res.clearCookie('refresh_token');
