@@ -62,12 +62,24 @@ export class AuthService {
     }
   }
   async signUp(Body: CreateUserDto): Promise<UserResponseDto> {
+    const usernameAlreadyExists = await this.usersService.findOne(
+      Body.username,
+    );
+    if (usernameAlreadyExists) {
+      throw new UnauthorizedException('username has been used');
+    }
+    const emailAlreadyExists = await this.usersService.findByEmail(Body.email);
+    if (emailAlreadyExists) {
+      throw new UnauthorizedException('email has been used');
+    }
+    await this.sendEmailVerification(Body.email);
     const hashPassword = await bcrypt.hash(Body.password, 10);
     return this.usersService.createUser({
       ...Body,
       password: hashPassword,
     });
   }
+
   async logOut(username: string): Promise<User | undefined> {
     try {
       const fondUser = await this.usersService.findOne(username);
@@ -125,7 +137,7 @@ export class AuthService {
     }
   }
 
-  async sendEmailVerification(email: string) {
+  private async sendEmailVerification(email: string) {
     const uniqueString = await this.jwtService.signAsync(
       { email },
       {
@@ -133,13 +145,20 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       },
     );
-    const mail = await this.mailerService.sendMail({
-      from: this.configService.get<string>('EMAIL_AUTH'),
-      to: email,
-      subject: 'Verify Your Email',
-      html: FORM_VERIFY_EMAIL(uniqueString),
-    });
-    return;
+    try {
+      await this.mailerService.sendMail({
+        from: this.configService.get<string>('EMAIL_AUTH'),
+        to: email,
+        subject: 'Verify Your Email',
+        html: FORM_VERIFY_EMAIL(uniqueString),
+      });
+      return true;
+    } catch (err) {
+      throw new HttpException(
+        'INTERNAL_SERVER_ERROR',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async verifyEmail(uniqueString: string) {

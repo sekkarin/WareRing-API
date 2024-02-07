@@ -102,7 +102,6 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async signUp(@Body(ValidationPipe) signUpDto: CreateUserDto) {
-    await this.authService.sendEmailVerification(signUpDto.email);
     return this.authService.signUp(signUpDto);
   }
 
