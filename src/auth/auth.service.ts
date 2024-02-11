@@ -27,8 +27,6 @@ export class AuthService {
   ) {}
   async signIn(username: string, pass: string) {
     try {
-      // console.log(pass);
-      
       const user = await this.usersService.findOne(username);
 
       const isMath = await bcrypt.compare(pass, user.password);
@@ -36,7 +34,6 @@ export class AuthService {
       
       
       if (!isMath) {
-        console.log("UnauthorizedException adsad");
         throw new UnauthorizedException();
       }
       let payload: any = {};

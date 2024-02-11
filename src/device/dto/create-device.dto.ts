@@ -58,8 +58,8 @@ export class CreateDeviceDto {
   @IsNumber()
   @IsNotEmpty()
   @IsEnum([0, 1, 2])
-  qos: string;
-
+  qos: number;
+  
   @ApiProperty({
     example: true,
     description: 'Whether the device retains messages',

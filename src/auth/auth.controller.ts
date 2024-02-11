@@ -28,7 +28,6 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { CreateUserDto } from './../users/dto/user.dto';
-import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
@@ -74,8 +73,10 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body(ValidationPipe) signInDto: BodyUserLoginDto, @Res() res: Response) {
-  
+  async signIn(
+    @Body(ValidationPipe) signInDto: BodyUserLoginDto,
+    @Res() res: Response,
+  ) {
     const user = await this.authService.signIn(
       signInDto.username,
       signInDto.password,
@@ -98,7 +99,6 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'Array of validation error messages',
-    
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
@@ -115,8 +115,8 @@ export class AuthController {
   @Roles(Role.Admin, Role.User)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-    console.log("logout");
-    
+    console.log('logout');
+
     const username = req.user.username;
     await this.authService.logOut(username);
     res.clearCookie('refresh_token');
@@ -143,7 +143,6 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description: 'Unauthorized - missing refresh token',
-    
   })
   @ApiCookieAuth('refresh_token')
   @ApiBearerAuth()
