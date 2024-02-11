@@ -44,7 +44,7 @@ describe('Auth (e2e)', () => {
           .expect(401);
         expect(response.body).toEqual({
           statusCode: 401,
-          message: 'username or email has been used',
+          message: 'username has been used',
           error: 'Unauthorized',
         });
         await mongooseConnection.db.dropCollection('users');
