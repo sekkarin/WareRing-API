@@ -3,8 +3,9 @@ import { Model } from 'mongoose';
 import { User } from './users/interfaces/user.interface';
 // import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 
-// const configService = new ConfigService();
 @Injectable()
 export class AppService {
   logger: Logger;
@@ -12,21 +13,15 @@ export class AppService {
     @Inject('USER_MODEL')
     private userModel: Model<User>,
     private jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {
     this.logger = new Logger();
   }
   async seedData() {
-    // const getToken = await axios.post(
-    //   configService.get<string>('EMQX_API') + '/login',
-    //   {
-    //     username: configService.get<string>('EMQX_DASHBOARD_ADMIN_USERNAME'),
-    //     password: configService.get<string>('EMQX_DASHBOARD_ADMIN_PASSWORD'),
-    //   },
-    // );
-    // const { token } = getToken.data;
-    // console.log(token);
-
-    
+    const { token } = await this.loginDashboard();
+    await this.userModel.deleteOne({ username: 'AdminWareringCaxknsa' });
+  
     const dataToSeed = [
       {
         firstName: 'admin',
@@ -36,7 +31,7 @@ export class AppService {
           '$2b$10$aBDeggbEBROiCQejjrKcxeoHUEVQawoTcKlbDZ1qcsCKcA.uZVO4m',
         email: 'admin@admin.com',
         roles: ['user', 'admin'],
-        // tokenEMQX: token,
+        tokenEMQX: token,
         isActive: true,
       },
     ];
@@ -46,9 +41,6 @@ export class AppService {
     if (findUser) {
       return;
     }
-    // this.jwtService.verify(findUser.tokenEMQX,{
-    //   secret:"emqxsecretcookie"
-    // })
     this.userModel.insertMany(dataToSeed);
   }
 
@@ -57,6 +49,24 @@ export class AppService {
       await this.seedData();
     } catch (error) {
       console.log(error);
+    }
+  }
+  private async loginDashboard() {
+    try {
+      const res = await this.httpService.axiosRef.post(
+        this.configService.get<string>('EMQX_API') + '/login',
+        {
+          username: this.configService.get<string>(
+            'EMQX_DASHBOARD_ADMIN_USERNAME',
+          ),
+          password: this.configService.get<string>(
+            'EMQX_DASHBOARD_ADMIN_PASSWORD',
+          ),
+        },
+      );
+      return { token: res.data.token };
+    } catch (error) {
+      throw error;
     }
   }
 

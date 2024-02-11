@@ -28,6 +28,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { CreateUserDto } from './../users/dto/user.dto';
+import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
   BodyUserLoginDto,
@@ -111,7 +112,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @ApiTags('UserRoles', 'AdminRoles')
-  @Roles( Role.User,Role.Admin)
+  @Roles(Role.Admin, Role.User)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
     console.log("logout");

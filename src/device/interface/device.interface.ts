@@ -7,10 +7,9 @@ export interface Device extends Document {
   password_hash: string;
   description: string;
   permission: string;
-  subscribe: string[];
-  publish: string[];
+  topics: string[];
   action: string;
-  qos: string[];
+  qos: number;
   retain: boolean;
   isSaveData: boolean;
   createdAt: Date;

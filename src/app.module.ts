@@ -10,6 +10,10 @@ import configuration from './../conf/configuration';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { transportOptions } from './utils/transportOptions';
 
+import { DeviceModule } from './device/device.module';
+import { ApiModule } from './api/api.module';
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -19,9 +23,12 @@ import { transportOptions } from './utils/transportOptions';
       isGlobal: true,
       envFilePath: [configuration],
     }),
+    DeviceModule,
+    ApiModule,
+    HttpModule
     MailerModule.forRoot({ ...transportOptions }),
   ],
-  controllers: [AppController],
+  // controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
