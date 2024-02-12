@@ -1,11 +1,17 @@
+import { ConfigService } from '@nestjs/config';
+
+const configService = new ConfigService();
+// console.log(configService.getOrThrow("PORT"));
+
+
 export const transportOptions = {
   transport: {
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: {
-      user: 'warering14@gmail.com',
-      pass: 'jupk ebhy ffck yyzi',
+      user: configService.get<string>('ALLOWED_ORIGINS'),
+      pass: configService.get<string>('PASS_AUTH'),
     },
   },
 };

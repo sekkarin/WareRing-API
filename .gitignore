@@ -19,6 +19,9 @@ lerna-debug.log*
 /env/dev/.env.dev
 /env/test/.env.test
 /env/prod/.env.prod
+/env/dev/.env.dev
+/env/test/.env.test
+/env/prod/.env.prod
 
 # IDEs and editors
 /.idea

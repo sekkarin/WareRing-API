@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 
 const configService = new ConfigService();
 
@@ -15,13 +16,12 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
-  // app.enableCors({ ...corsOptions });
-  app.enableCors();
-
+  app.enableCors({ ...corsOptions });
+  app.useGlobalPipes(new ValidationPipe());
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()
-      .setTitle('Books api')
-      .setDescription('The Book API')
+      .setTitle('Warering api')
+      .setDescription('The Warering API')
       .setVersion('1.0')
       .setExternalDoc('Nestjs', 'https://docs.nestjs.com/')
       .addBearerAuth()
