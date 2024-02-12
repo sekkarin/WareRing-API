@@ -6,21 +6,7 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
-  Req,
-  Query,
-  HttpCode,
-  Put,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';

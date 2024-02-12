@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './../users/users.service';
@@ -28,14 +29,20 @@ export class AuthService {
   async signIn(username: string, pass: string) {
     try {
       const user = await this.usersService.findOne(username);
-
+      if (!user) {
+        throw new NotFoundException('Not found your username');
+      }
+      if (!user.verifired) {
+        throw new UnauthorizedException('Please verify your e-mail first');
+      }
       const isMath = await bcrypt.compare(pass, user.password);
       console.log(pass,user.username);
       
       
       if (!isMath) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Password is incorrect');
       }
+
       let payload: any = {};
       payload = {
         sub: user.id,
@@ -58,21 +65,29 @@ export class AuthService {
         refresh_token: refresh_token,
       };
     } catch (error) {
-      console.log(error);
-      
-      throw new HttpException(
-        'Unauthorized - incorrect or missing credentials',
-        HttpStatus.FORBIDDEN,
-      );
+      throw error;
     }
   }
+
   async signUp(Body: CreateUserDto): Promise<UserResponseDto> {
+    const usernameAlreadyExists = await this.usersService.findOne(
+      Body.username,
+    );
+    if (usernameAlreadyExists) {
+      throw new UnauthorizedException('username has been used');
+    }
+    const emailAlreadyExists = await this.usersService.findByEmail(Body.email);
+    if (emailAlreadyExists) {
+      throw new UnauthorizedException('email has been used');
+    }
+    await this.sendEmailVerification(Body.email);
     const hashPassword = await bcrypt.hash(Body.password, 10);
     return this.usersService.createUser({
       ...Body,
       password: hashPassword,
     });
   }
+
   async logOut(username: string): Promise<User | undefined> {
     try {
       const fondUser = await this.usersService.findOne(username);
@@ -130,7 +145,7 @@ export class AuthService {
     }
   }
 
-  async sendEmailVerification(email: string) {
+  public async sendEmailVerification(email: string) {
     const uniqueString = await this.jwtService.signAsync(
       { email },
       {
@@ -138,13 +153,20 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       },
     );
-    const mail = await this.mailerService.sendMail({
-      from: this.configService.get<string>('EMAIL_AUTH'),
-      to: email,
-      subject: 'Verify Your Email',
-      html: FORM_VERIFY_EMAIL(uniqueString),
-    });
-    return;
+    try {
+      await this.mailerService.sendMail({
+        from: this.configService.get<string>('EMAIL_AUTH'),
+        to: email,
+        subject: 'Verify Your Email',
+        html: FORM_VERIFY_EMAIL(uniqueString),
+      });
+      return true;
+    } catch (err) {
+      throw new HttpException(
+        'INTERNAL_SERVER_ERROR',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async verifyEmail(uniqueString: string) {
@@ -206,5 +228,9 @@ export class AuthService {
         HttpStatus.FORBIDDEN,
       );
     }
+  }
+  async checkIsActive(username: string): Promise<boolean> {
+    const user = await this.usersService.findOne(username);
+    return user.isActive;
   }
 }

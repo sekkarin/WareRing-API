@@ -70,9 +70,13 @@ export class UsersService {
   async createUser(
     @Body() crateUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
-    const user = await this.findOne(crateUserDto.username);
-    if (user) {
-      throw new UnauthorizedException('username or email has been used');
+    const usernameAlreadyExists = await this.findOne(crateUserDto.username);
+    if (usernameAlreadyExists) {
+      throw new UnauthorizedException('username has been used');
+    }
+    const emailAlreadyExists = await this.findByEmail(crateUserDto.email);
+    if (emailAlreadyExists) {
+      throw new UnauthorizedException('email has been used');
     }
     const createdUser = new this.userModel({
       ...crateUserDto,
