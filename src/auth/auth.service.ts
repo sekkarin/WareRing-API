@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './../users/users.service';
@@ -28,11 +29,17 @@ export class AuthService {
   async signIn(username: string, pass: string) {
     try {
       const user = await this.usersService.findOne(username);
-
+      if (!user) {
+        throw new NotFoundException('Not found your username');
+      }
+      if (!user.verifired) {
+        throw new UnauthorizedException('Please verify your e-mail first');
+      }
       const isMath = await bcrypt.compare(pass, user.password);
       if (!isMath) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Password is incorrect');
       }
+
       let payload: any = {};
       payload = {
         sub: user.id,
@@ -55,12 +62,10 @@ export class AuthService {
         refresh_token: refresh_token,
       };
     } catch (error) {
-      throw new HttpException(
-        'Unauthorized - incorrect or missing credentials',
-        HttpStatus.FORBIDDEN,
-      );
+      throw error;
     }
   }
+
   async signUp(Body: CreateUserDto): Promise<UserResponseDto> {
     const usernameAlreadyExists = await this.usersService.findOne(
       Body.username,
@@ -137,7 +142,7 @@ export class AuthService {
     }
   }
 
-  private async sendEmailVerification(email: string) {
+  public async sendEmailVerification(email: string) {
     const uniqueString = await this.jwtService.signAsync(
       { email },
       {
@@ -220,5 +225,9 @@ export class AuthService {
         HttpStatus.FORBIDDEN,
       );
     }
+  }
+  async checkIsActive(username: string): Promise<boolean> {
+    const user = await this.usersService.findOne(username);
+    return user.isActive;
   }
 }
