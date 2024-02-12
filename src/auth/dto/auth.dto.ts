@@ -57,9 +57,6 @@ export class BodyUserLoginDto {
   })
   @IsNotEmpty()
   @Length(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'password too weak',
-  })
   password: string;
 }
 export class AccessTokenResponseDto {
