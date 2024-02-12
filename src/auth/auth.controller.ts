@@ -79,6 +79,7 @@ export class AuthController {
       signInDto.username,
       signInDto.password,
     );
+    
     res.cookie('refresh_token', user.refresh_token, {
       httpOnly: true,
       sameSite: 'none',

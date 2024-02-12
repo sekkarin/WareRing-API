@@ -10,6 +10,7 @@ export interface User extends Document {
   readonly profileUrl: string;
   readonly tokenEMQX: string;
   readonly isActive: boolean;
+  readonly verifired : boolean
   refreshToken: string;
   createdAt: string;
 }
