@@ -10,7 +10,6 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -18,7 +17,6 @@ import { Roles } from './decorator/roles.decorator';
 import { Role } from './enums/role.enum';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
-
 import {
   ApiBearerAuth,
   ApiCookieAuth,
@@ -34,12 +32,14 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // private myLogger: MyLoggerService// private jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('login')
@@ -73,18 +73,27 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body(ValidationPipe) signInDto: BodyUserLoginDto, @Res() res: Response) {
-  
+  async signIn(@Body() signInDto: BodyUserLoginDto, @Res() res: Response) {
+    const checkIsActive = await this.authService.checkIsActive(
+      signInDto.username,
+    );
+    if (!checkIsActive) {
+      throw new UnauthorizedException('User is banned');
+    }
     const user = await this.authService.signIn(
       signInDto.username,
       signInDto.password,
     );
-    
+    const expiresInSeconds = this.configService.getOrThrow<number>(
+      'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
+    );
+    const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
+
     res.cookie('refresh_token', user.refresh_token, {
       httpOnly: true,
       sameSite: 'none',
-      secure: true, // prod needed!
-      maxAge: 6 * 24 * 60 * 60 * 1000, // 6 day in ms unit
+      secure: true, 
+      maxAge: maxAgeMilliseconds,
     });
     return res.status(200).json({ access_token: user.access_token });
   }
@@ -98,11 +107,10 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'Array of validation error messages',
-    
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
-  async signUp(@Body(ValidationPipe) signUpDto: CreateUserDto) {
+  async signUp(@Body() signUpDto: CreateUserDto) {
     return this.authService.signUp(signUpDto);
   }
 
@@ -111,10 +119,9 @@ export class AuthController {
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @ApiTags('UserRoles', 'AdminRoles')
-  @Roles( Role.User,Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-  
     const username = req.user.username;
     await this.authService.logOut(username);
     res.clearCookie('refresh_token');
@@ -141,7 +148,6 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description: 'Unauthorized - missing refresh token',
-    
   })
   @ApiCookieAuth('refresh_token')
   @ApiBearerAuth()
@@ -240,7 +246,7 @@ export class AuthController {
   }) // Response description
   async setNewPassword(
     @Param('token') token,
-    @Body(ValidationPipe) resetPasswordDto: ResetPasswordDto,
+    @Body() resetPasswordDto: ResetPasswordDto,
     @Res() res: Response,
   ) {
     await this.authService.resetPassword(token, resetPasswordDto.newPassword);

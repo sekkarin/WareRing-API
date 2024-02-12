@@ -142,7 +142,7 @@ export class AuthService {
     }
   }
 
-  private async sendEmailVerification(email: string) {
+  public async sendEmailVerification(email: string) {
     const uniqueString = await this.jwtService.signAsync(
       { email },
       {
@@ -225,5 +225,9 @@ export class AuthService {
         HttpStatus.FORBIDDEN,
       );
     }
+  }
+  async checkIsActive(username: string): Promise<boolean> {
+    const user = await this.usersService.findOne(username);
+    return user.isActive;
   }
 }
