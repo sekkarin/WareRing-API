@@ -6,7 +6,22 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
+  HttpCode,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -18,6 +33,7 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { DevicesResponseDto } from './dto/get-all-device-dto';
 import { PermissionsDto } from './dto/permission.dto';
 import { StoreDataDto } from './dto/store-data.dto';
+
 @ApiTags('Device')
 @Controller('device')
 @Roles(Role.User)
