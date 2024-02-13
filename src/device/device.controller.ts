@@ -82,6 +82,7 @@ export class DeviceController {
     required: false,
     description: 'Page number for pagination (default: 1)',
   })
+  
   @ApiQuery({
     name: 'perPage',
     type: Number,
@@ -266,4 +267,6 @@ export class DeviceController {
       throw error;
     }
   }
+
+  
 }

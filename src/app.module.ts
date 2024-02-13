@@ -10,6 +10,7 @@ import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 import { HttpModule } from '@nestjs/axios';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { HttpModule } from '@nestjs/axios';
     }),
     DeviceModule,
     ApiModule,
-    HttpModule
+    HttpModule,
+    WebhookModule
     
   ],
   // controllers: [AppController],
