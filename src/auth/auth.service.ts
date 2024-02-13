@@ -231,6 +231,9 @@ export class AuthService {
   }
   async checkIsActive(username: string): Promise<boolean> {
     const user = await this.usersService.findOne(username);
+    if (!user) {
+      throw new NotFoundException('not found user');
+    }
     return user.isActive;
   }
 }
