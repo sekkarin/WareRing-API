@@ -6,6 +6,8 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -137,17 +139,14 @@ export class DeviceService {
     }
   }
 
-  async delete(id: string, userID: string): Promise<void> {
-    try {
-      // Check if the device exists
-      const device = await this.deviceModel.findOne({ _id: id, userID });
-      if (!device) {
-        throw new NotFoundException('Device not found');
-      }
-      await this.deviceModel.deleteOne({ _id: id, userID });
-    } catch (error) {
-      throw error;
+  async delete(id: string, userID: string) {
+    const device = await this.deviceModel.findOne({ _id: id, userID });
+    if (!device) {
+      throw new NotFoundException('Device not found');
+      // throw new HttpException('Device not found', HttpStatus.NOT_FOUND);
     }
+    await this.deviceModel.deleteOne({ _id: id, userID });
+    return await this.deviceModel.deleteOne({ _id: id, userID });
   }
 
   async setPermission(
@@ -195,5 +194,19 @@ export class DeviceService {
       throw error;
     }
   }
-  
+
+  async searchDevices(query: string, userID: string) {
+    const devices = await this.deviceModel.find({
+      userID: userID,
+      $or: [
+        { nameDevice: { $regex: query, $options: 'i' } },
+        { usernameDevice: { $regex: query, $options: 'i' } },
+      ],
+    });
+    const devicesResponse = devices.map((device) =>
+      this.mapToDeviceResponseDto(device),
+    );
+
+    return devicesResponse
+  }
 }

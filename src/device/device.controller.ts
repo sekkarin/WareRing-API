@@ -69,6 +69,13 @@ export class DeviceController {
     }
   }
 
+  @Get('search')
+  @ApiBearerAuth()
+  async searchDevices(@Req() req: Request, @Query('query') query: '') {
+    const { sub } = req['user'];
+    return this.deviceService.searchDevices(query, sub);
+  }
+
   @Get()
   @ApiBearerAuth()
   @ApiOperation({
@@ -82,7 +89,6 @@ export class DeviceController {
     required: false,
     description: 'Page number for pagination (default: 1)',
   })
-  
   @ApiQuery({
     name: 'perPage',
     type: Number,
@@ -170,8 +176,6 @@ export class DeviceController {
       const { sub } = req['user'];
       return this.deviceService.update(id, sub, updateDeviceDto);
     } catch (error) {
-      console.log(error);
-
       throw error;
     }
   }
@@ -205,15 +209,14 @@ export class DeviceController {
     name: 'id',
     description: 'ID of the device to delete',
   })
-  delete(@Req() req: Request, @Param('id') id: string) {
+  async delete(@Req() req: Request, @Param('id') id: string) {
     try {
       const { sub } = req['user'];
-      this.deviceService.delete(id, sub);
+    await  this.deviceService.delete(id, sub);
       return {
-        message: 'device deleted',
+        message: 'device deleted successfully',
       };
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -268,5 +271,5 @@ export class DeviceController {
     }
   }
 
-  
+
 }

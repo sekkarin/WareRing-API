@@ -33,7 +33,7 @@ export const DeviceSchema = new mongoose.Schema(
     action: {
       type: String,
       enum: ['publish', 'subscribe', 'all'],
-      default: 'publish',
+      default: 'all',
     },
     qos: {
       type: Number,
