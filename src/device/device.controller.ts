@@ -33,7 +33,7 @@ import { DevicesResponseDto } from './dto/get-all-device-dto';
 import { PermissionsDto } from './dto/permission.dto';
 import { StoreDataDto } from './dto/store-data.dto';
 @ApiTags('Device')
-@Controller('device')
+@Controller('devices')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard)
 export class DeviceController {
@@ -53,10 +53,7 @@ export class DeviceController {
     status: 400,
     description: 'Bad Request',
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal Server Error',
-  })
+
   async create(
     @Req() req: Request,
     @Body() createDeviceDto: CreateDeviceDto,
@@ -107,6 +104,7 @@ export class DeviceController {
     @Query('perPage') perPage = 10,
   ): Promise<DevicesResponseDto> {
     try {
+      // TODO: check query parameters type
       const { sub } = req['user'];
       const response: DevicesResponseDto = {
         data: await this.deviceService.findAll(page, perPage, sub),
@@ -114,6 +112,8 @@ export class DeviceController {
       };
       return response;
     } catch (error) {
+      console.log(error);
+      
       throw error;
     }
   }
@@ -212,7 +212,7 @@ export class DeviceController {
   async delete(@Req() req: Request, @Param('id') id: string) {
     try {
       const { sub } = req['user'];
-    await  this.deviceService.delete(id, sub);
+      await this.deviceService.delete(id, sub);
       return {
         message: 'device deleted successfully',
       };
@@ -270,6 +270,4 @@ export class DeviceController {
       throw error;
     }
   }
-
-
 }

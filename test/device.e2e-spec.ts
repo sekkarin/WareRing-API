@@ -4,11 +4,12 @@ import { AppModule } from '../src/app.module';
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import * as mongoose from 'mongoose';
-import {  login } from './testUtils';
+import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
 
 describe('Device (e2e)', () => {
   let app: INestApplication;
   const mongooseConnection = mongoose.connection;
+  let access_token: string;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -24,71 +25,154 @@ describe('Device (e2e)', () => {
     for (const collection of collections) {
       await collection.deleteMany({});
     }
-    // await register(app);
+    await signUp('user2', 'Password1234');
+    // const signInResponse = await signIn('user2', 'Password1234');
+    // access_token = signInResponse.body.access_token;
   });
-
-
-  afterAll(async () => {
-    if (mongooseConnection) {
-      await mongooseConnection.close();
-    }
-  });
-
-  describe('Create a new device', () => {
-    it('should create a new device status 200', async () => {
-      const { access_token, refresh_token } = await login(app);
-      console.log(access_token, refresh_token);
-
-      const device = await request(app.getHttpServer())
-        .post('/device')
-        .set('Cookie', refresh_token)
-        .set('Authorization', `Bearer ${access_token}`)
-        .send({
-          nameDevice: 'MyDevice',
-          usernameDevice: 'device_username',
-          password: 'hashed_password',
-          description: 'Smart home controller',
-          topics: ['topic1', 'topic2'],
-          qos: '0',
-          retain: true,
-          isSaveData: true,
-        })
-        .expect(HttpStatus.CREATED);
-      expect(device.body.usernameDevice).toBe('device_username');
-      expect(device.body.permission).toBeDefined();
-    });
-    // it('should return a validation error if DTO is invalid', async () => {
-    //   const { access_token, refresh_token } = await login(app);
-    //   console.log(access_token, refresh_token);
-    //   const invalidDtoData = {
-    //     nameDevice: '',
-    //     usernameDevice: 'device_username',
-    //     password: 'hashed_password',
-    //     description: 'Smart home controller',
-    //     topics: ['topic1', 'topic2'],
-    //     qos: '0',
-    //     retain: true,
-    //     isSaveData: true,
-    //   };
-
-    //   const device = await request(app.getHttpServer())
-    //     .post('/device')
-    //     .set('Cookie', refresh_token)
-    //     .set('Authorization', `Bearer ${access_token}`)
-    //     .send(invalidDtoData)
-    //     .expect(HttpStatus.BAD_REQUEST);
-
-    //   // Ensure that the response contains a message about the validation error
-    //   console.log(device.body);
-
-    //   // expect(response.body.error).toBeDefined();
-    //   // expect(response.body.message).toContain('nameDevice should not be empty');
-
-    //   // Add more assertions based on your requirements
-    // });
-  });
-
   afterEach(async () => {
     await app.close();
+  });
+
+  const signUp = async (username: string, password: string) => {
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: `${username}@example.com`,
+        password,
+        firstName: 'user',
+        lastName: 'user',
+        username,
+      })
+      .expect(HttpStatus.CREATED);
+  };
+
+  const signIn = async (username: string, password: string) => {
+    const signInResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ username, password })
+      .expect(HttpStatus.OK);
+
+    access_token = signInResponse.body.access_token;
+  };
+
+  describe('Post /devices ', () => {
+    it('should create a new device status 200', async () => {
+      // await signUp('user2', 'Password123');
+      await signIn('user2', 'Password1234');
+      const deviceDataMock: CreateDeviceDto = {
+        nameDevice: 'MyDevice',
+        usernameDevice: 'device_username_1',
+        password: 'hashed_password',
+        description: 'Smart home controller',
+        topics: ['topic1', 'topic2'],
+        qos: 0,
+        retain: true,
+        isSaveData: true,
+      };
+      const device = await request(app.getHttpServer())
+        .post('/devices')
+        .set('Authorization', `Bearer ${access_token}`)
+        .send(deviceDataMock)
+        .expect(HttpStatus.CREATED);
+      expect(device.body.usernameDevice).toBe('device_username_1');
+      expect(device.body.permission).toBeDefined();
+    });
+
+    it('should return 400 if device with usernameDevice already exists', async () => {
+      // await signUp('user2', 'Password123');
+      await signIn('user2', 'Password1234');
+
+      const deviceExisting: CreateDeviceDto = {
+        nameDevice: 'MyDevice',
+        usernameDevice: 'device_username_2',
+        password: 'hashed_password',
+        description: 'Smart home controller',
+        topics: ['topic1', 'topic2'],
+        qos: 0,
+        retain: true,
+        isSaveData: true,
+      };
+
+      // Create a device with a specific username
+      await request(app.getHttpServer())
+        .post('/devices')
+        .set('Authorization', `Bearer ${access_token}`)
+        .send(deviceExisting)
+        .expect(HttpStatus.CREATED); // Update to expect CREATED status
+
+      // Attempt to create another device with the same username, expect 400
+      await request(app.getHttpServer())
+        .post('/devices')
+        .set('Authorization', `Bearer ${access_token}`)
+        .send(deviceExisting)
+        .expect(HttpStatus.BAD_REQUEST); // Expect BAD_REQUEST status
+    });
+
+    it('should return 400 when creating device with invalid payload', async () => {
+      await signIn('user2', 'Password1234');
+      const invalidPayload = {};
+      const response = await request(app.getHttpServer())
+        .post('/devices')
+        .send(invalidPayload)
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(HttpStatus.BAD_REQUEST);
+
+      // Assert that the response contains details about validation errors
+      expect(response.body.message).toContain('nameDevice should not be empty');
+      expect(response.body.message).toContain('nameDevice must be a string');
+      expect(response.body.message).toContain(
+        'usernameDevice should not be empty',
+      );
+      expect(response.body.message).toContain(
+        'usernameDevice must be a string',
+      );
+    });
+  });
+
+  describe('GET /devices', () => {
+    it('should return a paginated list of devices with default parameters', async () => {
+      await signIn('user2', 'Password1234');
+      const response = await request(app.getHttpServer())
+        .get('/devices')
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(HttpStatus.OK);
+      // Add assertions for the response here
+      expect(response.body.data).toBeDefined();
+      expect(response.body.metadata).toBeDefined();
+    });
+
+    it('should return a paginated list of devices with custom pagination parameters', async () => {
+      await signIn('user2', 'Password1234');
+      const response = await request(app.getHttpServer())
+        .get('/devices?page=2&perPage=5')
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(HttpStatus.OK);
+      // Add assertions for the response here
+      expect(response.body.data).toBeDefined();
+      expect(response.body.metadata).toBeDefined();
+    });
+
+    it('should handle invalid pagination parameters', async () => {
+      await signIn('user2', 'Password1234');
+      const response = await request(app.getHttpServer())
+        .get('/devices?page=-1&perPage=abc')
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(HttpStatus.BAD_REQUEST);
+      // Add assertions for the response here
+      expect(response.body.message).toContain('Validation failed');
+    });
+
+    // it('should handle errors gracefully', async () => {
+    //   // Mock the service method to throw an error
+    //   jest
+    //     .spyOn(app.get(DeviceService), 'findAll')
+    //     .mockRejectedValueOnce(new Error('Test error'));
+
+    //   const response = await request(app.getHttpServer())
+    //     .get('/devices')
+    //     .expect(HttpStatus.INTERNAL_SERVER_ERROR);
+    //   // Add assertions for the response here
+    //   expect(response.body.message).toBe('Internal server error');
+    // });
   });
 });

@@ -6,6 +6,7 @@ import {
   IsArray,
   IsOptional,
   IsBoolean,
+  IsNumber,
 } from 'class-validator';
 export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {
   @IsOptional()
@@ -39,9 +40,9 @@ export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {
   action?: string;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  qos?: string;
+  qos?: number;
 
   @IsOptional()
   @IsBoolean()

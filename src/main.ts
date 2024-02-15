@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 
 const configService = new ConfigService();
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
