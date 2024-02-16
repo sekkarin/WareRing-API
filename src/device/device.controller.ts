@@ -11,6 +11,7 @@ import {
   Query,
   HttpCode,
   Put,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -53,7 +54,6 @@ export class DeviceController {
     status: 400,
     description: 'Bad Request',
   })
-
   async create(
     @Req() req: Request,
     @Body() createDeviceDto: CreateDeviceDto,
@@ -100,8 +100,8 @@ export class DeviceController {
   })
   async findAll(
     @Req() req: Request,
-    @Query('page') page = 1,
-    @Query('perPage') perPage = 10,
+    @Query('page', ParseIntPipe) page = 1,
+    @Query('perPage', ParseIntPipe) perPage = 10,
   ): Promise<DevicesResponseDto> {
     try {
       // TODO: check query parameters type
@@ -113,7 +113,7 @@ export class DeviceController {
       return response;
     } catch (error) {
       console.log(error);
-      
+
       throw error;
     }
   }

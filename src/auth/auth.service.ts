@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './../users/users.service';
@@ -24,10 +25,11 @@ export class AuthService {
   async signIn(username: string, pass: string) {
     try {
       const user = await this.usersService.findOne(username);
+      
       const isMath = await bcrypt.compare(pass, user.password);
 
       if (!isMath) {
-        throw new UnauthorizedException("password not valid");
+        throw new UnauthorizedException('password not valid');
       }
       let payload: any = {};
       payload = {
@@ -51,7 +53,7 @@ export class AuthService {
         refresh_token: refresh_token,
       };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
 
       throw new HttpException(
         'Unauthorized - incorrect or missing credentials',

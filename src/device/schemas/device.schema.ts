@@ -27,6 +27,7 @@ export const DeviceSchema = new mongoose.Schema(
       enum: ['deny', 'allow'],
       default: 'allow',
     },
+    // FIXME: change topic to sub document
     topics: {
       type: [String],
     },

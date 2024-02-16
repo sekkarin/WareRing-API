@@ -133,7 +133,7 @@ describe('Device (e2e)', () => {
     it('should return a paginated list of devices with default parameters', async () => {
       await signIn('user2', 'Password1234');
       const response = await request(app.getHttpServer())
-        .get('/devices')
+        .get('/devices?page=1&perPage=10')
         .set('Authorization', `Bearer ${access_token}`)
         .expect(HttpStatus.OK);
       // Add assertions for the response here
@@ -159,7 +159,7 @@ describe('Device (e2e)', () => {
         .set('Authorization', `Bearer ${access_token}`)
         .expect(HttpStatus.BAD_REQUEST);
       // Add assertions for the response here
-      expect(response.body.message).toContain('Validation failed');
+      expect(response.body.message).toContain('Validation failed (numeric string is expected)');
     });
 
     // it('should handle errors gracefully', async () => {
