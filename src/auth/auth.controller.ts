@@ -118,7 +118,6 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
-  @ApiTags('UserRoles', 'AdminRoles')
   @Roles(Role.User, Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {

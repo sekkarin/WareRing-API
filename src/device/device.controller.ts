@@ -34,8 +34,8 @@ import { DevicesResponseDto } from './dto/get-all-device-dto';
 import { PermissionsDto } from './dto/permission.dto';
 import { StoreDataDto } from './dto/store-data.dto';
 
-@ApiTags('Device')
-@Controller('device')
+@ApiTags('Devices')
+@Controller('devices')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard)
 export class DeviceController {
@@ -137,7 +137,7 @@ export class DeviceController {
     }
   }
 
-  @Patch(':id')
+  @Put(':id')
   @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a device by ID' })
