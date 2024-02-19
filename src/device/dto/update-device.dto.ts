@@ -32,7 +32,7 @@ export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {
   @IsOptional()
   @IsArray()
   @IsNotEmpty()
-  topics?: string[];
+  topics?: string;
 
   @IsOptional()
   @IsString()

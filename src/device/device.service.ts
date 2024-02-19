@@ -6,44 +6,57 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Device } from './interface/device.interface';
 import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
-import { DevicesResponseDto } from './dto/get-all-device-dto';
-import { PaginatedDto } from '../utils/paginated.dto';
+import { PaginatedDto } from '../utils/dto/paginated.dto';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
+    // private mongdb:Types
   ) {}
 
   async create(
     createDeviceDto: CreateDeviceDto,
     userID: string,
   ): Promise<DeviceResponseDto> {
-    const findDeviceDuplicates = await this.deviceModel.findOne({
+    const existingDevice = await this.deviceModel.findOne({
       usernameDevice: createDeviceDto.usernameDevice,
     });
+    const topicsGenerated = [
+      `${userID}/${createDeviceDto.topics}/publish`,
+      `${userID}/${createDeviceDto.topics}/subscribe`,
+    ];
 
-    if (findDeviceDuplicates) {
+    const existingTopics = await this.deviceModel.find({
+      topics: { $in: topicsGenerated },
+    });
+
+    if (existingTopics.length > 0) {
+      throw new BadRequestException(
+        'Topics already assigned to another device',
+      );
+    }
+
+    if (existingDevice) {
       throw new BadRequestException(
         'Device with this usernameDevice already exists',
       );
     }
     const password_hash = await bcrypt.hash(createDeviceDto.password, 10);
     const device = new this.deviceModel({
+      ...createDeviceDto,
       password_hash,
       userID,
-      ...createDeviceDto,
+      topics: topicsGenerated,
     });
     await device.save();
     return this.mapToDeviceResponseDto(device);
@@ -207,4 +220,5 @@ export class DeviceService {
 
     return devicesResponse;
   }
+
 }

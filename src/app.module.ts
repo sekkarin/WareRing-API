@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { LoggerMiddleware } from './utils/logger.middleware';
+import { LoggerMiddleware } from './utils/middlewares/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
