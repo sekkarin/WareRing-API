@@ -16,7 +16,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true
+    }),
+  );
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Books api')
