@@ -33,6 +33,8 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { DevicesResponseDto } from './dto/get-all-device-dto';
 import { PermissionsDto } from './dto/permission.dto';
 import { StoreDataDto } from './dto/store-data.dto';
+import { PaginatedDto } from 'src/utils/paginated.dto';
+import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
@@ -100,17 +102,12 @@ export class DeviceController {
   })
   async findAll(
     @Req() req: Request,
-    @Query('page', ParseIntPipe) page = 1,
-    @Query('perPage', ParseIntPipe) perPage = 10,
-  ): Promise<DevicesResponseDto> {
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ): Promise<PaginatedDto<DeviceResponseDto>> {
     try {
-      // TODO: check query parameters type
       const { sub } = req['user'];
-      const response: DevicesResponseDto = {
-        data: await this.deviceService.findAll(page, perPage, sub),
-        metadata: { page: page, perPages: perPage },
-      };
-      return response;
+      const { page, limit } = paginationQueryparamsDto;
+      return await this.deviceService.findAll(page, limit, sub);
     } catch (error) {
       console.log(error);
 

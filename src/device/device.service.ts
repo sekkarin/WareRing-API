@@ -16,6 +16,8 @@ import { Device } from './interface/device.interface';
 import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
+import { DevicesResponseDto } from './dto/get-all-device-dto';
+import { PaginatedDto } from '../utils/paginated.dto';
 
 @Injectable()
 export class DeviceService {
@@ -64,27 +66,23 @@ export class DeviceService {
     };
   }
 
-  async findAll(
-    page = 1,
-    perPage = 10,
-    userID: string,
-  ): Promise<DeviceResponseDto[]> {
+  async findAll(page = 1, limit = 10, userID: string) {
     try {
-      const totalItems = await this.deviceModel.countDocuments();
-      const totalPages = Math.ceil(totalItems / perPage);
-      if (page > totalPages) {
-        return [];
-      }
+      const itemCount = await this.deviceModel.countDocuments({ userID });
       const devices = await this.deviceModel
         .find({ userID })
-        .skip((page - 1) * perPage)
-        .limit(perPage);
+        .skip((page - 1) * limit)
+        .limit(limit);
 
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
       );
-
-      return devicesResponse;
+      return new PaginatedDto<DeviceResponseDto>(
+        devicesResponse,
+        page,
+        limit,
+        itemCount,
+      );
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -207,6 +205,6 @@ export class DeviceService {
       this.mapToDeviceResponseDto(device),
     );
 
-    return devicesResponse
+    return devicesResponse;
   }
 }
