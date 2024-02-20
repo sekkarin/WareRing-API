@@ -33,9 +33,12 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { DevicesResponseDto } from './dto/get-all-device-dto';
 import { PermissionsDto } from './dto/permission.dto';
 import { StoreDataDto } from './dto/store-data.dto';
-
+import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
+import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
+import { string } from 'mathjs';
 @ApiTags('Device')
-@Controller('device')
+@Controller('devices')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard)
 export class DeviceController {
@@ -55,10 +58,6 @@ export class DeviceController {
     status: 400,
     description: 'Bad Request',
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal Server Error',
-  })
   async create(
     @Req() req: Request,
     @Body() createDeviceDto: CreateDeviceDto,
@@ -69,6 +68,42 @@ export class DeviceController {
     } catch (error) {
       throw error;
     }
+  }
+
+  @Get('search')
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'query',
+    type: String,
+    required: false,
+    description: 'string query to search',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a paginated list of devices',
+    type: DevicesResponseDto,
+    isArray: true,
+  })
+  async searchDevices(
+    @Req() req: Request,
+    @Query('query') query: string,
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ) {
+    const { sub } = req['user'];
+    const { page, limit } = paginationQueryparamsDto;
+    return this.deviceService.searchDevices(query, sub, page,limit);
   }
 
   @Get()
@@ -85,10 +120,10 @@ export class DeviceController {
     description: 'Page number for pagination (default: 1)',
   })
   @ApiQuery({
-    name: 'perPage',
+    name: 'limit',
     type: Number,
     required: false,
-    description: 'Number of items per page (default: 10)',
+    description: 'limit Number of items  (default: 10)',
   })
   @ApiResponse({
     status: 200,
@@ -98,16 +133,12 @@ export class DeviceController {
   })
   async findAll(
     @Req() req: Request,
-    @Query('page') page = 1,
-    @Query('perPage') perPage = 10,
-  ): Promise<DevicesResponseDto> {
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ): Promise<PaginatedDto<DeviceResponseDto>> {
     try {
       const { sub } = req['user'];
-      const response: DevicesResponseDto = {
-        data: await this.deviceService.findAll(page, perPage, sub),
-        metadata: { page: page, perPages: perPage },
-      };
-      return response;
+      const { page, limit } = paginationQueryparamsDto;
+      return await this.deviceService.findAll(page, limit, sub);
     } catch (error) {
       throw error;
     }
@@ -126,9 +157,10 @@ export class DeviceController {
     description: 'Returns the details of a device by ID',
     type: DeviceResponseDto, // Assuming you have a DTO for the device response
   })
-  findOne(@Req() req: Request, @Param('id') id: string) {
+  findOne(@Req() req: Request, @Param('id', MongoDBObjectIdPipe) id: string) {
     try {
       const { sub } = req['user'];
+
       return this.deviceService.findOne(id, sub);
     } catch (error) {
       console.log(error);
@@ -137,7 +169,7 @@ export class DeviceController {
     }
   }
 
-  @Patch(':id')
+  @Put(':id')
   @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a device by ID' })
@@ -164,15 +196,14 @@ export class DeviceController {
   })
   update(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateDeviceDto: UpdateDeviceDto,
   ) {
     try {
       const { sub } = req['user'];
+
       return this.deviceService.update(id, sub, updateDeviceDto);
     } catch (error) {
-      console.log(error);
-
       throw error;
     }
   }
@@ -206,15 +237,17 @@ export class DeviceController {
     name: 'id',
     description: 'ID of the device to delete',
   })
-  delete(@Req() req: Request, @Param('id') id: string) {
+  async delete(
+    @Req() req: Request,
+    @Param('id', MongoDBObjectIdPipe) id: string,
+  ) {
     try {
       const { sub } = req['user'];
-      this.deviceService.delete(id, sub);
+      await this.deviceService.delete(id, sub);
       return {
-        message: 'device deleted',
+        message: 'device deleted successfully',
       };
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -231,7 +264,7 @@ export class DeviceController {
   @ApiResponse({ status: 404, description: 'Device not found' })
   setStatus(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() setPermissions: PermissionsDto,
   ) {
     try {
@@ -256,7 +289,7 @@ export class DeviceController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   setStoreData(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() storeDataDto: StoreDataDto,
   ) {
     try {

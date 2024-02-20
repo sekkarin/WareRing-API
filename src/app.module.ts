@@ -11,6 +11,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 const configService = new ConfigService();
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [

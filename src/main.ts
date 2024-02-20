@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 
 const configService = new ConfigService();
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
@@ -17,7 +16,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true
+    }),
+  );
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Warering api')

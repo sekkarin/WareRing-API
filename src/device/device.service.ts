@@ -9,37 +9,53 @@ import {
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Device } from './interface/device.interface';
 import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
+import { PaginatedDto } from '../utils/dto/paginated.dto';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
-    private deviceModel: Model<Device>,
+    private deviceModel: Model<Device>, // private mongdb:Types
   ) {}
 
   async create(
     createDeviceDto: CreateDeviceDto,
     userID: string,
   ): Promise<DeviceResponseDto> {
-    const findDeviceDuplicates = await this.deviceModel.findOne({
+    const existingDevice = await this.deviceModel.findOne({
       usernameDevice: createDeviceDto.usernameDevice,
     });
+    const topicsGenerated = [
+      `${userID}/${createDeviceDto.topics}/publish`,
+      `${userID}/${createDeviceDto.topics}/subscribe`,
+    ];
 
-    if (findDeviceDuplicates) {
+    const existingTopics = await this.deviceModel.find({
+      topics: { $in: topicsGenerated },
+    });
+
+    if (existingTopics.length > 0) {
+      throw new BadRequestException(
+        'Topics already assigned to another device',
+      );
+    }
+
+    if (existingDevice) {
       throw new BadRequestException(
         'Device with this usernameDevice already exists',
       );
     }
     const password_hash = await bcrypt.hash(createDeviceDto.password, 10);
     const device = new this.deviceModel({
+      ...createDeviceDto,
       password_hash,
       userID,
-      ...createDeviceDto,
+      topics: topicsGenerated,
     });
     await device.save();
     return this.mapToDeviceResponseDto(device);
@@ -62,27 +78,23 @@ export class DeviceService {
     };
   }
 
-  async findAll(
-    page = 1,
-    perPage = 10,
-    userID: string,
-  ): Promise<DeviceResponseDto[]> {
+  async findAll(page = 1, limit = 10, userID: string) {
     try {
-      const totalItems = await this.deviceModel.countDocuments();
-      const totalPages = Math.ceil(totalItems / perPage);
-      if (page > totalPages) {
-        return [];
-      }
+      const itemCount = await this.deviceModel.countDocuments({ userID });
       const devices = await this.deviceModel
         .find({ userID })
-        .skip((page - 1) * perPage)
-        .limit(perPage);
+        .skip((page - 1) * limit)
+        .limit(limit);
 
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
       );
-
-      return devicesResponse;
+      return new PaginatedDto<DeviceResponseDto>(
+        devicesResponse,
+        page,
+        limit,
+        itemCount,
+      );
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -105,25 +117,39 @@ export class DeviceService {
     userID: string,
     updateDeviceDto: UpdateDeviceDto,
   ): Promise<DeviceResponseDto> {
+    let topicsGenerated: string[];
+    let password_hash: string;
     try {
-      const usernameDeviceDuplicate = await this.deviceModel.findOne({
+      const existingDeviceUsername = await this.deviceModel.findOne({
         usernameDevice: updateDeviceDto.usernameDevice,
         userID,
       });
-      if (usernameDeviceDuplicate) {
+      if (existingDeviceUsername) {
         throw new BadRequestException('usernameDevice already');
       }
-      const topicsDuplicates = await this.deviceModel.findOne({
-        topics: { $in: updateDeviceDto.topics },
-        userID,
+      if (updateDeviceDto.topics) {
+        topicsGenerated = [
+          `${userID}/${updateDeviceDto.topics}/publish`,
+          `${userID}/${updateDeviceDto.topics}/subscribe`,
+        ];
+      }
+      const existingTopics = await this.deviceModel.find({
+        topics: { $in: topicsGenerated },
       });
 
-      if (topicsDuplicates) {
-        throw new BadRequestException('One or more topics already exist');
+      if (existingTopics.length > 0) {
+        throw new BadRequestException(
+          'Topics already assigned to another device',
+        );
+      }
+      if (updateDeviceDto.password) {
+        password_hash = await bcrypt.hash(updateDeviceDto.password, 10);
       }
       const device = await this.deviceModel.findByIdAndUpdate(
         { _id: id, userID },
-        { $set: updateDeviceDto },
+        {
+          $set: { ...updateDeviceDto, topics: topicsGenerated, password_hash },
+        },
         { new: true },
       );
 
@@ -137,17 +163,14 @@ export class DeviceService {
     }
   }
 
-  async delete(id: string, userID: string): Promise<void> {
-    try {
-      // Check if the device exists
-      const device = await this.deviceModel.findOne({ _id: id, userID });
-      if (!device) {
-        throw new NotFoundException('Device not found');
-      }
-      await this.deviceModel.deleteOne({ _id: id, userID });
-    } catch (error) {
-      throw error;
+  async delete(id: string, userID: string) {
+    const device = await this.deviceModel.findOne({ _id: id, userID });
+    if (!device) {
+      throw new NotFoundException('Device not found');
+      // throw new HttpException('Device not found', HttpStatus.NOT_FOUND);
     }
+    await this.deviceModel.deleteOne({ _id: id, userID });
+    return await this.deviceModel.deleteOne({ _id: id, userID });
   }
 
   async setPermission(
@@ -194,5 +217,30 @@ export class DeviceService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async searchDevices(query: string, userID: string, page = 1, limit = 10) {
+    const itemCount = await this.deviceModel.countDocuments({ userID });
+    const devices = await this.deviceModel
+      .find({
+        userID: userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .find({ userID })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const devicesResponse = devices.map((device) =>
+      this.mapToDeviceResponseDto(device),
+    );
+
+    return new PaginatedDto<DeviceResponseDto>(
+      devicesResponse,
+      page,
+      limit,
+      itemCount,
+    );
   }
 }

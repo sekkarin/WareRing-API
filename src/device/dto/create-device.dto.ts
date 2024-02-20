@@ -8,6 +8,7 @@ import {
   IsArray,
   IsNumber,
   IsEnum,
+  Length,
 } from 'class-validator';
 
 export class CreateDeviceDto {
@@ -44,12 +45,14 @@ export class CreateDeviceDto {
   description: string;
 
   @ApiProperty({
-    example: ['topic1', 'topic2'],
-    description: 'List of topics the device is subscribed to',
+    example: 'topic1',
+    description: 'The device is subscribed to',
   })
-  @IsArray()
+
+  @IsString()
+  @Length(3,25)
   @IsNotEmpty()
-  topics: string[];
+  topics: string;
 
   @ApiProperty({
     example: 0,

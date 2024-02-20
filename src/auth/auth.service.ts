@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './../users/users.service';
@@ -36,9 +37,7 @@ export class AuthService {
         throw new UnauthorizedException('Please verify your e-mail first');
       }
       const isMath = await bcrypt.compare(pass, user.password);
-      console.log(pass,user.username);
-      
-      
+
       if (!isMath) {
         throw new UnauthorizedException('Password is incorrect');
       }

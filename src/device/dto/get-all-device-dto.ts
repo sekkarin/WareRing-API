@@ -10,10 +10,18 @@ export class DevicesResponseDto {
     properties: {
       page: { type: 'number' },
       perPages: { type: 'number' },
+      itemCount: { type: 'number' },
+      pageCount: { type: 'number' },
+      hasPreviousPage: { type: 'boolean' },
+      hasNextPage: { type: 'boolean' },
     },
   })
   metadata: {
     page: number;
-    perPages: number;
+    limit: number;
+    itemCount: number;
+    pageCount: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
   };
 }
