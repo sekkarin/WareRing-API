@@ -6,6 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import * as mongoose from 'mongoose';
 import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
 import { DeviceResponseDto } from 'src/device/dto/response-device.dto';
+import { UpdateDeviceDto } from 'src/device/dto/update-device.dto';
 
 const createDeviceDto: CreateDeviceDto = {
   nameDevice: 'TestDevice',
@@ -32,18 +33,16 @@ describe('Device (e2e)', () => {
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await signUp('user2', 'Password1234');
+    await signIn('user2', 'Password1234');
+  });
+  afterEach(async () => {
     const collections = await mongooseConnection.db.collections();
 
     for (const collection of collections) {
       await collection.deleteMany({});
     }
-    await signUp('user2', 'Password1234');
 
-    // const signInResponse = await signIn('user2', 'Password1234');
-    // access_token = signInResponse.body.access_token;
-    await signIn('user2', 'Password1234');
-  });
-  afterEach(async () => {
     await app.close();
   });
 
@@ -72,7 +71,7 @@ describe('Device (e2e)', () => {
   describe('Post /devices ', () => {
     it('should create a new device successfully', async () => {
       const response = await createDevice(app, accessToken, createDeviceDto);
-      const createdDevice: DeviceResponseDto = response.body;
+      const createdDevice = response.body;
 
       // Assert the response contains the created device details
       expect(createdDevice.nameDevice).toBe(createDeviceDto.nameDevice);
@@ -151,7 +150,6 @@ describe('Device (e2e)', () => {
       );
     });
   });
-
   describe('GET /devices', () => {
     it('should return a paginated list of devices', async () => {
       await createDevice(app, accessToken, createDeviceDto);
@@ -224,7 +222,6 @@ describe('Device (e2e)', () => {
       // Add more assertions based on your response structure and expected data
     });
     it('should return 404 if device ID is not found', async () => {
-     
       const nonExistingId = new mongoose.Types.ObjectId();
 
       // Make a request to get device details by non-existing ID
@@ -236,7 +233,7 @@ describe('Device (e2e)', () => {
     it('should return 400 if device ID is invalid', async () => {
       // Make a request to get device details by an invalid ID (e.g., wrong format)
       const invalidId = 'invalid_device_id';
-    
+
       // Make a request to get device details by invalid ID
       await request(app.getHttpServer())
         .get(`/devices/${invalidId}`)
@@ -244,60 +241,60 @@ describe('Device (e2e)', () => {
         .expect(HttpStatus.BAD_REQUEST);
     });
   });
-  describe("Delete /devices/:id", () => {
+  describe('Delete /devices/:id', () => {
     it('should delete a device successfully', async () => {
-    
       const device = await createDevice(app, accessToken, createDeviceDto);
-     // Extract the device ID from the response
-     const deviceId = device.body.id; // Assuming the response contains the ID of the created device
+      // Extract the device ID from the response
+      const deviceId = device.body.id; // Assuming the response contains the ID of the created device
 
-     // Make a request to delete the device
-     const deleteDeviceResponse = await request(app.getHttpServer())
-       .delete(`/devices/${deviceId}`)
-       .set('Authorization', `Bearer ${accessToken}`)
-       .expect(HttpStatus.OK);
+      // Make a request to delete the device
+      const deleteDeviceResponse = await request(app.getHttpServer())
+        .delete(`/devices/${deviceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.OK);
 
-     // Assert that the response contains the expected message
-     expect(deleteDeviceResponse.body.message).toEqual('device deleted successfully');
-   });
+      // Assert that the response contains the expected message
+      expect(deleteDeviceResponse.body.message).toEqual(
+        'device deleted successfully',
+      );
+    });
 
-   it('should return 404 when trying to delete a non-existing device', async () => {
-    // Try to delete a non-existing device
-    const nonExistingDeviceId = new mongoose.Types.ObjectId();
-    const deleteResponse = await request(app.getHttpServer())
-      .delete(`/devices/${nonExistingDeviceId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(HttpStatus.NOT_FOUND);
+    it('should return 404 when trying to delete a non-existing device', async () => {
+      // Try to delete a non-existing device
+      const nonExistingDeviceId = new mongoose.Types.ObjectId();
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/devices/${nonExistingDeviceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
 
-    // Check if appropriate error message is returned
-    expect(deleteResponse.body.message).toEqual('Device not found');
+      // Check if appropriate error message is returned
+      expect(deleteResponse.body.message).toEqual('Device not found');
+    });
+    it('should return 400 if device ID is invalid', async () => {
+      const invalidDeviceId = 'invalid-id';
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/devices/${invalidDeviceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+      // Check if appropriate error message is returned
+      expect(deleteResponse.body.message).toEqual('Invalid ObjectId format');
+    });
   });
-  it('should return 400 if device ID is invalid', async () => {
-    const invalidDeviceId = 'invalid-id';
-    const deleteResponse = await request(app.getHttpServer())
-      .delete(`/devices/${invalidDeviceId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(HttpStatus.BAD_REQUEST);
-    // Check if appropriate error message is returned
-    expect(deleteResponse.body.message).toEqual('Invalid ObjectId format');
-  });
- 
-  })
-  describe("Put /device/permission/:id",()=>{
+  describe('Put /device/permission/:id', () => {
     it('should set permission for a device', async () => {
       const device = await createDevice(app, accessToken, createDeviceDto);
       const deviceId = device.body.id;
       const permissionsDto = {
         permission: 'deny', // Set the desired permission
       };
-  
+
       // Set permission for the device
       const setPermissionResponse = await request(app.getHttpServer())
         .put(`/devices/permission/${deviceId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(permissionsDto)
         .expect(HttpStatus.OK);
-  
+
       // Check if the permission is set successfully
       expect(setPermissionResponse.body.permission).toBe('deny'); // Adjust accordingly based on your DTO structure
     });
@@ -306,7 +303,7 @@ describe('Device (e2e)', () => {
       const permissionsDto = {
         permission: 'allow',
       };
-  
+
       // Attempt to set permission for a non-existent device
       await request(app.getHttpServer())
         .put(`/device/permission/${nonExistentDeviceId}`)
@@ -320,7 +317,7 @@ describe('Device (e2e)', () => {
       const invalidPermissionsDto = {
         permission: 'invalid_permission',
       };
-    
+
       // Attempt to set permission with an invalid permission value
       await request(app.getHttpServer())
         .put(`/devices/permission/${deviceId}`)
@@ -328,55 +325,99 @@ describe('Device (e2e)', () => {
         .send(invalidPermissionsDto)
         .expect(HttpStatus.BAD_REQUEST);
     });
-  })
-  describe("Put /device/store/:id",()=>{
+  });
+  describe('Put /device/store/:id', () => {
     it('should set store for a device', async () => {
       const device = await createDevice(app, accessToken, createDeviceDto);
       const deviceId = device.body.id;
       const storeDataDto = {
-        storeData: false // Set storeData to true or false as needed
+        storeData: false, // Set storeData to true or false as needed
       };
 
-  
       // Set permission for the device
-      const setPermissionResponse = await request(app.getHttpServer())
+      const setStoreResponse = await request(app.getHttpServer())
         .put(`/devices/store/${deviceId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(storeDataDto)
-        // .expect(HttpStatus.OK);
-      console.log(setPermissionResponse.body);
-      
+        .expect(HttpStatus.OK);
+
       // Check if the permission is set successfully
-      expect(setPermissionResponse.body.isSaveData).toBe(false); // Adjust accordingly based on your DTO structure
+      expect(setStoreResponse.body.isSaveData).toBe(false); // Adjust accordingly based on your DTO structure
     });
-    // it('should return 404 if device is not found', async () => {
-    //   const nonExistentDeviceId = 'non-existent-id';
-    //   const permissionsDto = {
-    //     permission: 'allow',
-    //   };
-  
-    //   // Attempt to set permission for a non-existent device
-    //   await request(app.getHttpServer())
-    //     .put(`/device/permission/${nonExistentDeviceId}`)
-    //     .set('Authorization', `Bearer ${accessToken}`)
-    //     .send(permissionsDto)
-    //     .expect(HttpStatus.NOT_FOUND);
-    // });
-    // it('should return 400 for invalid permission value', async () => {
-    //   const device = await createDevice(app, accessToken, createDeviceDto);
-    //   const deviceId = device.body.id;
-    //   const invalidPermissionsDto = {
-    //     permission: 'invalid_permission',
-    //   };
-    
-    //   // Attempt to set permission with an invalid permission value
-    //   await request(app.getHttpServer())
-    //     .put(`/devices/permission/${deviceId}`)
-    //     .set('Authorization', `Bearer ${accessToken}`)
-    //     .send(invalidPermissionsDto)
-    //     .expect(HttpStatus.BAD_REQUEST);
-    // });
-  })
+    it('should return 400 if store data DTO is invalid', async () => {
+      // Invalid store data DTO
+      const invalidStoreDataDto = {
+        // Populate invalid store data DTO with missing or invalid fields
+      };
+
+      // Attempt to update store data with invalid DTO
+      await request(app.getHttpServer())
+        .put(`/devices/store/123`) // Use an invalid device ID
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(invalidStoreDataDto)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+  });
+  describe('PUT /devices/:id', () => {
+    it('should update a device successfully', async () => {
+      const deviceCreationResponse = await createDevice(
+        app,
+        accessToken,
+        createDeviceDto,
+      );
+      const createdDeviceId = deviceCreationResponse.body.id;
+
+      // Define the update payload
+      const updatePayload: UpdateDeviceDto = {
+        nameDevice: 'TestDevice',
+        usernameDevice: 'test_username_1',
+        password: 'password',
+        description: 'Test device description',
+        topics: 'test_topics_1',
+        qos: 1,
+        retain: false,
+        isSaveData: false,
+      };
+
+      // Perform the update request
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/devices/${createdDeviceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatePayload);
+      // Assert the response status code is 200 OK
+      expect(updateResponse.status).toBe(200);
+      // Assert the response body contains the updated device details
+      expect(updateResponse.body).toHaveProperty('id', createdDeviceId);
+      expect(updateResponse.body.qos).toBe(updatePayload.qos);
+      expect(updateResponse.body.usernameDevice).toBe(
+        updatePayload.usernameDevice,
+      );
+    });
+    it('should update a device with invalid username and return 400', async () => {
+      const deviceId = 'valid-device-id';
+      const updatePayload = {
+        usernameDevice: '@!invalidusername',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/devices/${deviceId}`)
+        .send(updatePayload)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+    it('should update a device with an existing username and return 400', async () => {
+      const deviceId = 'valid-device-id';
+      const updatePayload = {
+        usernameDevice: 'existing-username',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/devices/${deviceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatePayload)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+  });
 });
 async function createDevice(
   app: INestApplication,

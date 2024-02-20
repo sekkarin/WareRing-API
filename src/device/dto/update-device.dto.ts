@@ -3,7 +3,6 @@ import { CreateDeviceDto } from './create-device.dto';
 import {
   IsString,
   IsNotEmpty,
-  IsArray,
   IsOptional,
   IsBoolean,
   IsNumber,
@@ -30,7 +29,7 @@ export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {
   permission?: string;
 
   @IsOptional()
-  @IsArray()
+  @IsString()
   @IsNotEmpty()
   topics?: string;
 

@@ -20,8 +20,7 @@ import { PaginatedDto } from '../utils/dto/paginated.dto';
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
-    private deviceModel: Model<Device>,
-    // private mongdb:Types
+    private deviceModel: Model<Device>, // private mongdb:Types
   ) {}
 
   async create(
@@ -118,25 +117,39 @@ export class DeviceService {
     userID: string,
     updateDeviceDto: UpdateDeviceDto,
   ): Promise<DeviceResponseDto> {
+    let topicsGenerated: string[];
+    let password_hash: string;
     try {
-      const usernameDeviceDuplicate = await this.deviceModel.findOne({
+      const existingDeviceUsername = await this.deviceModel.findOne({
         usernameDevice: updateDeviceDto.usernameDevice,
         userID,
       });
-      if (usernameDeviceDuplicate) {
+      if (existingDeviceUsername) {
         throw new BadRequestException('usernameDevice already');
       }
-      const topicsDuplicates = await this.deviceModel.findOne({
-        topics: { $in: updateDeviceDto.topics },
-        userID,
+      if (updateDeviceDto.topics) {
+        topicsGenerated = [
+          `${userID}/${updateDeviceDto.topics}/publish`,
+          `${userID}/${updateDeviceDto.topics}/subscribe`,
+        ];
+      }
+      const existingTopics = await this.deviceModel.find({
+        topics: { $in: topicsGenerated },
       });
 
-      if (topicsDuplicates) {
-        throw new BadRequestException('One or more topics already exist');
+      if (existingTopics.length > 0) {
+        throw new BadRequestException(
+          'Topics already assigned to another device',
+        );
+      }
+      if (updateDeviceDto.password) {
+        password_hash = await bcrypt.hash(updateDeviceDto.password, 10);
       }
       const device = await this.deviceModel.findByIdAndUpdate(
         { _id: id, userID },
-        { $set: updateDeviceDto },
+        {
+          $set: { ...updateDeviceDto, topics: topicsGenerated, password_hash },
+        },
         { new: true },
       );
 
@@ -206,19 +219,28 @@ export class DeviceService {
     }
   }
 
-  async searchDevices(query: string, userID: string) {
-    const devices = await this.deviceModel.find({
-      userID: userID,
-      $or: [
-        { nameDevice: { $regex: query, $options: 'i' } },
-        { usernameDevice: { $regex: query, $options: 'i' } },
-      ],
-    });
+  async searchDevices(query: string, userID: string, page = 1, limit = 10) {
+    const itemCount = await this.deviceModel.countDocuments({ userID });
+    const devices = await this.deviceModel
+      .find({
+        userID: userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .find({ userID })
+      .skip((page - 1) * limit)
+      .limit(limit);
     const devicesResponse = devices.map((device) =>
       this.mapToDeviceResponseDto(device),
     );
 
-    return devicesResponse;
+    return new PaginatedDto<DeviceResponseDto>(
+      devicesResponse,
+      page,
+      limit,
+      itemCount,
+    );
   }
-
 }
