@@ -3,14 +3,11 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { userProviders } from './provider/user.providers';
 import { DatabaseModule } from './../database/database.module';
-
+import { deviceProviders } from 'src/device/provider/provider';
 
 @Module({
-  providers: [
-    UsersService,
-    ...userProviders,
-  ],
-  exports: [UsersService,...userProviders],
+  providers: [UsersService, ...userProviders, ...deviceProviders],
+  exports: [UsersService, ...userProviders],
   imports: [DatabaseModule],
   controllers: [UsersController],
 })

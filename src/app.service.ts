@@ -19,7 +19,6 @@ export class AppService {
     this.logger = new Logger();
   }
   async seedData() {
-
     const { token } = await this.loginDashboard();
     const admin = await this.userModel.findOne({
       username: 'AdminWareringCaxknsa',
@@ -36,8 +35,19 @@ export class AppService {
         password:
           '$2b$10$aBDeggbEBROiCQejjrKcxeoHUEVQawoTcKlbDZ1qcsCKcA.uZVO4m',
         email: 'admin@admin.com',
-        roles: ['user', 'admin'],
+        roles: ['admin'],
         tokenEMQX: token,
+        isActive: true,
+        verifired: true,
+      },
+      {
+        firstName: 'John',
+        lastName: 'Doe',
+        username: 'ken',
+        password:
+          '$2b$10$E8BhNJ0UY2fet5LbhX0uZOoqeOwuouU/fEfqhrA8GMWLYOr475GHq',
+        email: 'sekkri1234@gmail.com',
+        roles: ['user'],
         isActive: true,
         verifired: true,
       },

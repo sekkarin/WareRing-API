@@ -13,6 +13,7 @@ import {
   Patch,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -76,45 +77,7 @@ export class UsersController {
       throw new NotFoundException('User not found.');
     }
   }
-
-  @ApiOperation({ summary: 'Update a user by ID' }) // Operation summary
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad Request - some required data is missing',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - not authorized to perform this action',
-  })
-  @ApiResponse({ status: 404, description: 'Not Found - user not found' })
-  @ApiParam({ name: 'id', description: 'User ID' }) // Parameter description
-  @ApiBearerAuth() // Specify Bearer token authentication
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Patch(':id')
-  async updateById(
-    @Body() createCatDto: UpdateUserDto,
-    @Param() params: { id: string },
-  ) {
-    try {
-      if (!createCatDto || Object.keys(createCatDto).length === 0) {
-        throw new BadRequestException(
-          'Invalid request - createCatDto is empty or null.',
-        );
-      }
-      const updatedUser = await this.usersService.update(
-        createCatDto,
-        params.id,
-      );
-
-      return updatedUser;
-    } catch (error) {
-      throw new NotFoundException('User not found.');
-    }
-  }
-
+ 
   @Get()
   @ApiOperation({ summary: 'Get all users' }) // Operation summary
   @ApiResponse({
@@ -146,12 +109,11 @@ export class UsersController {
     return await this.usersService.getAll(page, limit, sub);
   }
 
-  @Delete(':id')
+  @Delete()
   @Roles(Role.User)
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Delete a user by ID', description: 'Roles Admin' }) // Operation summary
-  @ApiParam({ name: 'id', description: 'User ID' }) // Parameter description
+  @ApiOperation({ summary: 'Delete a user', description: 'Roles Admin' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({
     status: 400,
@@ -159,19 +121,16 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth()
-  async deleteUser(@Param() params: { id: string }) {
-    // console.log(params.id);
-
-    if (!params.id) {
-      throw new BadRequestException('Some required data is missing.');
-    }
+  async deleteUser(@Req() req: Request) {
     try {
-      await this.usersService.deleteUser(params.id);
+      const { sub } = req['user'];
+    
+      await this.usersService.deleteUser(sub);
       return {
         message: 'delete user successfully',
       };
     } catch (error) {
-      throw new NotFoundException('User not found.');
+      throw error
     }
   }
 

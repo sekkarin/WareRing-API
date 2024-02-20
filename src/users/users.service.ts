@@ -6,18 +6,21 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Model, Types } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import { Model} from 'mongoose';
+
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { Device } from 'src/device/interface/device.interface';
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
+    @Inject("DEVICE_MODEL")
+    private deviceModel: Model<Device>,
   ) {}
 
   async findOne(username: string) {
@@ -61,10 +64,6 @@ export class UsersService {
       limit,
       itemCount,
     );
-    // return this.userModel
-    //   .find()
-    //   .select('-password -refreshToken -isAlive -role')
-    //   .exec();
   }
   async findOneById(id: string): Promise<UserResponseDto> {
     try {
@@ -117,6 +116,7 @@ export class UsersService {
     return userResponse;
   }
   async deleteUser(id: string) {
+    await this.deviceModel.deleteMany({userID:id})
     return await this.userModel.deleteOne({ _id: id });
   }
 
