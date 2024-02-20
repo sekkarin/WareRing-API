@@ -4,12 +4,14 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
   Patch,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +19,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -27,8 +30,13 @@ import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
 import { GetUserAllDto, UpdateUserDto } from './dto/user.dto';
+import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
+import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { UserResponseDto } from 'src/auth/dto/auth.dto';
+import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
 @ApiTags('User')
 @Controller('users')
+@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -108,19 +116,34 @@ export class UsersController {
   }
 
   @Get()
-  // @ApiOperation({ summary: 'Get all users' }) // Operation summary
-  // @ApiResponse({
-  //   status: 200,
-  //   description: `Get all users`,
-  //   type: [GetUserAllDto],
-  // }) // Response description
-  // @ApiBearerAuth()
-  // @Roles(Role.Admin)
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @HttpCode(HttpStatus.OK)
-  //
-  async getUsers() {
-    return await this.usersService.getAll();
+  @ApiOperation({ summary: 'Get all users' }) // Operation summary
+  @ApiResponse({
+    status: 200,
+    description: `Get all users`,
+    type: [GetUserAllDto],
+  }) // Response description
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
+  @HttpCode(HttpStatus.OK)
+  async getUsers(
+    @Req() req: Request,
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ): Promise<PaginatedDto<UserResponseDto>> {
+    const { page, limit } = paginationQueryparamsDto;
+    const { sub } = req['user'];
+    return await this.usersService.getAll(page, limit, sub);
   }
 
   @Delete(':id')
@@ -152,12 +175,9 @@ export class UsersController {
     }
   }
 
-  @Get(':username')
-  @ApiOperation({ summary: 'Get user by username' }) // Operation summary
-  @ApiParam({
-    name: 'username',
-    description: 'Username of the user to retrieve',
-  }) // Parameter description
+  @Get(':id')
+  @Roles(Role.User)
+  @ApiOperation({ summary: 'Get user by id' }) // Operation summary
   @ApiResponse({
     status: 200,
     description: 'User retrieved successfully',
@@ -173,14 +193,20 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth()
-  async getUser(@Param() params: { username: string }) {
-    if (!params.username) {
-      throw new BadRequestException('Some required data is missing.');
-    }
+  async getUser(
+    @Req() req: Request,
+    @Param('id', MongoDBObjectIdPipe) id: string,
+  ) {
+    const { sub } = req['user'];
     try {
-      return await this.usersService.getUserById(params.username);
+      if (id !== sub) {
+        throw new ForbiddenException(
+          'You are not authorized to access this resource',
+        );
+      }
+      return await this.usersService.findOneById(id);
     } catch (error) {
-      throw new NotFoundException('User not found.');
+      throw error;
     }
   }
 }

@@ -5,7 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 
 import { User } from './users/interfaces/user.interface';
-// import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppService {
@@ -20,8 +19,14 @@ export class AppService {
     this.logger = new Logger();
   }
   async seedData() {
+
     const { token } = await this.loginDashboard();
-    await this.userModel.deleteOne({ username: 'AdminWareringCaxknsa' });
+    const admin = await this.userModel.findOne({
+      username: 'AdminWareringCaxknsa',
+    });
+    if (admin) {
+      return;
+    }
 
     const dataToSeed = [
       {
@@ -34,6 +39,7 @@ export class AppService {
         roles: ['user', 'admin'],
         tokenEMQX: token,
         isActive: true,
+        verifired: true,
       },
     ];
     const findUser = await this.userModel.findOne({

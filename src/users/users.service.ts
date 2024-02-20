@@ -1,14 +1,17 @@
+// endpoint upload profile
 import {
   Body,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
+import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 
 @Injectable()
 export class UsersService {
@@ -35,20 +38,45 @@ export class UsersService {
       })
       .exec();
   }
-  async getUserById(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<User | undefined> {
     return await this.userModel
       .findOne({ username: username })
       .select('-password -refreshToken -isAlive -role')
       .exec();
   }
-  async getAll(): Promise<User[] | undefined> {
-    return this.userModel
-      .find()
-      .select('-password -refreshToken -isAlive -role')
-      .exec();
+  async getAll(page = 1, limit = 10, currentUserId: string) {
+    const itemCount = await this.userModel.countDocuments({
+      _id: { $ne: currentUserId },
+    });
+    const users = await this.userModel
+      .find({ _id: { $ne: currentUserId } })
+      .skip((page - 1) * limit)
+      .limit(limit);
+ 
+
+    const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
+    return new PaginatedDto<UserResponseDto>(
+      usersResponse,
+      page,
+      limit,
+      itemCount,
+    );
+    // return this.userModel
+    //   .find()
+    //   .select('-password -refreshToken -isAlive -role')
+    //   .exec();
   }
-  async findOneById(id: string): Promise<User | undefined> {
-    return this.userModel.findById(id).exec();
+  async findOneById(id: string): Promise<UserResponseDto> {
+    try {
+      const user = await this.userModel.findById(id).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const userResponse = this.mapToUserResponseDto(user);
+      return userResponse;
+    } catch (error) {
+      return error;
+    }
   }
   async update(userUpdate: UpdateUserDto, id: string) {
     try {
@@ -66,7 +94,6 @@ export class UsersService {
       throw new UnauthorizedException();
     }
   }
-
   async createUser(
     @Body() crateUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
@@ -85,13 +112,7 @@ export class UsersService {
     });
     await createdUser.save();
 
-    const userResponse: UserResponseDto = {
-      _id: createdUser._id,
-      email: createdUser.email,
-      username: createdUser.username,
-      fname: createdUser.firstName,
-      lname: createdUser.lastName,
-    };
+    const userResponse = this.mapToUserResponseDto(createdUser);
 
     return userResponse;
   }
@@ -106,7 +127,7 @@ export class UsersService {
     );
   }
 
-  async setNewPassword(email, newPassword) {
+  async setNewPassword(email: string, newPassword: string) {
     try {
       const updatedUser = await this.userModel.findOneAndUpdate(
         { email },
@@ -116,5 +137,16 @@ export class UsersService {
     } catch (err) {
       throw new UnauthorizedException();
     }
+  }
+  private mapToUserResponseDto(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      email: user.email,
+      fname: user.firstName,
+      lname: user.lastName,
+      username: user.username,
+      profileUrl: user.profileUrl,
+      createdAt: user.createdAt,
+    };
   }
 }
