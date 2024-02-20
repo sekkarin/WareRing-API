@@ -6,15 +6,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService } from './../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './../users/interfaces/user.interface';
-import * as bcrypt from 'bcrypt';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
+import { MailerService } from '@nestjs-modules/mailer';
+import * as bcrypt from 'bcrypt';
+
+import { UsersService } from './../users/users.service';
+import { User } from './../users/interfaces/user.interface';
 import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
-import { MailerService } from '@nestjs-modules/mailer';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
 
@@ -36,9 +37,7 @@ export class AuthService {
         throw new UnauthorizedException('Please verify your e-mail first');
       }
       const isMath = await bcrypt.compare(pass, user.password);
-      console.log(pass,user.username);
-      
-      
+
       if (!isMath) {
         throw new UnauthorizedException('Password is incorrect');
       }
@@ -208,7 +207,7 @@ export class AuthService {
       });
       return mail;
     } catch (err) {
-      console.log(err);
+      
     }
   }
 
@@ -231,6 +230,9 @@ export class AuthService {
   }
   async checkIsActive(username: string): Promise<boolean> {
     const user = await this.usersService.findOne(username);
+    if (!user) {
+      throw new NotFoundException('not found user');
+    }
     return user.isActive;
   }
 }

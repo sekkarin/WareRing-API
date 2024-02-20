@@ -1,15 +1,15 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import * as cookieParser from 'cookie-parser';
-import { corsOptions } from './utils/corsOptions';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
+import * as cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 
-const configService = new ConfigService();
+import { AppModule } from './app.module';
+import { corsOptions } from './utils/corsOptions';
 
+const configService = new ConfigService();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
@@ -17,7 +17,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Warering api')

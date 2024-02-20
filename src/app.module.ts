@@ -1,15 +1,17 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
+
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { LoggerMiddleware } from './utils/logger.middleware';
+import { LoggerMiddleware } from './utils/middlewares/logger.middleware';
 import configuration from './../conf/configuration';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
+
 const configService = new ConfigService();
 
 @Module({

@@ -11,12 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
-import { Roles } from './decorator/roles.decorator';
-import { Role } from './enums/role.enum';
-import { AuthGuard } from './guards/auth.guard';
-import { RolesGuard } from './guards/roles.guard';
 import {
   ApiBearerAuth,
   ApiCookieAuth,
@@ -25,6 +20,13 @@ import {
   ApiTags,
   ApiParam,
 } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+
+import { AuthService } from './auth.service';
+import { Roles } from './decorator/roles.decorator';
+import { Role } from './enums/role.enum';
+import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
@@ -32,7 +34,6 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -217,7 +218,6 @@ export class AuthController {
           .json({ msg: 'REGISTRATION_ERROR_MAIL_NOT_SENT' });
       }
     } catch (err) {
-      console.log(err);
       return res.status(400).json({ msg: 'LOGIN_ERROR_SEND_EMAIL' });
     }
   }

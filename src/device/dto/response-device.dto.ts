@@ -38,7 +38,7 @@ export class DeviceResponseDto {
   permission: string;
 
   @ApiProperty({
-    example: ['topic1', 'topic2'],
+    example: ['{userId}/topic/subscribe', '{userId}/topic/publish'],
     description: 'Topics associated with the device',
   })
   topics: string[];
