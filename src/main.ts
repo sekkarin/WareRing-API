@@ -1,12 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import * as cookieParser from 'cookie-parser';
-import { corsOptions } from './utils/corsOptions';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
+import * as cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+
+import { AppModule } from './app.module';
+import { corsOptions } from './utils/corsOptions';
 
 const configService = new ConfigService();
 async function bootstrap() {
@@ -18,7 +19,7 @@ async function bootstrap() {
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true
+      transform: true,
     }),
   );
   if (process.env.NODE_ENV == 'dev') {

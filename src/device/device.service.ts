@@ -1,17 +1,16 @@
-// TODO: add clientID
 import {
-  ConflictException,
   Inject,
   Injectable,
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
-import { Model, Types } from 'mongoose';
 import { Device } from './interface/device.interface';
-import * as bcrypt from 'bcrypt';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';

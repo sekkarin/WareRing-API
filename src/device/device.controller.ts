@@ -36,7 +36,6 @@ import { StoreDataDto } from './dto/store-data.dto';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
-import { string } from 'mathjs';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
@@ -103,7 +102,7 @@ export class DeviceController {
   ) {
     const { sub } = req['user'];
     const { page, limit } = paginationQueryparamsDto;
-    return this.deviceService.searchDevices(query, sub, page,limit);
+    return this.deviceService.searchDevices(query, sub, page, limit);
   }
 
   @Get()
@@ -163,8 +162,6 @@ export class DeviceController {
 
       return this.deviceService.findOne(id, sub);
     } catch (error) {
-      console.log(error);
-
       throw error;
     }
   }

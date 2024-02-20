@@ -1,10 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { User } from './users/interfaces/user.interface';
-// import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
+
+import { User } from './users/interfaces/user.interface';
+// import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppService {
@@ -21,7 +22,7 @@ export class AppService {
   async seedData() {
     const { token } = await this.loginDashboard();
     await this.userModel.deleteOne({ username: 'AdminWareringCaxknsa' });
-  
+
     const dataToSeed = [
       {
         firstName: 'admin',

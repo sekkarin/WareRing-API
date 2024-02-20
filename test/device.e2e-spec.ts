@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
-import * as cookieParser from 'cookie-parser';
 import * as mongoose from 'mongoose';
+import * as request from 'supertest';
+import * as cookieParser from 'cookie-parser';
+
+import { AppModule } from '../src/app.module';
 import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
-import { DeviceResponseDto } from 'src/device/dto/response-device.dto';
 import { UpdateDeviceDto } from 'src/device/dto/update-device.dto';
 
 const createDeviceDto: CreateDeviceDto = {
@@ -33,7 +33,7 @@ describe('Device (e2e)', () => {
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
-    await signUp('user2', 'Password1234');
+    await signUp('user2');
     await signIn('user2', 'Password1234');
   });
   afterEach(async () => {
@@ -46,17 +46,17 @@ describe('Device (e2e)', () => {
     await app.close();
   });
 
-  const signUp = async (username: string, password: string) => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email: `${username}@example.com`,
-        password,
-        firstName: 'user',
-        lastName: 'user',
-        username,
-      })
-      .expect(HttpStatus.CREATED);
+  const signUp = async (username: string) => {
+    await mongooseConnection.db.collection('users').insertOne({
+      firstName: 'fname',
+      lastName: 'lname',
+      username,
+      password: '$2b$10$gY4RF/bDlBqCNvaAtsJUqOCHQNQ5WWFwCgbMQiv4aCoQ5Ul9kdLHG',
+      email: 'sekkri1234@gmail.com',
+      roles: ['user'],
+      isActive: true,
+      verifired: true,
+    });
   };
 
   const signIn = async (username: string, password: string) => {
