@@ -26,7 +26,7 @@ import { Roles } from './../auth/decorator/roles.decorator';
 import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
-import {  GetUserAllDto, UpdateUserDto } from './dto/user.dto';
+import { GetUserAllDto, UpdateUserDto } from './dto/user.dto';
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
@@ -53,7 +53,6 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth() // Specify Bearer token authentication
-  @ApiTags("UserRoles")
   update(@Body() createCatDto: UpdateUserDto, @Req() req: Request) {
     try {
       const id = req['user'].sub;
@@ -62,8 +61,8 @@ export class UsersController {
           'Invalid request - createCatDto is empty or null.',
         );
       }
-      
-      const updatedUser =  this.usersService.update(createCatDto, id);
+
+      const updatedUser = this.usersService.update(createCatDto, id);
       return updatedUser;
     } catch (error) {
       throw new NotFoundException('User not found.');
@@ -86,12 +85,10 @@ export class UsersController {
   @Roles(Role.Admin, Role.User)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  @ApiTags("AdminRoles")
   @Patch(':id')
   async updateById(
     @Body() createCatDto: UpdateUserDto,
     @Param() params: { id: string },
-    
   ) {
     try {
       if (!createCatDto || Object.keys(createCatDto).length === 0) {
@@ -103,8 +100,7 @@ export class UsersController {
         createCatDto,
         params.id,
       );
-      
-      
+
       return updatedUser;
     } catch (error) {
       throw new NotFoundException('User not found.');
@@ -122,7 +118,7 @@ export class UsersController {
   // @Roles(Role.Admin)
   // @UseGuards(AuthGuard, RolesGuard)
   // @HttpCode(HttpStatus.OK)
-  // @ApiTags("AdminRoles")
+  //
   async getUsers() {
     return await this.usersService.getAll();
   }
@@ -140,7 +136,6 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth()
-  @ApiTags("AdminRoles")
   async deleteUser(@Param() params: { id: string }) {
     // console.log(params.id);
 
@@ -158,8 +153,6 @@ export class UsersController {
   }
 
   @Get(':username')
-  // @Roles(Role.Admin, Role.User)
-  // @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get user by username' }) // Operation summary
   @ApiParam({
     name: 'username',
@@ -180,7 +173,6 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth()
-  @ApiTags("UserRoles","AdminRoles")
   async getUser(@Param() params: { username: string }) {
     if (!params.username) {
       throw new BadRequestException('Some required data is missing.');
