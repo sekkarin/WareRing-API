@@ -8,8 +8,8 @@ pipeline {
     }
     stage("Test"){
       steps{
-        sh 'apt-get install npm'
-        sh 'npm install'
+        sh 'sudo apt-get install nodejs'
+        sh 'npm run test:e2e'
       }
     }
     stage("Build"){
