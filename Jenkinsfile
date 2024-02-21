@@ -11,7 +11,7 @@ pipeline {
         sh 'apt-get update'
         sh 'apt-get upgrade'
         sh 'apt-get install -y nodejs'
-      
+        sh 'apt-get install -y npm'
       }
     }
     stage("Build"){
