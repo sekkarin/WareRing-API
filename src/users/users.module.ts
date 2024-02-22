@@ -5,10 +5,14 @@ import { userProviders } from './provider/user.providers';
 import { DatabaseModule } from './../database/database.module';
 import { deviceProviders } from 'src/device/provider/provider';
 
+
 @Module({
   providers: [UsersService, ...userProviders, ...deviceProviders],
   exports: [UsersService, ...userProviders],
-  imports: [DatabaseModule],
+  imports: [
+    DatabaseModule,
+  
+  ],
   controllers: [UsersController],
 })
 export class UsersModule {}

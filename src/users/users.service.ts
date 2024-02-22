@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Model} from 'mongoose';
+import { Model } from 'mongoose';
 
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
@@ -19,7 +19,7 @@ export class UsersService {
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
-    @Inject("DEVICE_MODEL")
+    @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
   ) {}
 
@@ -55,7 +55,6 @@ export class UsersService {
       .find({ _id: { $ne: currentUserId } })
       .skip((page - 1) * limit)
       .limit(limit);
- 
 
     const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
     return new PaginatedDto<UserResponseDto>(
@@ -77,12 +76,23 @@ export class UsersService {
       return error;
     }
   }
-  async update(userUpdate: UpdateUserDto, id: string) {
+  async update(
+    userUpdate: UpdateUserDto,
+    id: string,
+    file: Express.Multer.File | undefined,
+    url: string,
+  ) {
+    let profileUrl: string | undefined = undefined;
     try {
+      if (file.filename) {
+        // delete file
+        // new file
+        profileUrl = url + file.filename;
+      }
       const updateUser = await this.userModel
         .findOneAndUpdate<UpdateUserDto>(
           { _id: id },
-          { ...userUpdate },
+          { ...userUpdate, profileUrl },
           { new: true },
         )
         .select('-password -refreshToken -role')
@@ -116,7 +126,7 @@ export class UsersService {
     return userResponse;
   }
   async deleteUser(id: string) {
-    await this.deviceModel.deleteMany({userID:id})
+    await this.deviceModel.deleteMany({ userID: id });
     return await this.userModel.deleteOne({ _id: id });
   }
 

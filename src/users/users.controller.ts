@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import {
   BadRequestException,
   Body,
@@ -6,18 +6,25 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HostParam,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
   Patch,
+  Put,
   Query,
   Req,
+  Res,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -35,13 +42,20 @@ import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileUploadDto } from './dto/file-upload.dto';
+import { storageFiles } from 'src/utils/storageFiles';
+import { hostname } from 'os';
+import { ConfigService } from '@nestjs/config';
 @ApiTags('User')
 @Controller('users')
-@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  @Patch()
+  @Put()
   @ApiBearerAuth()
   @Roles(Role.Admin, Role.User)
   @UseGuards(AuthGuard, RolesGuard)
@@ -62,8 +76,42 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'Not Found - user not found' })
   @ApiBearerAuth() // Specify Bearer token authentication
-  update(@Body() createCatDto: UpdateUserDto, @Req() req: Request) {
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: storageFiles(),
+      fileFilter(req, file, callback) {
+        if (!file.originalname.match(/\.(jpg|png|jpeg|gif)$/)) {
+          return callback(null, false);
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  update(
+    @Body() createCatDto: UpdateUserDto,
+    @Req() req: Request,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
     try {
+      // TODO: delete image old
+      // TODO: Refactor code and clean up
+      console.log(file);
+      // console.log(req.hostname);
+      const protocol = req.protocol;
+      const host = req.hostname;
+      const originUrl = req.originalUrl;
+      const fullUrl =
+        protocol +
+        '://' +
+        host +
+        `:${this.configService.get<string>('PORT')}` +
+        originUrl +
+        '/profile/';
+      console.log(fullUrl);
+
+      // const host = req.hostname;
+
       const id = req['user'].sub;
       if (!createCatDto || Object.keys(createCatDto).length === 0) {
         throw new BadRequestException(
@@ -71,13 +119,18 @@ export class UsersController {
         );
       }
 
-      const updatedUser = this.usersService.update(createCatDto, id);
+      const updatedUser = this.usersService.update(
+        createCatDto,
+        id,
+        file,
+        fullUrl,
+      );
       return updatedUser;
     } catch (error) {
       throw new NotFoundException('User not found.');
     }
   }
- 
+
   @Get()
   @ApiOperation({ summary: 'Get all users' }) // Operation summary
   @ApiResponse({
@@ -99,6 +152,7 @@ export class UsersController {
   })
   @ApiBearerAuth()
   @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async getUsers(
     @Req() req: Request,
@@ -124,18 +178,19 @@ export class UsersController {
   async deleteUser(@Req() req: Request) {
     try {
       const { sub } = req['user'];
-    
+
       await this.usersService.deleteUser(sub);
       return {
         message: 'delete user successfully',
       };
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
   @Get(':id')
   @Roles(Role.User)
+  @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get user by id' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -167,5 +222,15 @@ export class UsersController {
     } catch (error) {
       throw error;
     }
+  }
+
+  @Get('profile/:filename')
+  async getProfilePicture(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ) {
+    res.sendFile(filename, {
+      root: './uploads/profiles/',
+    });
   }
 }

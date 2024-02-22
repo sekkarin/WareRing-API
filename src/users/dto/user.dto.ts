@@ -10,6 +10,7 @@ import {
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { FileUploadDto } from './file-upload.dto';
 
 export class ForgetPassDto {
   @IsEmail()
@@ -85,37 +86,17 @@ export class UpdateUserDto {
   @IsString()
   lname?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  role?: {
-    User?: string;
-    Admin?: string;
-  };
+ 
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   username?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  nameTitle?: string;
+ 
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  refreshToken?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsBoolean()
-  isAlive?: boolean;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  profileUrl?: string;
+  @ApiProperty({ type: 'string', format: 'binary',required: false })
+  file?: FileUploadDto;
 }
 
 export class User {
