@@ -173,8 +173,73 @@ export class UsersService {
       fname: user.firstName,
       lname: user.lastName,
       username: user.username,
+      isActive: user.isActive,
       profileUrl: user.profileUrl,
       createdAt: user.createdAt,
     };
+  }
+  async setBanned(banned: boolean, id: string) {
+    try {
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        { _id: id },
+        { isActive: banned },
+      );
+      return this.mapToUserResponseDto(updatedUser);
+    } catch (error) {
+      console.log(error);
+
+      throw new UnauthorizedException();
+    }
+  }
+  async searchUsers(
+    query: string,
+    page = 1,
+    limit = 10,
+    currentUserId: string,
+  ) {
+    const itemCount = await this.userModel.countDocuments({
+      _id: { $ne: currentUserId },
+    });
+    const users = await this.userModel
+      .find({
+        _id: { $ne: currentUserId },
+        $or: [
+          { firstName: { $regex: query, $options: 'i' } },
+          { lastName: { $regex: query, $options: 'i' } },
+          { username: { $regex: query, $options: 'i' } },
+          { email: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
+    return new PaginatedDto<UserResponseDto>(
+      usersResponse,
+      page,
+      limit,
+      itemCount,
+    );
+
+    // const itemCount = await this.userModel.countDocuments();
+    // const users = await this.userModel
+    //   .find({
+    //     $or: [
+    //       { firstName: { $regex: query, $options: 'i' } },
+    //       { lastName: { $regex: query, $options: 'i' } },
+    //       { username: { $regex: query, $options: 'i' } },
+    //       { email: { $regex: query, $options: 'i' } },
+    //     ],
+    //   })
+    //   .skip((page - 1) * limit)
+    //   .limit(limit);
+    // const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
+
+    // return new PaginatedDto<UserResponseDto>(
+    //   usersResponse,
+    //   page,
+    //   limit,
+    //   itemCount,
+    // );
   }
 }

@@ -44,6 +44,11 @@ export class UserResponseDto {
   })
   profileUrl?: string;
   @ApiProperty({
+    description: 'isActive of the user',
+    example: 'true',
+  })
+  isActive?: boolean;
+  @ApiProperty({
     description: 'createdAt of the user',
     example: '....',
   })

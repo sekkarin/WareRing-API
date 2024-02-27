@@ -40,6 +40,9 @@ import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params
 import { FileInterceptor } from '@nestjs/platform-express';
 import { storageFiles } from 'src/utils/storageFiles';
 import { ConfigService } from '@nestjs/config';
+import { BannedDto } from './dto/banned.dto';
+
+// TODO: sort and filter get users
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
@@ -127,6 +130,66 @@ export class UsersController {
       }
       throw error;
     }
+  }
+
+  @Put('banned/:id')
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Set user banned state' }) // เพิ่มคำอธิบายสำหรับ API Endpoint
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    type: UserResponseDto,
+  })
+  @ApiBearerAuth()
+  async setBanned(
+    @Body() banned: BannedDto,
+    @Param('id', MongoDBObjectIdPipe) id: string,
+  ) {
+    try {
+      const bannedState = banned.banned;
+      return this.usersService.setBanned(bannedState, id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('search')
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'query',
+    type: String,
+    required: false,
+    description: 'string query to search',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a paginated list of user',
+    type: UserResponseDto,
+    isArray: true,
+  })
+  async searchDevices(
+    @Req() req: Request,
+    @Query('query') query: string,
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ) {
+    const { sub } = req['user'];
+    const { page, limit } = paginationQueryparamsDto;
+    return this.usersService.searchUsers(query, page, limit,sub);
   }
 
   @Get()
