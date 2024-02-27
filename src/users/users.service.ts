@@ -11,9 +11,9 @@ import * as bcrypt from 'bcrypt';
 
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
-import { UserResponseDto } from 'src/auth/dto/auth.dto';
-import { PaginatedDto } from 'src/utils/dto/paginated.dto';
-import { Device } from 'src/device/interface/device.interface';
+import { UserResponseDto } from './../auth/dto/auth.dto';
+import { PaginatedDto } from './../utils/dto/paginated.dto';
+import { Device } from './../device/interface/device.interface';
 
 @Injectable()
 export class UsersService {
@@ -88,8 +88,6 @@ export class UsersService {
     try {
       const user = await this.userModel.findOne({ _id: id });
       if (!user) {
-        console.log(user, id);
-
         throw new NotFoundException('User not found');
       }
       if (file?.filename) {
@@ -180,15 +178,17 @@ export class UsersService {
   }
   async setBanned(banned: boolean, id: string) {
     try {
+      const findUser = await this.userModel.findById(id);
+      if (!findUser) {
+        throw new NotFoundException(`User not found`);
+      }
       const updatedUser = await this.userModel.findOneAndUpdate(
         { _id: id },
         { isActive: banned },
       );
       return this.mapToUserResponseDto(updatedUser);
     } catch (error) {
-      console.log(error);
-
-      throw new UnauthorizedException();
+      throw error;
     }
   }
   async searchUsers(

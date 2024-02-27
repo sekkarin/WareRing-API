@@ -33,12 +33,12 @@ import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
 import { GetUserAllDto, UpdateUserDto } from './dto/user.dto';
-import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
-import { PaginatedDto } from 'src/utils/dto/paginated.dto';
-import { UserResponseDto } from 'src/auth/dto/auth.dto';
-import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
+import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
+import { PaginatedDto } from './../utils/dto/paginated.dto';
+import { UserResponseDto } from './../auth/dto/auth.dto';
+import { PaginationQueryparamsDto } from './../device/dto/pagination-query-params.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { storageFiles } from 'src/utils/storageFiles';
+import { storageFiles } from './../utils/storageFiles';
 import { ConfigService } from '@nestjs/config';
 import { BannedDto } from './dto/banned.dto';
 
@@ -76,10 +76,13 @@ export class UsersController {
     FileInterceptor('file', {
       storage: storageFiles(),
       fileFilter(req, file, callback) {
-        if (!file.originalname.match(/\.(jpg|png|jpeg|gif)$/)) {
-          return callback(null, false);
+        if (!file.originalname.match(/\.(jpg|png|jpeg)$/)) {
+          return callback(new BadRequestException('Invalid file type'), false);
         }
         callback(null, true);
+      },
+      limits: {
+        fileSize: 5000,
       },
     }),
   )
@@ -108,7 +111,9 @@ export class UsersController {
       // FIXME: fix full path
 
       const id = req['user'].sub;
-      if (!updateUserDto || Object.keys(updateUserDto).length === 0) {
+      //  console.log(req?.fileValidationError);
+
+      if (Object.keys(updateUserDto).length === 0 && !file) {
         throw new BadRequestException(
           'Please provide at least one field to update.',
         );
@@ -135,7 +140,7 @@ export class UsersController {
   @Put('banned/:id')
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Set user banned state' }) // เพิ่มคำอธิบายสำหรับ API Endpoint
+  @ApiOperation({ summary: 'Set user banned state,Roles Admin' }) // เพิ่มคำอธิบายสำหรับ API Endpoint
   @ApiResponse({
     status: 200,
     description: 'User updated successfully',
@@ -150,6 +155,8 @@ export class UsersController {
       const bannedState = banned.banned;
       return this.usersService.setBanned(bannedState, id);
     } catch (error) {
+      console.log(error);
+      
       throw error;
     }
   }
@@ -158,6 +165,7 @@ export class UsersController {
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Search all users, Roles Admin' }) // Operation summary
   @ApiQuery({
     name: 'query',
     type: String,
@@ -189,11 +197,11 @@ export class UsersController {
   ) {
     const { sub } = req['user'];
     const { page, limit } = paginationQueryparamsDto;
-    return this.usersService.searchUsers(query, page, limit,sub);
+    return this.usersService.searchUsers(query, page, limit, sub);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users' }) // Operation summary
+  @ApiOperation({ summary: 'Get all users Roles Admin' }) // Operation summary
   @ApiResponse({
     status: 200,
     description: `Get all users`,
