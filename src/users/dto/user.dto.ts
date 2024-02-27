@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  IsBoolean,
   IsOptional,
   Length,
   Matches,
@@ -67,35 +66,47 @@ export class CreateUserDto {
   @MaxLength(30)
   @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   readonly username?: string;
-
 }
 
 export class UpdateUserDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'Password for the user',
+    example: 'Password123',
+    required: false 
+  })
+  @Length(8)
   @IsOptional()
-  @IsEmail()
-  email?: string;
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  fname?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  lname?: string;
-
+  @ApiProperty({
+    description: 'First name of the user',
+    example: 'John',
+    required: false 
+  })
  
-
-  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  username?: string;
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+   firstName?: string;
 
- 
+  @ApiProperty({
+    description: 'Last name of the user',
+    example: 'Doe',
+    required: false 
+  })
+  @IsString()
+  @IsOptional()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+   lastName?: string;
 
-  @ApiProperty({ type: 'string', format: 'binary',required: false })
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
   file?: FileUploadDto;
 }
 

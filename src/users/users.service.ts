@@ -1,4 +1,3 @@
-// endpoint upload profile
 import {
   Body,
   Inject,
@@ -7,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
+import * as fs from 'fs';
+import * as bcrypt from 'bcrypt';
 
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
@@ -83,24 +84,43 @@ export class UsersService {
     url: string,
   ) {
     let profileUrl: string | undefined = undefined;
+    let hashPassword: string | undefined = undefined;
     try {
-      if (file.filename) {
-        // delete file
-        // new file
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        console.log(user, id);
+
+        throw new NotFoundException('User not found');
+      }
+      if (file?.filename) {
         profileUrl = url + file.filename;
+        if (user?.profileUrl) {
+          const fullUrl = user.profileUrl.split('/profile/')[1];
+          this.deleteFile(fullUrl);
+        }
+      }
+      if (userUpdate?.password) {
+        hashPassword = await bcrypt.hash(userUpdate?.password, 10);
       }
       const updateUser = await this.userModel
-        .findOneAndUpdate<UpdateUserDto>(
+        .findOneAndUpdate(
           { _id: id },
-          { ...userUpdate, profileUrl },
+          { ...userUpdate, profileUrl, password: hashPassword },
           { new: true },
         )
-        .select('-password -refreshToken -role')
         .exec();
-
-      return updateUser;
+      const userResponse = this.mapToUserResponseDto(updateUser);
+      return userResponse;
     } catch (error) {
-      throw new UnauthorizedException();
+      console.log(error);
+      throw error;
+      // throw new UnauthorizedException();
+    }
+  }
+  private deleteFile(path: string) {
+    const filePath = './uploads/profiles/' + path;
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
   }
   async createUser(
@@ -129,14 +149,12 @@ export class UsersService {
     await this.deviceModel.deleteMany({ userID: id });
     return await this.userModel.deleteOne({ _id: id });
   }
-
   async verifiredUserEmail(email: string) {
     return await this.userModel.findOneAndUpdate(
       { email },
       { verifired: true },
     );
   }
-
   async setNewPassword(email: string, newPassword: string) {
     try {
       const updatedUser = await this.userModel.findOneAndUpdate(

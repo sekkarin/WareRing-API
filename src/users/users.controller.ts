@@ -6,27 +6,22 @@ import {
   Delete,
   ForbiddenException,
   Get,
-  HostParam,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
-  Patch,
   Put,
   Query,
   Req,
   Res,
-  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import * as fs from 'fs';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiConsumes,
   ApiOperation,
-  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -43,9 +38,7 @@ import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { UserResponseDto } from 'src/auth/dto/auth.dto';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FileUploadDto } from './dto/file-upload.dto';
 import { storageFiles } from 'src/utils/storageFiles';
-import { hostname } from 'os';
 import { ConfigService } from '@nestjs/config';
 @ApiTags('User')
 @Controller('users')
@@ -64,7 +57,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: 'User updated successfully',
-    type: GetUserAllDto,
+    type: UserResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -89,45 +82,50 @@ export class UsersController {
   )
   @ApiConsumes('multipart/form-data')
   update(
-    @Body() createCatDto: UpdateUserDto,
+    @Body() updateUserDto: UpdateUserDto,
     @Req() req: Request,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    const protocol = req.protocol;
+    const host = req.hostname;
+    const originUrl = req.originalUrl;
+    const fullUrl =
+      protocol +
+      '://' +
+      host +
+      `:${this.configService.get<string>('PORT')}` +
+      originUrl +
+      '/profile/';
+
     try {
       // TODO: delete image old
       // TODO: Refactor code and clean up
-      console.log(file);
-      // console.log(req.hostname);
-      const protocol = req.protocol;
-      const host = req.hostname;
-      const originUrl = req.originalUrl;
-      const fullUrl =
-        protocol +
-        '://' +
-        host +
-        `:${this.configService.get<string>('PORT')}` +
-        originUrl +
-        '/profile/';
-      console.log(fullUrl);
-
-      // const host = req.hostname;
+      // TODO: SAVE image when error
+      // FIXME: dto update
+      // FIXME: fix full path
 
       const id = req['user'].sub;
-      if (!createCatDto || Object.keys(createCatDto).length === 0) {
+      if (!updateUserDto || Object.keys(updateUserDto).length === 0) {
         throw new BadRequestException(
-          'Invalid request - createCatDto is empty or null.',
+          'Please provide at least one field to update.',
         );
       }
 
       const updatedUser = this.usersService.update(
-        createCatDto,
+        updateUserDto,
         id,
         file,
         fullUrl,
       );
       return updatedUser;
     } catch (error) {
-      throw new NotFoundException('User not found.');
+      if (file) {
+        const filePath = file.path;
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      throw error;
     }
   }
 

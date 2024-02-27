@@ -15,7 +15,7 @@ async function bootstrap() {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
   app.use(cookieParser());
-  app.useStaticAssets(path.join(__dirname, '../'));
+  // app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
     new ValidationPipe({
