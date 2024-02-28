@@ -2,19 +2,26 @@ import {
   Body,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
+import * as fs from 'fs';
 import * as bcrypt from 'bcrypt';
+
 import { User } from './interfaces/user.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
-import { UserResponseDto } from 'src/auth/dto/auth.dto';
+import { UserResponseDto } from './../auth/dto/auth.dto';
+import { PaginatedDto } from './../utils/dto/paginated.dto';
+import { Device } from './../device/interface/device.interface';
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
+    @Inject('DEVICE_MODEL')
+    private deviceModel: Model<Device>,
   ) {}
 
   async findOne(username: string) {
@@ -35,38 +42,85 @@ export class UsersService {
       })
       .exec();
   }
-  async getUserById(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<User | undefined> {
     return await this.userModel
       .findOne({ username: username })
       .select('-password -refreshToken -isAlive -role')
       .exec();
   }
-  async getAll(): Promise<User[] | undefined> {
-    return this.userModel
-      .find()
-      .select('-password -refreshToken -isAlive -role')
-      .exec();
-  }
-  async findOneById(id: string): Promise<User | undefined> {
-    return this.userModel.findById(id).exec();
-  }
-  async update(userUpdate: UpdateUserDto, id: string) {
-    try {
-      const updateUser = await this.userModel
-        .findOneAndUpdate<UpdateUserDto>(
-          { _id: id },
-          { ...userUpdate },
-          { new: true },
-        )
-        .select('-password -refreshToken -role')
-        .exec();
+  async getAll(page = 1, limit = 10, currentUserId: string) {
+    const itemCount = await this.userModel.countDocuments({
+      _id: { $ne: currentUserId },
+    });
+    const users = await this.userModel
+      .find({ _id: { $ne: currentUserId } })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-      return updateUser;
+    const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
+    return new PaginatedDto<UserResponseDto>(
+      usersResponse,
+      page,
+      limit,
+      itemCount,
+    );
+  }
+  async findOneById(id: string): Promise<UserResponseDto> {
+    try {
+      const user = await this.userModel.findById(id).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const userResponse = this.mapToUserResponseDto(user);
+      return userResponse;
     } catch (error) {
-      throw new UnauthorizedException();
+      return error;
     }
   }
-
+  async update(
+    userUpdate: UpdateUserDto,
+    id: string,
+    file: Express.Multer.File | undefined,
+    url: string,
+  ) {
+    let profileUrl: string | undefined = undefined;
+    let hashPassword: string | undefined = undefined;
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      if (file?.filename) {
+        profileUrl = url + file.filename;
+        if (user?.profileUrl) {
+          const fullUrl = user.profileUrl.split('/profile/')[1];
+          this.deleteFile(fullUrl);
+        }
+      }
+      if (userUpdate?.password) {
+        hashPassword = await bcrypt.hash(userUpdate?.password, 10);
+      }
+      const updateUser = await this.userModel
+        .findOneAndUpdate(
+          { _id: id },
+          { ...userUpdate, profileUrl, password: hashPassword },
+          { new: true },
+        )
+        .exec();
+      const userResponse = this.mapToUserResponseDto(updateUser);
+      return userResponse;
+    } catch (error) {
+      console.log(error);
+      throw error;
+      // throw new UnauthorizedException();
+    }
+  }
+  private deleteFile(path: string) {
+    const filePath = './uploads/profiles/' + path;
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
   async createUser(
     @Body() crateUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
@@ -85,28 +139,21 @@ export class UsersService {
     });
     await createdUser.save();
 
-    const userResponse: UserResponseDto = {
-      _id: createdUser._id,
-      email: createdUser.email,
-      username: createdUser.username,
-      fname: createdUser.firstName,
-      lname: createdUser.lastName,
-    };
+    const userResponse = this.mapToUserResponseDto(createdUser);
 
     return userResponse;
   }
   async deleteUser(id: string) {
+    await this.deviceModel.deleteMany({ userID: id });
     return await this.userModel.deleteOne({ _id: id });
   }
-
   async verifiredUserEmail(email: string) {
     return await this.userModel.findOneAndUpdate(
       { email },
       { verifired: true },
     );
   }
-
-  async setNewPassword(email, newPassword) {
+  async setNewPassword(email: string, newPassword: string) {
     try {
       const updatedUser = await this.userModel.findOneAndUpdate(
         { email },
@@ -116,5 +163,62 @@ export class UsersService {
     } catch (err) {
       throw new UnauthorizedException();
     }
+  }
+  private mapToUserResponseDto(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      email: user.email,
+      fname: user.firstName,
+      lname: user.lastName,
+      username: user.username,
+      isActive: user.isActive,
+      profileUrl: user.profileUrl,
+      createdAt: user.createdAt,
+    };
+  }
+  async setBanned(banned: boolean, id: string) {
+    try {
+      const findUser = await this.userModel.findById(id);
+      if (!findUser) {
+        throw new NotFoundException(`User not found`);
+      }
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        { _id: id },
+        { isActive: banned },
+      );
+      return this.mapToUserResponseDto(updatedUser);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async searchUsers(
+    query: string,
+    page = 1,
+    limit = 10,
+    currentUserId: string,
+  ) {
+    const itemCount = await this.userModel.countDocuments({
+      _id: { $ne: currentUserId },
+    });
+    const users = await this.userModel
+      .find({
+        _id: { $ne: currentUserId },
+        $or: [
+          { firstName: { $regex: query, $options: 'i' } },
+          { lastName: { $regex: query, $options: 'i' } },
+          { username: { $regex: query, $options: 'i' } },
+          { email: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
+    return new PaginatedDto<UserResponseDto>(
+      usersResponse,
+      page,
+      limit,
+      itemCount,
+    );
   }
 }

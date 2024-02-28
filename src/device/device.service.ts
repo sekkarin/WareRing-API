@@ -166,7 +166,6 @@ export class DeviceService {
     const device = await this.deviceModel.findOne({ _id: id, userID });
     if (!device) {
       throw new NotFoundException('Device not found');
-      // throw new HttpException('Device not found', HttpStatus.NOT_FOUND);
     }
     await this.deviceModel.deleteOne({ _id: id, userID });
     return await this.deviceModel.deleteOne({ _id: id, userID });

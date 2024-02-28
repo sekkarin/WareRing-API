@@ -13,7 +13,7 @@ export class UserResponseDto {
     description: 'Unique identifier of the user',
     example: '652f70eff9c12a76d1b46b22',
   })
-  _id: string;
+  id: string;
 
   @ApiProperty({
     description: 'Email of the user',
@@ -38,6 +38,21 @@ export class UserResponseDto {
     example: 'doe',
   })
   lname: string;
+  @ApiProperty({
+    description: 'profileUrl of the user',
+    example: '....',
+  })
+  profileUrl?: string;
+  @ApiProperty({
+    description: 'isActive of the user',
+    example: 'true',
+  })
+  isActive?: boolean;
+  @ApiProperty({
+    description: 'createdAt of the user',
+    example: '....',
+  })
+  createdAt?: string;
 }
 export class BodyUserLoginDto {
   @ApiProperty({

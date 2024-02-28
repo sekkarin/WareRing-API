@@ -96,3 +96,4 @@ Docker Compose installed on your system.
 ### ADMIN
   username AdminWareringCaxknsa
   password kmsad9ASdjas0LSJWd9iaa
+  2eda470f189c4f669b4a9aaf0b6f0e7c
