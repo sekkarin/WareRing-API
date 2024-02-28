@@ -15,7 +15,7 @@ async function bootstrap() {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
   app.use(cookieParser());
-  app.useStaticAssets(path.join(__dirname, '../'));
+  // app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,7 +31,7 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api-docs', app, document);
   }
   await app.listen(configService.get<number>('PORT') || process.env.PORT);
 }
