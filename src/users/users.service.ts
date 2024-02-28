@@ -220,26 +220,5 @@ export class UsersService {
       limit,
       itemCount,
     );
-
-    // const itemCount = await this.userModel.countDocuments();
-    // const users = await this.userModel
-    //   .find({
-    //     $or: [
-    //       { firstName: { $regex: query, $options: 'i' } },
-    //       { lastName: { $regex: query, $options: 'i' } },
-    //       { username: { $regex: query, $options: 'i' } },
-    //       { email: { $regex: query, $options: 'i' } },
-    //     ],
-    //   })
-    //   .skip((page - 1) * limit)
-    //   .limit(limit);
-    // const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
-
-    // return new PaginatedDto<UserResponseDto>(
-    //   usersResponse,
-    //   page,
-    //   limit,
-    //   itemCount,
-    // );
   }
 }

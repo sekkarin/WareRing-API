@@ -136,15 +136,13 @@ describe('Users (e2e)', () => {
         .expect(HttpStatus.NOT_FOUND);
     });
     it('should return 403 when user is not authorized', async () => {
-     await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .put(`/users/banned/${user_id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ banned: true })
         .expect(HttpStatus.FORBIDDEN);
-   
     });
     it('should return 400 when request body is invalid', async () => {
-   
       await request(app.getHttpServer())
         .put(`/users/banned/${user_id}`)
         .set('Authorization', `Bearer ${accessTokenAdmin}`)
@@ -152,4 +150,100 @@ describe('Users (e2e)', () => {
         .expect(400);
     });
   });
+  describe('GET search', () => {
+    it('should return paginated list of users matching the query', async () => {
+      const query = 'search_query';
+      const page = 1;
+      const limit = 10;
+      const res = await request(app.getHttpServer())
+        .get(`/users/search?query=${query}&page=${page}&limit=${limit}`)
+        .set('Authorization', `Bearer ${accessTokenAdmin}`)
+        .expect(HttpStatus.OK);
+      expect(res.body.data).toBeDefined();
+      expect(res.body.metadata.page).toBe('1');
+      expect(res.body.metadata.limit).toBe('10');
+      expect(res.body.metadata.itemCount).toBeDefined();
+    });
+
+    it('should return 401 when user is not authorized', async () => {
+      const query = 'search_query';
+      const page = 1;
+      const limit = 10;
+      await request(app.getHttpServer())
+        .get(`/users/search?query=${query}&page=${page}&limit=${limit}`)
+        .expect(401);
+    });
+
+    it('should return 400 when page parameter is missing', () => {
+      const query = 'search_query';
+      const limit = 'sda5%^&*()';
+      return request(app.getHttpServer())
+        .get(`/users/search?query=${query}&limit=${limit}`)
+        .set('Authorization', `Bearer ${accessTokenAdmin}`)
+        .expect(400);
+    });
+  });
+  describe('GET users', () => {
+    it('should return a paginated list of users', async () => {
+      const page = 1;
+      const limit = 10;
+      const res = await request(app.getHttpServer())
+        .get(`/users?page=${page}&limit=${limit}`)
+        .set('Authorization', `Bearer ${accessTokenAdmin}`)
+        .expect(HttpStatus.OK);
+      expect(res.body.data).toBeDefined();
+      expect(res.body.metadata.page).toBe('1');
+      expect(res.body.metadata.limit).toBe('10');
+      expect(res.body.metadata.itemCount).toBeDefined();
+    });
+    it('should return 401 when user is not authorized', async () => {
+      const page = 1;
+      const limit = 10;
+      return request(app.getHttpServer())
+        .get(`/users?page=${page}&limit=${limit}`)
+        .expect(401);
+    });
+  });
+  describe('DELETE user', () => {
+    it('should delete the current user', async () => {
+      // Act: Delete the current user
+      const res = await request(app.getHttpServer())
+        .delete('/users')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.OK);
+    
+      expect(res.body.message).toBe('delete user successfully');
+    });
+  });
+  describe('GET user', () => {
+    it('should create a new user and retrieve it by ID', async () => {
+      const getUserResponse = await request(app.getHttpServer())
+        .get(`/users/${user_id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.OK);
+  
+      // Verify that the retrieved user matches the created user
+      expect(getUserResponse.body.id).toBe(user_id);
+      expect(getUserResponse.body.email).toBe('sekkri1234@gmail.com');
+      
+    });
+  // describe('GET profile image', () => {
+  //   it('should retrieve profile picture by filename', async () => {
+  //     // Assuming you have a test profile picture named 'test.jpg' in the 'uploads/profiles' directory
+  //     const filename = 'test.jpg';
+  
+  //     // Make a request to retrieve the profile picture
+  //     const res = await request(app.getHttpServer())
+  //       .get(`/users/profile/${filename}`)
+  //       .expect(HttpStatus.OK);
+  
+  //     // // Check if the content type of the response is an image
+  //     // expect(res.headers['content-type']).toMatch(/^image/);
+  
+  //     // // Check if the response body matches the content of the profile picture file
+  //     // const fileContent = fs.readFileSync(`./uploads/profiles/${filename}`);
+  //     // expect(res.body).toEqual(fileContent);
+  //   });
+  });
+
 });
