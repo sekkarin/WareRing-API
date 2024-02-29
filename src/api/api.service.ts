@@ -1,12 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Post } from '@nestjs/common';
+import { Inject, Injectable, Post } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AxiosError } from 'axios';
+import { Model } from 'mongoose';
+import { Device } from 'src/device/interface/device.interface';
 
 @Injectable()
 export class ApiService {
+  private tokenEMQX: string | null = null;
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Inject('DEVICE_MODEL')
+    private deviceModel: Model<Device>,
   ) {}
 
   private async loginDashboard() {
@@ -22,43 +28,110 @@ export class ApiService {
           ),
         },
       );
-
-      console.log(res.data);
-      return { token: res.data.token };
+      this.tokenEMQX = res.data.token;
     } catch (error) {
       throw error;
     }
   }
 
-  bannedDevices() {
-    return {};
-  }
-  createApiToken() {
-    return {};
-  }
-  listeners() {
-    return {};
-  }
-
-  async kickDevice() {
+  async overview(userID: string) {
     try {
-      const res = await this.httpService.axiosRef.post(
-        this.configService.get<string>('EMQX_API') + '/clients/kickout/bulk',
-        ['96b5b0de-66c3-406d-bfbb-04c6617bf5aa1706944451899'],
+      // Get device data from EMQX API
+      const res = await this.fetchDeviceDataFromEMQX();
+      const devicesEMQX = res.data;
+
+      // Count total devices
+      const totalDevice = await this.countTotalDevices(userID);
+      const totalDeviceDeny = await this.countDeniedDevices(userID);
+
+      // Filter and count online devices
+      const { deviceOnline, deviceOffline } = await this.filterAndCountDevices(
+        devicesEMQX,
+        userID,
+        totalDeviceDeny,
+      );
+
+      return {
+        // statusCode: 200,
+        deviceOffline,
+        deviceOnline,
+        totalDevice,
+        totalDeviceDeny,
+      };
+    } catch (error) {
+      // console.log(error);
+      if (error instanceof AxiosError && error.response.status == 401) {
+        await this.loginDashboard();
+        return this.overview(userID);
+      }
+
+      throw error;
+    }
+  }
+  
+  private async fetchDeviceDataFromEMQX() {
+    try {
+      return await this.httpService.axiosRef.get(
+        `${this.configService.get('EMQX_API')}/clients`,
         {
-          headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDY5NDgyNDkzNjQsImlzcyI6IkVNUVgifQ.7DxydhQPGiVNJFNEZlVtieK4uPsiHE-0C4WMb8_uXJI`,
-            // Authorization: `Bearer ${(await this.loginDashboard()).token}`,
-          },
+          headers: { Authorization: `Bearer ${this.tokenEMQX}` },
         },
       );
-      console.log(res.data, res.status);
-  
-      return res.data;
     } catch (error) {
-      console.log(error);
-      
+      // console.log(error);
+
+      throw error;
     }
-  
+  }
+
+  private async countTotalDevices(userID: string) {
+    try {
+      return await this.deviceModel.countDocuments({ userID });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async countDeniedDevices(userID: string) {
+    try {
+      return await this.deviceModel.countDocuments({
+        userID,
+        permission: 'deny',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async filterAndCountDevices(
+    devicesEMQX: any,
+    userID: string,
+    totalDeviceDeny: number,
+  ) {
+    try {
+      const devices = await this.deviceModel.find({
+        userID,
+        permission: 'allow',
+      });
+      const devicesInfo = devices
+        .map((device) =>
+          devicesEMQX.data.find(
+            (deviceEMQX) =>
+              deviceEMQX.username === device.usernameDevice &&
+              deviceEMQX.connected === true,
+          ),
+        )
+        .filter((deviceInfo) => deviceInfo !== undefined);
+
+      const deviceOnline = devicesInfo.length;
+      const totalDevice = await this.countTotalDevices(userID);
+
+      return {
+        deviceOnline,
+        deviceOffline: totalDevice - deviceOnline - totalDeviceDeny,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }

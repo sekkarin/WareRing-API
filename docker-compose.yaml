@@ -14,18 +14,7 @@ services:
       - 27018:27017
     volumes:
       - mongodb:/data/db
-  test-mongo:
-    container_name: warering-mongoDB-test
-    image: mongo:4.4
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoAdminTest
-      MONGO_INITDB_ROOT_PASSWORD: 125478963m
-      MONGO_INITDB_DATABASE: warering-project
-      MONGODB_DATABASE: warering-project
-    ports:
-      - 27019:27017
-      
+   
 
   emqx:
       container_name: emqx
