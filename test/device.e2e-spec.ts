@@ -37,10 +37,13 @@ describe('Device (e2e)', () => {
     await signIn('user2', 'Password1234');
   });
   afterEach(async () => {
-    const collections = await mongooseConnection.db.collections();
+    // const collections = await mongooseConnection.db.collections();
 
-    for (const collection of collections) {
-      await collection.deleteMany({});
+    // for (const collection of collections) {
+    //   await collection.deleteMany({});
+    // }
+    if (mongooseConnection) {
+      await mongooseConnection.close();
     }
 
     await app.close();

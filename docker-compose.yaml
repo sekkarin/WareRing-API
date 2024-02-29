@@ -14,18 +14,7 @@ services:
       - 27018:27017
     volumes:
       - mongodb:/data/db
-  test-mongo:
-    container_name: warering-mongoDB-test
-    image: mongo:4.4
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoAdminTest
-      MONGO_INITDB_ROOT_PASSWORD: 125478963m
-      MONGO_INITDB_DATABASE: warering-project
-      MONGODB_DATABASE: warering-project
-    ports:
-      - 27019:27017
-      
+   
 
   emqx:
       container_name: emqx
@@ -98,7 +87,18 @@ services:
         # EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_auth_mongo"
 
         # EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: 1000
-
+  jenkins:
+    image: jenkins/jenkins:lts
+    restart: always
+    privileged: true
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    container_name: jenkins
+    volumes:
+      - /home/ubuntu/jenkins_compose/jenkins_configuration:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
 volumes:
   mongodb:
   vol-emqx-data:

@@ -3,13 +3,13 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  IsBoolean,
   IsOptional,
   Length,
   Matches,
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { FileUploadDto } from './file-upload.dto';
 
 export class ForgetPassDto {
   @IsEmail()
@@ -66,56 +66,48 @@ export class CreateUserDto {
   @MaxLength(30)
   @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   readonly username?: string;
-
 }
 
 export class UpdateUserDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'Password for the user',
+    example: 'Password123',
+    required: false 
+  })
+  @Length(8)
   @IsOptional()
-  @IsEmail()
-  email?: string;
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'First name of the user',
+    example: 'John',
+    required: false 
+  })
+ 
   @IsOptional()
   @IsString()
-  fname?: string;
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+   firstName?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
+  @ApiProperty({
+    description: 'Last name of the user',
+    example: 'Doe',
+    required: false 
+  })
   @IsString()
-  lname?: string;
-
-  @ApiProperty({ required: false })
   @IsOptional()
-  role?: {
-    User?: string;
-    Admin?: string;
-  };
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches('^[a-zA-Z\\s]+$', undefined)
+   lastName?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  username?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  nameTitle?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  refreshToken?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsBoolean()
-  isAlive?: boolean;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  profileUrl?: string;
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  file?: FileUploadDto;
 }
 
 export class User {
