@@ -14,6 +14,7 @@ export class ApiService {
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
   ) {}
+  
 
   private async loginDashboard() {
     try {
