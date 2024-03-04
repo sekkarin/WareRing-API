@@ -1,10 +1,11 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Model } from 'mongoose';
+
 import { CreateWidgetDto } from './dto/create-widget.dto';
 import { UpdateWidgetDto } from './dto/update-widget.dto';
-import { Model } from 'mongoose';
 import { Widget } from './interface/widget.interface';
 import { WidgetResponseDto } from './dto/response-widget.dto';
-import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { PaginatedDto } from './../utils/dto/paginated.dto';
 
 @Injectable()
 export class WidgetService {

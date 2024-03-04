@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { ApiService } from './api.service';
 import { ApiController } from './api.controller';
 import { HttpModule } from '@nestjs/axios';
-import { DatabaseModule } from 'src/database/database.module';
-import { deviceProviders } from 'src/device/provider/provider';
-import { userProviders } from 'src/users/provider/user.providers';
+import { DatabaseModule } from './../database/database.module';
+import { deviceProviders } from './../device/provider/provider';
+import { userProviders } from './../users/provider/user.providers';
 
 @Module({
   controllers: [ApiController],

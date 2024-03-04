@@ -23,14 +23,14 @@ import {
 } from '@nestjs/swagger';
 import { Widget } from './interface/widget.interface';
 import { WidgetResponseDto } from './dto/response-widget.dto';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/auth/enums/role.enum';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
-import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { Roles } from './../auth/decorator/roles.decorator';
+import { Role } from './../auth/enums/role.enum';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { RolesGuard } from './../auth/guards/roles.guard';
+import { PaginationQueryparamsDto } from './../device/dto/pagination-query-params.dto';
+import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { WidgetResponsesDto } from './dto/responses-widget.dto';
-import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
+import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
 
 @ApiTags('Widget')
 @Controller('widgets')

@@ -8,6 +8,7 @@ export class CreateWidgetDto {
     required: false,
   })
   @IsString()
+  @IsNotEmpty()
   nameDevice: string;
 
   @ApiProperty({
@@ -16,6 +17,7 @@ export class CreateWidgetDto {
     required: false,
   })
   @IsString()
+  @IsNotEmpty()
   type: string;
 
   @ApiProperty({
