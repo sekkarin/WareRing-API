@@ -36,6 +36,8 @@ import { StoreDataDto } from './dto/store-data.dto';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
+import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
+import { GetDevicesSortDto } from './dto/get-device-sort.dto';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
@@ -113,22 +115,16 @@ export class DeviceController {
       'Returns a paginated list of devices based on the provided parameters.',
   })
   @ApiQuery({
-    name: 'page',
-    type: Number,
+    name: 'query',
+    type: String,
     required: false,
     description: 'Page number for pagination (default: 1)',
   })
   @ApiQuery({
-    name: 'sort',
-    type: String,
+    name: 'page',
+    type: Number,
     required: false,
-    description: 'limit Number of items  (default: 10)',
-  })
-  @ApiQuery({
-    name: 'type',
-    type: String,
-    required: false,
-    description: 'limit Number of items  (default: 10)',
+    description: 'Page number for pagination (default: 1)',
   })
   @ApiQuery({
     name: 'limit',
@@ -136,6 +132,30 @@ export class DeviceController {
     required: false,
     description: 'limit Number of items  (default: 10)',
   })
+  @ApiQuery({
+    name: 'isSaveData',
+    type: Boolean,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiQuery({
+    name: 'permission',
+    enum: ['allow', 'deny'],
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiQuery({
+    name: 'createdAt',
+    enum: ['+createdAt', '-createdAt'],
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  // @ApiQuery({
+  //   name: 'nameDevice',
+  //   enum: ['asc', 'desc'],
+  //   required: false,
+  //   description: 'limit Number of items  (default: 10)',
+  // })
   @ApiResponse({
     status: 200,
     description: 'Returns a paginated list of devices',
@@ -144,17 +164,25 @@ export class DeviceController {
   })
   async findAll(
     @Req() req: Request,
+    // @Query() getDevicesSortDto: GetDevicesSortDto,
+    // @Query() getDevicesFilterDto: GetDevicesFilterDto,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
-    @Query('sort') sort?: string,
-    @Query('type') type?: string,
   ): Promise<PaginatedDto<DeviceResponseDto>> {
     try {
       const { sub } = req['user'];
-      const filter = { type };
-      console.log(filter);
-      
-      const { page, limit } = paginationQueryparamsDto;
-      return await this.deviceService.findAll(page, limit, sub, sort, filter);
+      const { page, limit, createdAt, isSaveData, permission, query } =
+        paginationQueryparamsDto;
+      // const getDevicesSortDto = { createdAt };
+      const getDevicesFilterDto = { isSaveData, permission };
+
+      return await this.deviceService.findAll(
+        query,
+        page,
+        limit,
+        sub,
+        createdAt,
+        getDevicesFilterDto,
+      );
     } catch (error) {
       throw error;
     }
