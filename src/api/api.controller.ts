@@ -1,13 +1,13 @@
-import { Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, Req, UseGuards } from '@nestjs/common';
 import { ApiService } from './api.service';
-import { HttpService } from '@nestjs/axios';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Role } from 'src/auth/enums/role.enum';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from './../auth/decorator/roles.decorator';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { RolesGuard } from './../auth/guards/roles.guard';
+import { Role } from './../auth/enums/role.enum';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('api')
+@ApiTags('Api')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard)
 export class ApiController {
@@ -26,7 +26,6 @@ export class ApiController {
       const { sub } = req['user'];
       return this.apiService.overview(sub);
     } catch (error) {
-     
       throw error;
     }
   }
