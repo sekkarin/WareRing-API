@@ -25,22 +25,13 @@ export class WidgetService {
     return this.mapToWidgetResponseDto(createdWidget);
   }
 
-  async findAll(userId: string, page = 1, limit = 10) {
-    const itemCount = await this.widgetModel.countDocuments({ userId });
-    const widgets = await this.widgetModel
-      .find({ userID: userId })
-      .skip((page - 1) * limit)
-      .limit(limit);
+  async findAll(userId: string) {
+    const widgets = await this.widgetModel.find({ userID: userId });
 
     const widgetResponse = widgets.map((widget) =>
       this.mapToWidgetResponseDto(widget),
     );
-    return new PaginatedDto<WidgetResponseDto>(
-      widgetResponse,
-      page,
-      limit,
-      itemCount,
-    );
+    return widgetResponse;
   }
 
   async findOne(id: string, userId: string): Promise<WidgetResponseDto> {

@@ -61,27 +61,14 @@ export class WidgetController {
   @ApiResponse({
     status: 200,
     description: 'Returns a paginated list of widgets',
-    type: WidgetResponsesDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    type: Number,
-    required: false,
-    description: 'Page number for pagination (default: 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: Number,
-    required: false,
-    description: 'limit Number of items  (default: 10)',
+    type: [WidgetResponseDto],
   })
   findAll(
     @Req() req: Request,
-    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
-  ): Promise<PaginatedDto<WidgetResponseDto>> {
+   
+  ): Promise<WidgetResponseDto[]> {
     const { sub } = req['user'];
-    const { page, limit } = paginationQueryparamsDto;
-    return this.widgetService.findAll(sub, page, limit);
+    return this.widgetService.findAll(sub);
   }
 
   @Get(':id')
