@@ -119,6 +119,18 @@ export class DeviceController {
     description: 'Page number for pagination (default: 1)',
   })
   @ApiQuery({
+    name: 'sort',
+    type: String,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiQuery({
+    name: 'type',
+    type: String,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiQuery({
     name: 'limit',
     type: Number,
     required: false,
@@ -133,11 +145,16 @@ export class DeviceController {
   async findAll(
     @Req() req: Request,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+    @Query('sort') sort?: string,
+    @Query('type') type?: string,
   ): Promise<PaginatedDto<DeviceResponseDto>> {
     try {
       const { sub } = req['user'];
+      const filter = { type };
+      console.log(filter);
+      
       const { page, limit } = paginationQueryparamsDto;
-      return await this.deviceService.findAll(page, limit, sub);
+      return await this.deviceService.findAll(page, limit, sub, sort, filter);
     } catch (error) {
       throw error;
     }

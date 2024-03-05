@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, FilterQuery } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -53,6 +53,7 @@ export class DeviceService {
     const device = new this.deviceModel({
       ...createDeviceDto,
       password_hash,
+      password_law: createDeviceDto.password,
       userID,
       topics: topicsGenerated,
     });
@@ -66,6 +67,7 @@ export class DeviceService {
       userID: device.userID,
       nameDevice: device.nameDevice,
       usernameDevice: device.usernameDevice,
+      password: device.password_law,
       description: device.description,
       permission: device.permission,
       topics: device.topics,
@@ -77,13 +79,31 @@ export class DeviceService {
     };
   }
 
-  async findAll(page = 1, limit = 10, userID: string) {
+  async findAll(
+    page = 1,
+    limit = 10,
+    userID: string,
+    sort = '',
+    filter = { type: '' },
+  ) {
     try {
+      const query: FilterQuery<any> = { userID };
+      // ?filter=status&sort=-createdAt&...
+      // Apply filter if provided
+      if (filter) {
+        query.${} = filter.type;
+        console.log(query);
+        
+      }
       const itemCount = await this.deviceModel.countDocuments({ userID });
-      const devices = await this.deviceModel
-        .find({ userID })
-        .skip((page - 1) * limit)
-        .limit(limit);
+      let devicesQuery = this.deviceModel.find(query);
+
+      if (sort) {
+        devicesQuery = devicesQuery.sort(sort);
+      } else {
+        devicesQuery = devicesQuery.sort({ createdAt: -1 });
+      }
+      const devices = await devicesQuery.skip((page - 1) * limit).limit(limit);
 
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
@@ -118,6 +138,7 @@ export class DeviceService {
   ): Promise<DeviceResponseDto> {
     let topicsGenerated: string[];
     let password_hash: string;
+    let password_law: string | null = null;
     try {
       const existingDeviceUsername = await this.deviceModel.findOne({
         usernameDevice: updateDeviceDto.usernameDevice,
@@ -143,11 +164,17 @@ export class DeviceService {
       }
       if (updateDeviceDto.password) {
         password_hash = await bcrypt.hash(updateDeviceDto.password, 10);
+        password_law = updateDeviceDto.password;
       }
       const device = await this.deviceModel.findByIdAndUpdate(
         { _id: id, userID },
         {
-          $set: { ...updateDeviceDto, topics: topicsGenerated, password_hash },
+          $set: {
+            ...updateDeviceDto,
+            topics: topicsGenerated,
+            password_hash,
+            password_law,
+          },
         },
         { new: true },
       );
@@ -218,7 +245,15 @@ export class DeviceService {
   }
 
   async searchDevices(query: string, userID: string, page = 1, limit = 10) {
-    const itemCount = await this.deviceModel.countDocuments({ userID });
+    const itemCount = await this.deviceModel
+      .find({
+        userID: userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .countDocuments();
     const devices = await this.deviceModel
       .find({
         userID: userID,

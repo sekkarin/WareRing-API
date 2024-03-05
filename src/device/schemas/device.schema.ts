@@ -9,18 +9,33 @@ export const DeviceSchema = new mongoose.Schema(
     nameDevice: {
       type: String,
       required: true,
+      min: 1,
+      max:25,
+      trim: true,
     },
     usernameDevice: {
       type: String,
       unique: true,
       required: true,
+      min: 1,
+      max:25,
+      trim: true,
     },
     password_hash: {
       type: String,
       required: true,
+      trim: true,
+    },
+    password_law: {
+      type: String,
+      required: true,
+      trim: true,
     },
     description: {
       type: String,
+      min: 1,
+      max:255,
+      trim: true,
     },
     permission: {
       type: String,
@@ -39,7 +54,7 @@ export const DeviceSchema = new mongoose.Schema(
     qos: {
       type: Number,
       enum: [0, 1, 2],
-      default:0
+      default: 0,
     },
     retain: {
       type: Boolean,
@@ -47,7 +62,7 @@ export const DeviceSchema = new mongoose.Schema(
     },
     isSaveData: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {
