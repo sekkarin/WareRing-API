@@ -18,7 +18,7 @@ export class ApiController {
   //   return this.apiService.kickDevice();
   // }
 
-  @Get()
+  @Get('overview')
   @ApiBearerAuth()
   @HttpCode(200)
   overview(@Req() req: Request) {
