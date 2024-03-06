@@ -11,6 +11,7 @@ import { LoggerMiddleware } from './utils/middlewares/logger.middleware';
 import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
+import { WidgetModule } from './widget/widget.module';
 
 const configService = new ConfigService();
 
@@ -37,6 +38,7 @@ const configService = new ConfigService();
         },
       },
     }),
+    WidgetModule
   ],
   providers: [AppService],
 })
