@@ -14,7 +14,6 @@ export class ApiService {
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
   ) {}
-  
 
   private async loginDashboard() {
     try {
@@ -39,7 +38,7 @@ export class ApiService {
     try {
       // Get device data from EMQX API
       const res = await this.fetchDeviceDataFromEMQX();
-      const devicesEMQX = res.data;
+      const devicesEMQX = await res.data;
 
       // Count total devices
       const totalDevice = await this.countTotalDevices(userID);
@@ -69,7 +68,7 @@ export class ApiService {
       throw error;
     }
   }
-  
+
   private async fetchDeviceDataFromEMQX() {
     try {
       return await this.httpService.axiosRef.get(
@@ -119,7 +118,8 @@ export class ApiService {
           devicesEMQX.data.find(
             (deviceEMQX) =>
               deviceEMQX.username === device.usernameDevice &&
-              deviceEMQX.connected === true,
+              deviceEMQX.connected === true &&
+              deviceEMQX.listener == 'tcp:default',
           ),
         )
         .filter((deviceInfo) => deviceInfo !== undefined);

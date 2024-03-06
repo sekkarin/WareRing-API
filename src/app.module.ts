@@ -12,6 +12,7 @@ import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 const configService = new ConfigService();
 
@@ -38,7 +39,8 @@ const configService = new ConfigService();
         },
       },
     }),
-    WidgetModule
+    WidgetModule,
+    WebhookModule
   ],
   providers: [AppService],
 })
