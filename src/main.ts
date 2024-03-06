@@ -20,6 +20,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      
     }),
   );
   if (process.env.NODE_ENV == 'dev') {

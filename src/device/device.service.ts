@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, FilterQuery, Document, Query, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -14,6 +14,8 @@ import { Device } from './interface/device.interface';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
+import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
+import { GetDevicesSortDto } from './dto/get-device-sort.dto';
 
 @Injectable()
 export class DeviceService {
@@ -53,6 +55,7 @@ export class DeviceService {
     const device = new this.deviceModel({
       ...createDeviceDto,
       password_hash,
+      password_law: createDeviceDto.password,
       userID,
       topics: topicsGenerated,
     });
@@ -66,6 +69,7 @@ export class DeviceService {
       userID: device.userID,
       nameDevice: device.nameDevice,
       usernameDevice: device.usernameDevice,
+      password: device.password_law,
       description: device.description,
       permission: device.permission,
       topics: device.topics,
@@ -77,13 +81,34 @@ export class DeviceService {
     };
   }
 
-  async findAll(page = 1, limit = 10, userID: string) {
+  async findAll(
+    query: string,
+    page = 1,
+    limit = 10,
+    userID: string,
+    getDevicesSortDto: string,
+    getDevicesFilterDto: GetDevicesFilterDto,
+  ) {
     try {
-      const itemCount = await this.deviceModel.countDocuments({ userID });
-      const devices = await this.deviceModel
-        .find({ userID })
-        .skip((page - 1) * limit)
-        .limit(limit);
+      let options = {};
+      ({ options, getDevicesFilterDto } = this.getFilter(getDevicesFilterDto));
+
+      const itemCount = await this.deviceModel.countDocuments({
+        userID,
+        ...options,
+      });
+      let devicesQuery = this.deviceModel.find({
+        userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+        ...options,
+      });
+
+      devicesQuery = this.getSort(getDevicesSortDto, devicesQuery);
+      const devices = await devicesQuery.skip((page - 1) * limit).limit(limit);
 
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
@@ -95,10 +120,39 @@ export class DeviceService {
         itemCount,
       );
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw error;
     }
   }
 
+  private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    if (getDevicesSortDto) {
+      devicesQuery = devicesQuery.sort(getDevicesSortDto);
+    } else {
+      devicesQuery = devicesQuery.sort({ createdAt: -1 });
+    }
+    return devicesQuery;
+  }
+
+  private getFilter(getDevicesFilterDto: GetDevicesFilterDto) {
+    let options = {};
+
+    getDevicesFilterDto = this.removeUndefined(getDevicesFilterDto);
+
+    if (getDevicesFilterDto) {
+      options = { ...getDevicesFilterDto };
+    }
+    return { options, getDevicesFilterDto };
+  }
+
+  private removeUndefined<T>(obj: T): T {
+    const newObj = {} as T;
+    for (const key of Object.keys(obj)) {
+      if (obj[key] !== undefined) {
+        newObj[key] = obj[key];
+      }
+    }
+    return newObj;
+  }
   async findOne(id: string, userID: string): Promise<DeviceResponseDto> {
     try {
       const device = await this.deviceModel.findOne({ _id: id, userID });
@@ -118,6 +172,7 @@ export class DeviceService {
   ): Promise<DeviceResponseDto> {
     let topicsGenerated: string[];
     let password_hash: string;
+    let password_law: string | null = null;
     try {
       const existingDeviceUsername = await this.deviceModel.findOne({
         usernameDevice: updateDeviceDto.usernameDevice,
@@ -143,11 +198,17 @@ export class DeviceService {
       }
       if (updateDeviceDto.password) {
         password_hash = await bcrypt.hash(updateDeviceDto.password, 10);
+        password_law = updateDeviceDto.password;
       }
       const device = await this.deviceModel.findByIdAndUpdate(
         { _id: id, userID },
         {
-          $set: { ...updateDeviceDto, topics: topicsGenerated, password_hash },
+          $set: {
+            ...updateDeviceDto,
+            topics: topicsGenerated,
+            password_hash,
+            password_law,
+          },
         },
         { new: true },
       );
@@ -218,7 +279,20 @@ export class DeviceService {
   }
 
   async searchDevices(query: string, userID: string, page = 1, limit = 10) {
-    const itemCount = await this.deviceModel.countDocuments({ userID });
+    // page = 1,
+    // limit = 10,
+    // userID: string,
+    // getDevicesSortDto: string,
+    // getDevicesFilterDto: GetDevicesFilterDto,
+    const itemCount = await this.deviceModel
+      .find({
+        userID: userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .countDocuments();
     const devices = await this.deviceModel
       .find({
         userID: userID,
