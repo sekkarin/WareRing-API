@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 const { Types } = mongoose;
 export const WidgetSchema = new mongoose.Schema(
   {
-    userID: {
+    deviceId: {
       type: Types.ObjectId,
       ref: 'Device',
     },

@@ -39,7 +39,7 @@ import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
 export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
 
-  @Post()
+  @Post(':deviceId')
   @ApiOperation({ summary: 'Create a new widget' })
   @ApiBearerAuth()
   @ApiResponse({
@@ -50,12 +50,12 @@ export class WidgetController {
   async create(
     @Body() createWidgetDto: CreateWidgetDto,
     @Req() req: Request,
+    @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ): Promise<WidgetResponseDto> {
-    const { sub } = req['user'];
-    return this.widgetService.create(createWidgetDto, sub);
+    return this.widgetService.create(createWidgetDto, deviceId);
   }
 
-  @Get()
+  @Get(':deviceId')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all widgets for the authenticated user' })
   @ApiResponse({
@@ -64,14 +64,12 @@ export class WidgetController {
     type: [WidgetResponseDto],
   })
   findAll(
-    @Req() req: Request,
-   
+    @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ): Promise<WidgetResponseDto[]> {
-    const { sub } = req['user'];
-    return this.widgetService.findAll(sub);
+    return this.widgetService.findAll(deviceId);
   }
 
-  @Get(':id')
+  @Get(':widgetId/widget')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a single widget by ID' })
   @ApiResponse({
@@ -81,14 +79,14 @@ export class WidgetController {
   })
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async findOne(
-    @Param('id', MongoDBObjectIdPipe) id: string,
-    @Req() req: Request,
+    @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
+
   ): Promise<WidgetResponseDto> {
-    const { sub } = req['user'];
-    return this.widgetService.findOne(id, sub);
+    
+    return this.widgetService.findOne(widgetId);
   }
 
-  @Patch(':id')
+  @Patch(':widgetId')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a widget' })
   @ApiResponse({
@@ -98,25 +96,22 @@ export class WidgetController {
   })
   @ApiResponse({ status: 404, description: 'Widget not found' })
   update(
-    @Param('id', MongoDBObjectIdPipe) id: string,
+    @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Body() updateWidgetDto: UpdateWidgetDto,
-    @Req() req: Request,
   ) {
-    const { sub } = req['user'];
-    return this.widgetService.update(id, sub, updateWidgetDto);
+
+    return this.widgetService.update(widgetId, updateWidgetDto);
   }
 
-  @Delete(':id')
+  @Delete(':widgetId')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a widget' })
   @ApiResponse({ status: 200, description: 'Widget deleted successfully' })
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async delete(
-    @Param('id', MongoDBObjectIdPipe) id: string,
-    @Req() req: Request,
+    @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
   ): Promise<void> {
-    const { sub } = req['user'];
-    const deleted = await this.widgetService.delete(id, sub);
+    const deleted = await this.widgetService.delete(widgetId);
     if (!deleted) {
       throw new NotFoundException('Widget not found');
     }

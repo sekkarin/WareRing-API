@@ -15,7 +15,6 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
 import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
-import { GetDevicesSortDto } from './dto/get-device-sort.dto';
 
 @Injectable()
 export class DeviceService {
@@ -82,7 +81,7 @@ export class DeviceService {
   }
 
   async findAll(
-    query: string,
+    query = '',
     page = 1,
     limit = 10,
     userID: string,

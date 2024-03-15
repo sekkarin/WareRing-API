@@ -5,39 +5,35 @@ import { CreateWidgetDto } from './dto/create-widget.dto';
 import { UpdateWidgetDto } from './dto/update-widget.dto';
 import { Widget } from './interface/widget.interface';
 import { WidgetResponseDto } from './dto/response-widget.dto';
-import { PaginatedDto } from './../utils/dto/paginated.dto';
 
 @Injectable()
 export class WidgetService {
   constructor(
     @Inject('WIDGET_MODEL')
-    private widgetModel: Model<Widget>, // private mongdb:Types
+    private widgetModel: Model<Widget>,
   ) {}
   async create(
     createWidgetDto: CreateWidgetDto,
-    userID: string,
+    deviceId: string,
   ): Promise<WidgetResponseDto> {
     const createdWidget = new this.widgetModel({
       ...createWidgetDto,
-      userID: userID,
+      deviceId,
     });
     await createdWidget.save();
     return this.mapToWidgetResponseDto(createdWidget);
   }
 
-  async findAll(userId: string) {
-    const widgets = await this.widgetModel.find({ userID: userId });
-
+  async findAll(deviceId: string) {
+    const widgets = await this.widgetModel.find({ deviceId });
     const widgetResponse = widgets.map((widget) =>
       this.mapToWidgetResponseDto(widget),
     );
     return widgetResponse;
   }
 
-  async findOne(id: string, userId: string): Promise<WidgetResponseDto> {
-    const widget = await this.widgetModel
-      .findOne({ _id: id, userID: userId })
-      .exec();
+  async findOne(widgetId: string): Promise<WidgetResponseDto> {
+    const widget = await this.widgetModel.findOne({ _id: widgetId }).exec();
     if (!widget) {
       throw new NotFoundException('Widget not found');
     }
@@ -45,15 +41,13 @@ export class WidgetService {
   }
 
   async update(
-    id: string,
-    userID: string,
+    widgetId: string,
     updateWidgetDto: UpdateWidgetDto,
   ): Promise<WidgetResponseDto> {
     const existingWidget = await this.widgetModel
       .findOneAndUpdate(
         {
-          _id: id,
-          userID: userID,
+          _id: widgetId,
         },
         updateWidgetDto,
         { new: true },
@@ -65,10 +59,8 @@ export class WidgetService {
     return this.mapToWidgetResponseDto(existingWidget);
   }
 
-  async delete(id: string, userId: string): Promise<boolean> {
-    const result = await this.widgetModel
-      .deleteOne({ _id: id, userID: userId })
-      .exec();
+  async delete(widgetId: string): Promise<boolean> {
+    const result = await this.widgetModel.deleteOne({ _id: widgetId }).exec();
     return result.deletedCount > 0;
   }
   private mapToWidgetResponseDto(widget: Widget): WidgetResponseDto {
@@ -77,7 +69,7 @@ export class WidgetService {
       nameDevice: widget.nameDevice,
       type: widget.type,
       configWidget: widget.configWidget,
-      userId: widget.userID,
+      deviceId: widget.deviceId,
       createdAt: widget.createdAt,
       updatedAt: widget.updatedAt,
     };

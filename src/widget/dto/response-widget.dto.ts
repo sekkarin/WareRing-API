@@ -4,8 +4,9 @@ export class WidgetResponseDto {
   @ApiProperty({ description: 'The unique identifier of the widget' })
   id: string;
 
-  @ApiProperty({ description: 'The ID of the user associated with the widget' })
-  userId: string;
+  @ApiProperty({ description: 'The ID of the device associated with the widget' })
+  deviceId: string;
+  
 
   @ApiProperty({ description: 'The name of the device' })
   nameDevice: string;
