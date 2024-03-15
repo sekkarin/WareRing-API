@@ -8,8 +8,8 @@ export class WidgetResponseDto {
   deviceId: string;
   
 
-  @ApiProperty({ description: 'The name of the device' })
-  nameDevice: string;
+  @ApiProperty({ description: 'The label of the device' })
+  label: string;
 
   @ApiProperty({ description: 'The type of the widget' })
   type: string;

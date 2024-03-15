@@ -66,7 +66,7 @@ export class WidgetService {
   private mapToWidgetResponseDto(widget: Widget): WidgetResponseDto {
     return {
       id: widget.id,
-      nameDevice: widget.nameDevice,
+      label: widget.label,
       type: widget.type,
       configWidget: widget.configWidget,
       deviceId: widget.deviceId,

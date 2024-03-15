@@ -6,7 +6,7 @@ export const WidgetSchema = new mongoose.Schema(
       type: Types.ObjectId,
       ref: 'Device',
     },
-    nameDevice: {
+    label: {
       type: String,
       trim: true,
       required: true

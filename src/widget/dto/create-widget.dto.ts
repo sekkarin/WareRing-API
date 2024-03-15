@@ -3,13 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateWidgetDto {
   @ApiProperty({
-    description: 'The name of the device associated with the widget',
+    description: 'The label of the device associated with the widget',
     example: 'My Device',
     required: false,
   })
   @IsString()
   @IsNotEmpty()
-  nameDevice: string;
+  label: string;
 
   @ApiProperty({
     description: 'The type of the widget',

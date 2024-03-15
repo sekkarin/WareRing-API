@@ -3,10 +3,10 @@ import { CreateWidgetDto } from './create-widget.dto';
 
 export class UpdateWidgetDto extends PartialType(CreateWidgetDto) {
   @ApiProperty({
-    description: 'The name of the device associated with the widget',
+    description: 'The label of the device associated with the widget',
     example: 'My Device',
   })
-  nameDevice?: string;
+  label?: string;
 
   @ApiProperty({
     description: 'The type of the widget',
