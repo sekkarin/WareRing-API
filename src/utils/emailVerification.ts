@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
-
 const configService = new ConfigService();
+
 export const FORM_VERIFY_EMAIL = (token: string) => {
   return `<!DOCTYPE html>
   <html>

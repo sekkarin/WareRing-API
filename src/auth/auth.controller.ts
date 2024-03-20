@@ -112,7 +112,13 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async signUp(@Body() signUpDto: CreateUserDto) {
-    return this.authService.signUp(signUpDto);
+    try {
+      
+      return this.authService.signUp(signUpDto);
+    } catch (error) {
+      console.log(error);
+      
+    }
   }
 
   @Post('logout')

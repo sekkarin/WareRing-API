@@ -161,6 +161,8 @@ export class AuthService {
       });
       return true;
     } catch (err) {
+      console.log(err);
+      
       throw new HttpException(
         'INTERNAL_SERVER_ERROR',
         HttpStatus.INTERNAL_SERVER_ERROR,

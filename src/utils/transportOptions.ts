@@ -10,7 +10,7 @@ export const transportOptions = {
     port: 587,
     secure: false,
     auth: {
-      user: configService.get<string>('ALLOWED_ORIGINS'),
+      user: configService.get<string>('EMAIL_AUTH'),
       pass: configService.get<string>('PASS_AUTH'),
     },
   },

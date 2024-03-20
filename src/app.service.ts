@@ -62,6 +62,7 @@ export class AppService {
   }
 
   async onApplicationBootstrap() {
+    
     try {
       await this.seedData();
     } catch (error) {
