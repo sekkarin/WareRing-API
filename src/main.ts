@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import * as path from 'path';
+import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -15,6 +15,7 @@ async function bootstrap() {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
   app.use(cookieParser());
+  app.use(helmet());
   // app.useStaticAssets(path.join(__dirname, '../'));
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
