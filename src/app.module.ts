@@ -2,6 +2,13 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
+import {
+  ThrottlerGuard,
+  ThrottlerModule,
+  seconds,
+  minutes,
+} from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -40,9 +47,22 @@ const configService = new ConfigService();
       },
     }),
     WidgetModule,
-    WebhookModule
+    WebhookModule,
+    ThrottlerModule.forRoot([
+      {
+        name: 'long',
+        ttl: minutes(1),
+        limit: 100,
+      },
+    ]),
   ],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

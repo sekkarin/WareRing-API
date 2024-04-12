@@ -34,6 +34,7 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
+import { Throttle,seconds } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -44,6 +45,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @Throttle({ short: { limit: 3, ttl: seconds(1)} })
   @ApiOperation({ summary: 'User login' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -93,7 +95,7 @@ export class AuthController {
     res.cookie('refresh_token', user.refresh_token, {
       httpOnly: true,
       sameSite: 'none',
-      secure: true, 
+      secure: true,
       maxAge: maxAgeMilliseconds,
     });
     return res.status(200).json({ access_token: user.access_token });
@@ -113,11 +115,9 @@ export class AuthController {
   @Post('register')
   async signUp(@Body() signUpDto: CreateUserDto) {
     try {
-      
       return this.authService.signUp(signUpDto);
     } catch (error) {
       console.log(error);
-      
     }
   }
 
