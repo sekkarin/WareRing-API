@@ -2,15 +2,8 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
-import {
-  ThrottlerGuard,
-  ThrottlerModule,
-  seconds,
-  minutes,
-} from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { CacheModule } from '@nestjs/cache-manager';
 
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -48,20 +41,9 @@ const configService = new ConfigService();
     }),
     WidgetModule,
     WebhookModule,
-    ThrottlerModule.forRoot([
-      {
-        name: 'long',
-        ttl: minutes(1),
-        limit: 100,
-      },
-    ]),
-  ],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    CacheModule.register({
+      isGlobal: true,
+    }),
   ],
 })
 export class AppModule implements NestModule {

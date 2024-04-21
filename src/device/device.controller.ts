@@ -11,6 +11,8 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
+  CacheTTL,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -36,16 +38,21 @@ import { StoreDataDto } from './dto/store-data.dto';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
-import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
-import { GetDevicesSortDto } from './dto/get-device-sort.dto';
+import { Throttle } from '@nestjs/throttler';
+import { CacheInterceptor, CacheKey, } from '@nestjs/cache-manager';
+
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard)
+@Throttle({ medium: { ttl: 10000, limit: 20 } })
+// @UseInterceptors(CacheInterceptor)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @Post()
+  // @CacheTTL(1 * 60 * 1000)
+  // @UseInterceptors(CacheInterceptor)
   @HttpCode(201)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new device' })
@@ -108,6 +115,8 @@ export class DeviceController {
   }
 
   @Get()
+  // @CacheTTL( 20 * 1000)
+  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get a paginated list of devices',
@@ -150,12 +159,6 @@ export class DeviceController {
     required: false,
     description: 'limit Number of items  (default: 10)',
   })
-  // @ApiQuery({
-  //   name: 'nameDevice',
-  //   enum: ['asc', 'desc'],
-  //   required: false,
-  //   description: 'limit Number of items  (default: 10)',
-  // })
   @ApiResponse({
     status: 200,
     description: 'Returns a paginated list of devices',
@@ -164,15 +167,13 @@ export class DeviceController {
   })
   async findAll(
     @Req() req: Request,
-    // @Query() getDevicesSortDto: GetDevicesSortDto,
-    // @Query() getDevicesFilterDto: GetDevicesFilterDto,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
   ): Promise<PaginatedDto<DeviceResponseDto>> {
     try {
       const { sub } = req['user'];
       const { page, limit, createdAt, isSaveData, permission, query } =
         paginationQueryparamsDto;
-      // const getDevicesSortDto = { createdAt };
+
       const getDevicesFilterDto = { isSaveData, permission };
 
       return await this.deviceService.findAll(
@@ -189,6 +190,8 @@ export class DeviceController {
   }
 
   @Get(':id')
+  @CacheTTL(1 * 60 * 1000)
+  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get Device by ID',
@@ -251,6 +254,7 @@ export class DeviceController {
   }
 
   @Delete(':id')
+  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a device by ID' })
   @ApiResponse({

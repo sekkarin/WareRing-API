@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import * as compression from 'compression';
 
-
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
 
@@ -17,17 +16,11 @@ async function bootstrap() {
     logger: ['debug', 'error', 'log', 'verbose', 'warn'],
   });
   app.use(cookieParser());
-  // app.use(helmet());
-  // app.use(compression());
-
-  // app.use(csurf());
-
-  // app.useStaticAssets(path.join(__dirname, '../'));
+  app.use(helmet());
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-      
     }),
   );
   if (process.env.NODE_ENV == 'dev') {

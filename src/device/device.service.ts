@@ -2,10 +2,9 @@ import {
   Inject,
   Injectable,
   BadRequestException,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Model, FilterQuery, Document, Query, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -20,7 +19,7 @@ import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
-    private deviceModel: Model<Device>, // private mongdb:Types
+    private deviceModel: Model<Device>,
   ) {}
 
   async create(

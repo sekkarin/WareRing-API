@@ -7,7 +7,7 @@ class PageMetaDto {
   readonly hasNextPage: boolean;
   constructor(page: number, limit: number, itemCount: number) {
     // console.log('class Page meta page',page,typeof page);
-    
+
     this.page = page;
     this.limit = limit;
     this.itemCount = itemCount;
@@ -17,10 +17,14 @@ class PageMetaDto {
   }
 }
 export class PaginatedDto<T> {
-  readonly data: T[];
+  data: T[];
   readonly metadata: PageMetaDto;
   constructor(date: T[], page: number, limit: number, itemCount: number) {
     this.data = date;
     this.metadata = new PageMetaDto(page, limit, itemCount);
+  }
+  setData(data: T[]) {
+    this.data = data;
+    
   }
 }

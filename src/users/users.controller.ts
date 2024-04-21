@@ -41,10 +41,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { storageFiles } from './../utils/storageFiles';
 import { ConfigService } from '@nestjs/config';
 import { BannedDto } from './dto/banned.dto';
+import { Throttle } from '@nestjs/throttler';
 
 // TODO: sort and filter get users
 @ApiTags('User')
 @Controller('users')
+@Throttle({ medium: { ttl: 10000, limit: 20 } })
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,

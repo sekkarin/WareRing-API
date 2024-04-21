@@ -34,10 +34,11 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { Throttle,seconds } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@Throttle({ short: { limit: 3, ttl: 1 * 60 * 1000 } })
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // private myLogger: MyLoggerService// private jwtService: JwtService,
@@ -45,7 +46,6 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  @Throttle({ short: { limit: 3, ttl: seconds(1)} })
   @ApiOperation({ summary: 'User login' }) // Operation summary
   @ApiResponse({
     status: 200,
