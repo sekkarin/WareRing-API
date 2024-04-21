@@ -13,6 +13,7 @@ import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { BullModule } from '@nestjs/bull';
 
 const configService = new ConfigService();
 
@@ -43,6 +44,11 @@ const configService = new ConfigService();
     WebhookModule,
     CacheModule.register({
       isGlobal: true,
+    }),
+    BullModule.forRoot({
+      redis: {
+        port: 6379,
+      },
     }),
   ],
 })

@@ -18,6 +18,8 @@ import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class AuthService {
@@ -69,22 +71,27 @@ export class AuthService {
   }
 
   async signUp(Body: CreateUserDto): Promise<UserResponseDto> {
-    const usernameAlreadyExists = await this.usersService.findOne(
-      Body.username,
-    );
-    if (usernameAlreadyExists) {
-      throw new UnauthorizedException('username has been used');
+    try {
+      const usernameAlreadyExists = await this.usersService.findOne(
+        Body.username,
+      );
+      if (usernameAlreadyExists) {
+        throw new UnauthorizedException('username has been used');
+      }
+      const emailAlreadyExists = await this.usersService.findByEmail(
+        Body.email,
+      );
+      if (emailAlreadyExists) {
+        throw new UnauthorizedException('email has been used');
+      }
+      const hashPassword = await bcrypt.hash(Body.password, 10);
+      return this.usersService.createUser({
+        ...Body,
+        password: hashPassword,
+      });
+    } catch (error) {
+      throw error;
     }
-    const emailAlreadyExists = await this.usersService.findByEmail(Body.email);
-    if (emailAlreadyExists) {
-      throw new UnauthorizedException('email has been used');
-    }
-    await this.sendEmailVerification(Body.email);
-    const hashPassword = await bcrypt.hash(Body.password, 10);
-    return this.usersService.createUser({
-      ...Body,
-      password: hashPassword,
-    });
   }
 
   async logOut(username: string): Promise<User | undefined> {
@@ -161,8 +168,6 @@ export class AuthService {
       });
       return true;
     } catch (err) {
-      console.log(err);
-      
       throw new HttpException(
         'INTERNAL_SERVER_ERROR',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -208,9 +213,7 @@ export class AuthService {
         html: FORM_FORGET_PASS(resetPassToken),
       });
       return mail;
-    } catch (err) {
-      
-    }
+    } catch (err) {}
   }
 
   async resetPassword(token: string, newPassword: string) {

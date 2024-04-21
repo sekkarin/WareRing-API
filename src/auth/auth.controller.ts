@@ -21,6 +21,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 import { AuthService } from './auth.service';
 import { Roles } from './decorator/roles.decorator';
@@ -34,15 +36,14 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { Throttle } from '@nestjs/throttler';
 
-@ApiTags('Authentication')
 @Controller('auth')
-@Throttle({ short: { limit: 3, ttl: 1 * 60 * 1000 } })
+@ApiTags('Authentication')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // private myLogger: MyLoggerService// private jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectQueue('sendEmailVerify') private sendEmailVerifyQueue: Queue,
   ) {}
 
   @Post('login')
@@ -115,9 +116,25 @@ export class AuthController {
   @Post('register')
   async signUp(@Body() signUpDto: CreateUserDto) {
     try {
-      return this.authService.signUp(signUpDto);
+      // console.log(signUpDto);
+
+      const result = await this.authService.signUp(signUpDto);
+      await this.sendEmailVerifyQueue.add(
+        'send-email-verify',
+        {
+          email: result.email,
+        },
+        {
+          attempts: 3,
+          priority: 2,
+          removeOnComplete: true,
+          removeOnFail: true,
+          delay: 1000,
+        },
+      );
+      return result;
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   }
 

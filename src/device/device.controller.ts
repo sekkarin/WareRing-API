@@ -115,7 +115,6 @@ export class DeviceController {
   }
 
   @Get()
-  // @CacheTTL( 20 * 1000)
   @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({
@@ -190,7 +189,6 @@ export class DeviceController {
   }
 
   @Get(':id')
-  @CacheTTL(1 * 60 * 1000)
   @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({

@@ -18,6 +18,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({ ...corsOptions });
+  app.use(compression());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
