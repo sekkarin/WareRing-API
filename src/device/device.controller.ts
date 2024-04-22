@@ -37,24 +37,17 @@ import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { RateLimit, RateLimiterGuard } from 'nestjs-rate-limiter';
-
+import { Throttle } from '@nestjs/throttler';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @UseGuards(AuthGuard, RolesGuard)
-@UseGuards(RateLimiterGuard)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @Post()
   @HttpCode(201)
-  @RateLimit({
-    keyPrefix: 'createDevice',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new device' })
   @ApiBody({ type: CreateDeviceDto })
@@ -117,12 +110,6 @@ export class DeviceController {
 
   @Get()
   @UseInterceptors(CacheInterceptor)
-  @RateLimit({
-    keyPrefix: 'getDevices',
-    points: 30,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get a paginated list of devices',
@@ -197,12 +184,6 @@ export class DeviceController {
 
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
-  @RateLimit({
-    keyPrefix: 'getDevice',
-    points: 30,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get Device by ID',
@@ -227,12 +208,6 @@ export class DeviceController {
 
   @Put(':id')
   @HttpCode(200)
-  @RateLimit({
-    keyPrefix: 'updateDevice',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a device by ID' })
   @ApiResponse({
@@ -271,12 +246,6 @@ export class DeviceController {
   }
 
   @Delete(':id')
-  @RateLimit({
-    keyPrefix: 'deleteDevice',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a device by ID' })
   @ApiResponse({
@@ -322,12 +291,6 @@ export class DeviceController {
 
   @Put('permission/:id')
   @HttpCode(200)
-  @RateLimit({
-    keyPrefix: 'permissionDevice',
-    points: 30,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Set permission for a device' }) // Operation summary
   @ApiResponse({
@@ -352,12 +315,6 @@ export class DeviceController {
 
   @Put('store/:id')
   @HttpCode(200)
-  @RateLimit({
-    keyPrefix: 'storeDevice',
-    points: 30,
-    duration: 60,
-    errorMessage: 'Attempts are limited. Please try again later.',
-  })
   @ApiOperation({ summary: 'Set store data for a device' })
   @ApiParam({ name: 'id', description: 'ID of the device' })
   @ApiBearerAuth()

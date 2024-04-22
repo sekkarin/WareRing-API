@@ -36,11 +36,11 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { RateLimit, RateLimiterGuard ,} from 'nestjs-rate-limiter';
+import { Throttle } from "@nestjs/throttler";
 
 @Controller('auth')
 @ApiTags('Authentication')
-@UseGuards(RateLimiterGuard)
+@Throttle({ default: { limit: 3, ttl: 60000 } })
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // private myLogger: MyLoggerService// private jwtService: JwtService,
@@ -49,12 +49,6 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  @RateLimit({
-    keyPrefix: 'sign-in',
-    points: 3,
-    duration: 60 * 3,
-    errorMessage: 'Login attempts are limited. Please try again later.',
-  })
   @ApiOperation({ summary: 'User login' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -111,12 +105,6 @@ export class AuthController {
   }
 
   @Post('register')
-  @RateLimit({
-    keyPrefix: 'sign-up',
-    points: 1,
-    duration: 60,
-    errorMessage: 'Accounts cannot be created more than once per minute',
-  })
   @ApiOperation({ summary: 'User registration' }) // Operation summary
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -158,12 +146,6 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   @Roles(Role.User, Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
-  @RateLimit({
-    keyPrefix: 'logout',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Logout attempts are limited. Please try again later.',
-  })
   async logOut(@Req() req: Request, @Res() res: Response) {
     const username = req.user.username;
     await this.authService.logOut(username);
@@ -172,14 +154,9 @@ export class AuthController {
   }
 
   @Get('refresh')
+  @Throttle({ default: { limit: 6, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth('refresh_token')
-  @RateLimit({
-    keyPrefix: 'refresh-token',
-    points: 10,
-    duration: 60,
-    errorMessage: 'Refresh token attempts are limited. Please try again later.',
-  })
   @ApiOperation({ summary: 'Refresh access token using a refresh token' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -210,12 +187,6 @@ export class AuthController {
   }
 
   @Get('email/:token')
-  @RateLimit({
-    keyPrefix: 'email-token',
-    points: 2,
-    duration: 60,
-    errorMessage: 'Logout attempts are limited. Please try again later.',
-  })
   @ApiOperation({ summary: 'Verify Email using token' })
   @ApiParam({
     name: 'token',
@@ -245,12 +216,6 @@ export class AuthController {
   }
 
   @Get('/forget-password/:email')
-  @RateLimit({
-    keyPrefix: 'forget-password',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Reset password attempts are limited. Please try again later.',
-  })
   @ApiOperation({ summary: 'Send reset password form using email of user' })
   @ApiParam({
     name: 'email',
@@ -284,12 +249,6 @@ export class AuthController {
   }
 
   @Post('/reset-password/:token')
-  @RateLimit({
-    keyPrefix: 'forget-password-verification',
-    points: 3,
-    duration: 60,
-    errorMessage: 'Reset password attempts are limited. Please try again later.',
-  })
   @ApiOperation({
     summary: 'Reset User Password',
   })

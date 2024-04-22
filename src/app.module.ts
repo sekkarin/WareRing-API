@@ -15,8 +15,8 @@ import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { BullModule } from '@nestjs/bull';
-import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 const configService = new ConfigService();
 
@@ -61,14 +61,22 @@ const configService = new ConfigService();
         port: 6379,
       },
     }),
-    // RateLimiterModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 250,
+        },
+      ],
+      errorMessage:"Access limited. Please try again later."
+    }),
   ],
-  // providers: [
-  //   {
-  //     provide: APP_GUARD,
-  //     useClass: RateLimiterGuard,
-  //   },
-  // ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
