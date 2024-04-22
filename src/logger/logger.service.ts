@@ -1,4 +1,4 @@
-import { ConsoleLogger, Injectable, Scope } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
@@ -24,11 +24,11 @@ export class LoggerService extends ConsoleLogger {
       timeZone: 'Asia/Bangkok',
     }).format(new Date())}\t${entry}\n`;
     try { 
-      if (!fs.existsSync(path.join(__dirname, '..', '..', 'logs'))) {
-        await fsPromises.mkdir(path.join(__dirname, '..', '..', 'logs'))
+      if (!fs.existsSync(path.join(__dirname, '..','..', '..', 'logs'))) {
+        await fsPromises.mkdir(path.join(__dirname, '..','..', '..', 'logs'))
       }
       await fsPromises.appendFile(
-        path.join(__dirname, '..', '..', 'logs', 'loggerFile.log'),
+        path.join(__dirname,'..', '..', '..', 'logs', 'loggerFile.log'),
         formattedEntry,
       );
     } catch (error) {

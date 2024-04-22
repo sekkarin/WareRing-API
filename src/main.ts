@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -9,13 +9,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
 import { LoggerService } from './logger/logger.service';
+import { AllExceptionsFilter } from './all-exceptionsFilter';
 
 const configService = new ConfigService();
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bufferLogs: true,
-  });
-  app.useLogger(app.get(LoggerService));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+  // app.useLogger(app.get(LoggerService));
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({ ...corsOptions });
