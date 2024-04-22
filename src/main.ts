@@ -5,10 +5,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
-import * as compression from 'compression';
 
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
+
 
 const configService = new ConfigService();
 async function bootstrap() {
@@ -18,7 +18,6 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({ ...corsOptions });
-  app.use(compression());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

@@ -18,8 +18,6 @@ import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 
 @Injectable()
 export class AuthService {
@@ -112,6 +110,7 @@ export class AuthService {
       );
     }
   }
+
   async refresh(refreshToken: string) {
     try {
       const foundUser = await this.usersService.findOneToken(refreshToken);
@@ -213,7 +212,9 @@ export class AuthService {
         html: FORM_FORGET_PASS(resetPassToken),
       });
       return mail;
-    } catch (err) {}
+    } catch (err) {
+      throw err
+    }
   }
 
   async resetPassword(token: string, newPassword: string) {
@@ -233,6 +234,7 @@ export class AuthService {
       );
     }
   }
+
   async checkIsActive(username: string): Promise<boolean> {
     const user = await this.usersService.findOne(username);
     if (!user) {
@@ -240,4 +242,5 @@ export class AuthService {
     }
     return user.isActive;
   }
+  
 }

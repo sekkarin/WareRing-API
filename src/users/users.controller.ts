@@ -41,12 +41,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { storageFiles } from './../utils/storageFiles';
 import { ConfigService } from '@nestjs/config';
 import { BannedDto } from './dto/banned.dto';
-import { Throttle } from '@nestjs/throttler';
+import { RateLimit, RateLimiterGuard } from 'nestjs-rate-limiter';
 
 // TODO: sort and filter get users
 @ApiTags('User')
 @Controller('users')
-@Throttle({ medium: { ttl: 10000, limit: 20 } })
+@UseGuards(RateLimiterGuard)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
@@ -57,6 +57,12 @@ export class UsersController {
   @ApiBearerAuth()
   @Roles(Role.Admin, Role.User)
   @UseGuards(AuthGuard, RolesGuard)
+  @RateLimit({
+    keyPrefix: 'updateUser',
+    points: 3,
+    duration: 60,
+    errorMessage: 'Attempts are limited. Please try again later.',
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a user' }) // Operation summary
   @ApiResponse({
@@ -142,6 +148,12 @@ export class UsersController {
   @Put('banned/:id')
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
+  @RateLimit({
+    keyPrefix: 'bannedUser',
+    points: 30,
+    duration: 60,
+    errorMessage: 'Attempts are limited. Please try again later.',
+  })
   @ApiOperation({ summary: 'Set user banned state,Roles Admin' }) // เพิ่มคำอธิบายสำหรับ API Endpoint
   @ApiResponse({
     status: 200,
@@ -224,6 +236,12 @@ export class UsersController {
   @ApiBearerAuth()
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
+  @RateLimit({
+    keyPrefix: 'getUsers',
+    points: 30,
+    duration: 60,
+    errorMessage: 'Attempts are limited. Please try again later.',
+  })
   @HttpCode(HttpStatus.OK)
   async getUsers(
     @Req() req: Request,
@@ -238,6 +256,12 @@ export class UsersController {
   @Roles(Role.User)
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard, RolesGuard)
+  @RateLimit({
+    keyPrefix: 'deleteUser',
+    points: 30,
+    duration: 60,
+    errorMessage: 'Attempts are limited. Please try again later.',
+  })
   @ApiOperation({ summary: 'Delete a user', description: 'Roles Admin' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({
@@ -262,6 +286,12 @@ export class UsersController {
   @Get(':id')
   @Roles(Role.User)
   @UseGuards(AuthGuard, RolesGuard)
+  @RateLimit({
+    keyPrefix: 'getUser',
+    points: 30,
+    duration: 60,
+    errorMessage: 'Attempts are limited. Please try again later.',
+  })
   @ApiOperation({ summary: 'Get user by id' }) // Operation summary
   @ApiResponse({
     status: 200,

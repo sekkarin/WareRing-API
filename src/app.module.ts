@@ -3,6 +3,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
@@ -14,6 +15,8 @@ import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { BullModule } from '@nestjs/bull';
+import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
+import { APP_GUARD } from '@nestjs/core';
 
 const configService = new ConfigService();
 
@@ -42,15 +45,30 @@ const configService = new ConfigService();
     }),
     WidgetModule,
     WebhookModule,
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: 'localhost',
+            port: 6379,
+          },
+        }),
+      }),
     }),
     BullModule.forRoot({
       redis: {
         port: 6379,
       },
     }),
+    // RateLimiterModule,
   ],
+  // providers: [
+  //   {
+  //     provide: APP_GUARD,
+  //     useClass: RateLimiterGuard,
+  //   },
+  // ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
