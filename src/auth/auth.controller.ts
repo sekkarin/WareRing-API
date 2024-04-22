@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Ip,
   Param,
   Post,
   Req,
@@ -36,7 +37,8 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { Throttle } from "@nestjs/throttler";
+import { Throttle } from '@nestjs/throttler';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -47,6 +49,7 @@ export class AuthController {
     private readonly configService: ConfigService,
     @InjectQueue('sendEmailVerify') private sendEmailVerifyQueue: Queue,
   ) {}
+  private readonly logger = new LoggerService(AuthController.name);
 
   @Post('login')
   @ApiOperation({ summary: 'User login' }) // Operation summary
@@ -79,7 +82,12 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body() signInDto: BodyUserLoginDto, @Res() res: Response) {
+  async signIn(
+    @Ip() ip: string,
+    @Body() signInDto: BodyUserLoginDto,
+    @Res() res: Response,
+  ) {
+    this.logger.log(`Request for\t${ip}\t${AuthController.name}`);
     const checkIsActive = await this.authService.checkIsActive(
       signInDto.username,
     );

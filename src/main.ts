@@ -8,13 +8,14 @@ import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
-
+import { LoggerService } from './logger/logger.service';
 
 const configService = new ConfigService();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['debug', 'error', 'log', 'verbose', 'warn'],
+    bufferLogs: true,
   });
+  app.useLogger(app.get(LoggerService));
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({ ...corsOptions });
