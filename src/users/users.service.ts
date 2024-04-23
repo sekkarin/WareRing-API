@@ -14,9 +14,11 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from './../auth/dto/auth.dto';
 import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { Device } from './../device/interface/device.interface';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new LoggerService(UsersService.name);
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
@@ -86,6 +88,7 @@ export class UsersService {
     let profileUrl: string | undefined = undefined;
     let hashPassword: string | undefined = undefined;
     try {
+      
       const user = await this.userModel.findOne({ _id: id });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -108,11 +111,10 @@ export class UsersService {
         )
         .exec();
       const userResponse = this.mapToUserResponseDto(updateUser);
+      this.logger.log(`user ${id} update information successfully`)
       return userResponse;
     } catch (error) {
-      console.log(error);
       throw error;
-      // throw new UnauthorizedException();
     }
   }
   private deleteFile(path: string) {
@@ -145,6 +147,7 @@ export class UsersService {
   }
   async deleteUser(id: string) {
     await this.deviceModel.deleteMany({ userID: id });
+    this.logger.log(`user ${id} delete account successfully`)
     return await this.userModel.deleteOne({ _id: id });
   }
   async verifiredUserEmail(email: string) {

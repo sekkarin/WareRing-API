@@ -7,6 +7,7 @@ import {
 import { Model } from 'mongoose';
 import { Device } from 'src/device/interface/device.interface';
 import { Data } from './interfaces/data.interface';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class WebhookService {
@@ -15,19 +16,27 @@ export class WebhookService {
     private deviceModel: Model<Device>,
     @Inject('DATA_MODEL')
     private dataModel: Model<Data>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   async save(body: any) {
-    const { username, topic, qos, flags, event, payload } = body;
+    const { username, topic, qos, event, payload } = body;
+    let device: any;
     try {
       if (event !== 'message.publish') {
         throw new BadRequestException('invalid event');
       }
-      const device = await this.deviceModel.findOne({
-        usernameDevice: username,
-        qos: qos,
-        retain: flags?.retain,
-        'topics.0': topic,
-      });
+      const deviceCached = await this.cacheManager.get<string>(topic);
+      if (deviceCached) {
+        device = JSON.parse(deviceCached) as Document;
+      } else {
+        device = await this.deviceModel.findOne({
+          usernameDevice: username,
+          qos: qos,
+          'topics.0': topic,
+        });
+        await this.cacheManager.set(topic, JSON.stringify(device), 60000);
+      }
+    
       if (!device) {
         throw new NotFoundException('Device not found.');
       }
@@ -38,10 +47,9 @@ export class WebhookService {
       }
       const toObject = JSON.parse(payload.replace(/'/g, '"'));
       const dataDevice = await this.dataModel.create({
-        deviceId: device.id,
+        deviceId: device._id,
         payload: toObject,
       });
-
       return dataDevice;
     } catch (error) {
       throw error;

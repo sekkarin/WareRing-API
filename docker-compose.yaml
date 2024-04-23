@@ -14,8 +14,6 @@ services:
       - 27018:27017
     volumes:
       - mongodb:/data/db
-   
-
   emqx:
       container_name: emqx
       image: emqx:5.4.1
@@ -49,56 +47,17 @@ services:
 
         # DEFAULT APP SECRET
         EMQX_MANAGEMENT__DEFAULT_APPLICATION__SECRET: "warering-cecret"
-
-        # EMQX_ALLOW_ANONYMOUS: "false"
-        # EMQX_NOMATCH: "deny"
-        # EMQX_AUTHZ__NO__MATCH: "deny"
-        # EMQX_AUTHZ__DENY__ACTION: "ignore"
-        # No Match Action
-        # MONGO CONNECTION
-        # EMQX_AUTH__MONGO__TYPE: single
-        # EMQX_AUTH__MONGO__TOPOLOGY__POOL_SIZE: 1
-        # EMQX_AUTH__MONGO__TOPOLOGY__MAX_OVERFLOW: 0
-
         EMQX_AUTH__MONGO__SERVER: "mongo:27017"
         EMQX_AUTH__MONGO__POOL: 18
 
-        # EMQX_AUTH__MONGO__LOGIN: ""
-        # EMQX_AUTH__MONGO__PASSWORD: ""
-      
-        # EMQX_AUTH__MONGO__DATABASE: "warering-project"
-        # EMQX_AUTH__MONGO__AUTH_QUERY__COLLECTION: "deivce"
-
-        # EMQX_AUTH__MONGO__SUPER_QUERY__COLLECTION: "emqxauthrules"
-        # EMQX_AUTH__MONGO__SUPER_QUERY__SUPER_FIELD: "is_superuser"
-        # EMQX_AUTH__MONGO__SUPER_QUERY__SELECTOR: "username=%u"
-        # EMQX_AUTH__MONGO__SUPER_QUERY: "off"
-
-        # EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_HASH: plain
-        # EMQX_AUTH__MONGO__AUTH_QUERY__PASSWORD_FIELD: "password"
-        # EMQX_AUTH__MONGO__AUTH_QUERY__SELECTOR: "username=%u"
-
-        # # ## Enable ACL query.
-        # # #Access control list
-        # EMQX_AUTH__MONGO__ACL_QUERY: "on"
-        # EMQX_AUTH__MONGO__ACL_QUERY__COLLECTION: "emqxauthrules"
-        # EMQX_AUTH__MONGO__ACL_QUERY__SELECTOR: "username=%u"
-
-        # EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_auth_mongo"
-
-        # EMQX_LISTENER__TCP__EXTERNAL__MAX_CONNECTIONS: 1000
-  jenkins:
-    image: jenkins/jenkins:lts
+  redis:
+    container_name: warering-redis
+    image: redis:7.2.4
     restart: always
-    privileged: true
-    user: root
     ports:
-      - 8080:8080
-      - 50000:50000
-    container_name: jenkins
-    volumes:
-      - /home/ubuntu/jenkins_compose/jenkins_configuration:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
+    - '6379:6379'
+
+ 
 volumes:
   mongodb:
   vol-emqx-data:

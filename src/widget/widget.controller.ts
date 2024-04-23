@@ -8,7 +8,6 @@ import {
   Delete,
   UseGuards,
   Req,
-  Query,
   NotFoundException,
 } from '@nestjs/common';
 import { WidgetService } from './widget.service';
@@ -17,28 +16,27 @@ import { UpdateWidgetDto } from './dto/update-widget.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Widget } from './interface/widget.interface';
+import { Throttle } from '@nestjs/throttler';
+
 import { WidgetResponseDto } from './dto/response-widget.dto';
 import { Roles } from './../auth/decorator/roles.decorator';
 import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
-import { PaginationQueryparamsDto } from './../device/dto/pagination-query-params.dto';
-import { PaginatedDto } from './../utils/dto/paginated.dto';
-import { WidgetResponsesDto } from './dto/responses-widget.dto';
 import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
+import { LoggerService } from 'src/logger/logger.service';
 
 @ApiTags('Widget')
 @Controller('widgets')
 @Roles(Role.User)
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @UseGuards(AuthGuard, RolesGuard)
 export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
-
+  
   @Post(':deviceId')
   @ApiOperation({ summary: 'Create a new widget' })
   @ApiBearerAuth()
@@ -52,7 +50,11 @@ export class WidgetController {
     @Req() req: Request,
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ): Promise<WidgetResponseDto> {
-    return this.widgetService.create(createWidgetDto, deviceId);
+    try {
+      return this.widgetService.create(createWidgetDto, deviceId);
+    } catch (error) {
+      throw error
+    }
   }
 
   @Get(':deviceId')

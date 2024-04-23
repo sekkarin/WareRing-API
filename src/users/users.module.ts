@@ -11,7 +11,6 @@ import { deviceProviders } from './../device/provider/provider';
   exports: [UsersService, ...userProviders],
   imports: [
     DatabaseModule,
-  
   ],
   controllers: [UsersController],
 })

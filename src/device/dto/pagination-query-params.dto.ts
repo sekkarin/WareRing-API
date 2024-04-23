@@ -10,7 +10,7 @@ export class PaginationQueryparamsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(50)
+  // @Max(100)
   readonly limit?: number = 10;
 
   @Type(() => String)

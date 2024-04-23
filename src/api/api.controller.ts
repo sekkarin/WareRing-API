@@ -12,12 +12,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @UseGuards(AuthGuard, RolesGuard)
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
-
-  // @Post('kick_device')
-  // kickDevice() {
-  //   return this.apiService.kickDevice();
-  // }
-
   @Get('overview')
   @ApiBearerAuth()
   @HttpCode(200)

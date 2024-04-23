@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Ip,
   Param,
   Post,
   Req,
@@ -21,6 +22,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 import { AuthService } from './auth.service';
 import { Roles } from './decorator/roles.decorator';
@@ -34,14 +37,20 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
+import { Throttle } from '@nestjs/throttler';
+import { LoggerService } from 'src/logger/logger.service';
 
-@ApiTags('Authentication')
+// TODO: resize image
 @Controller('auth')
+@ApiTags('Authentication')
+@Throttle({ default: { limit: 3, ttl: 60000 } })
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // private myLogger: MyLoggerService// private jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectQueue('sendEmailVerify') private sendEmailVerifyQueue: Queue,
   ) {}
+  private readonly logger = new LoggerService(AuthController.name);
 
   @Post('login')
   @ApiOperation({ summary: 'User login' }) // Operation summary
@@ -74,31 +83,45 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - incorrect or missing credentials',
   })
-  async signIn(@Body() signInDto: BodyUserLoginDto, @Res() res: Response) {
-    const checkIsActive = await this.authService.checkIsActive(
-      signInDto.username,
-    );
-    if (!checkIsActive) {
-      throw new UnauthorizedException('User is banned');
-    }
-    const user = await this.authService.signIn(
-      signInDto.username,
-      signInDto.password,
-    );
-    const expiresInSeconds = this.configService.getOrThrow<number>(
-      'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
-    );
-    const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
+  async signIn(
+    @Ip() ip: string,
+    @Body() signInDto: BodyUserLoginDto,
+    @Res() res: Response,
+  ) {
+    this.logger.log(`${AuthController.name} Login attempt from IP: ${ip}`);
+    try {
+      const checkIsActive = await this.authService.checkIsActive(
+        signInDto.username,
+      );
+      if (!checkIsActive) {
+        this.logger.warn(`User ${signInDto.username} is banned or inactive`);
+        throw new UnauthorizedException('User is banned');
+      }
+      const user = await this.authService.signIn(
+        signInDto.username,
+        signInDto.password,
+      );
+      const expiresInSeconds = this.configService.getOrThrow<number>(
+        'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
+      );
+      const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
 
-    res.cookie('refresh_token', user.refresh_token, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true, 
-      maxAge: maxAgeMilliseconds,
-    });
-    return res.status(200).json({ access_token: user.access_token });
+      res.cookie('refresh_token', user.refresh_token, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        maxAge: maxAgeMilliseconds,
+      });
+      this.logger.log(
+        `${AuthController.name} User ${signInDto.username} logged in successfully`,
+      );
+      return res.status(200).json({ access_token: user.access_token });
+    } catch (error) {
+      throw error;
+    }
   }
 
+  @Post('register')
   @ApiOperation({ summary: 'User registration' }) // Operation summary
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -110,14 +133,26 @@ export class AuthController {
     description: 'Array of validation error messages',
   })
   @HttpCode(HttpStatus.CREATED)
-  @Post('register')
-  async signUp(@Body() signUpDto: CreateUserDto) {
+  async signUp(@Ip() ip: string, @Body() signUpDto: CreateUserDto) {
+    this.logger.log(`${AuthController.name} Register attempt from IP: ${ip}`);
     try {
-      
-      return this.authService.signUp(signUpDto);
+      const result = await this.authService.signUp(signUpDto);
+      await this.sendEmailVerifyQueue.add(
+        'send-email-verify',
+        {
+          email: result.email,
+        },
+        {
+          attempts: 3,
+          priority: 2,
+          removeOnComplete: true,
+          removeOnFail: true,
+          delay: 1000,
+        },
+      );
+      return result;
     } catch (error) {
-      console.log(error);
-      
+      throw error;
     }
   }
 
@@ -128,14 +163,21 @@ export class AuthController {
   @Roles(Role.User, Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-    const username = req.user.username;
-    await this.authService.logOut(username);
-    res.clearCookie('refresh_token');
-    res.status(200).json({ message: "logout's" });
+    try {
+      const username = req.user.username;
+      await this.authService.logOut(username);
+      res.clearCookie('refresh_token');
+      this.logger.log(`User ${username} logged out`);
+      res.status(200).json({ message: "logout's" });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('refresh')
+  @Throttle({ default: { limit: 6, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
+  @ApiCookieAuth('refresh_token')
   @ApiOperation({ summary: 'Refresh access token using a refresh token' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -155,7 +197,6 @@ export class AuthController {
     status: 400,
     description: 'Unauthorized - missing refresh token',
   })
-  @ApiCookieAuth('refresh_token')
   @ApiBearerAuth()
   async refresh(@Req() request: Request, @Res() res: Response) {
     const cookies = request.cookies;
@@ -191,8 +232,15 @@ export class AuthController {
     description: 'Unauthorized - token is not valid',
   })
   async verifyEmail(@Param('token') token, @Res() res: Response) {
-    await this.authService.verifyEmail(token);
-    res.status(200).json({ msg: 'Your email is verifired' });
+    try {
+      const verifyEmailResult = await this.authService.verifyEmail(token);
+      this.logger.log(
+        `verification email ${verifyEmailResult.email} successfully`,
+      );
+      res.status(200).json({ msg: 'Your email is verifired' });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('/forget-password/:email')
@@ -214,6 +262,7 @@ export class AuthController {
     description: "NotFound - Can't find user account with email that your sent",
   }) // Response description
   async sendEmailForgetPassword(@Param('email') email, @Res() res: Response) {
+    this.logger.log(`Forget password email sent to: ${email}`);
     try {
       const isEmailSent = await this.authService.sendEmailForgetPassword(email);
       if (isEmailSent) {
@@ -254,7 +303,11 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res() res: Response,
   ) {
-    await this.authService.resetPassword(token, resetPasswordDto.newPassword);
+    const resetResult = await this.authService.resetPassword(
+      token,
+      resetPasswordDto.newPassword,
+    );
+    this.logger.log(`Reset password email from: ${resetResult.email}`);
     res.status(200).json({ msg: 'Reset your password already' });
   }
 }

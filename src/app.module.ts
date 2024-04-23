@@ -2,8 +2,9 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -13,6 +14,10 @@ import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { BullModule } from '@nestjs/bull';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { LoggerModule } from './logger/logger.module';
 
 const configService = new ConfigService();
 
@@ -40,9 +45,40 @@ const configService = new ConfigService();
       },
     }),
     WidgetModule,
-    WebhookModule
+    WebhookModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: 'localhost',
+            port: 6379,
+          },
+        }),
+      }),
+    }),
+    BullModule.forRoot({
+      redis: {
+        port: 6379,
+      },
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 250,
+        },
+      ],
+      errorMessage:"Access limited. Please try again later."
+    }),
+    LoggerModule,
   ],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
