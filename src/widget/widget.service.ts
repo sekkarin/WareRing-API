@@ -5,13 +5,16 @@ import { CreateWidgetDto } from './dto/create-widget.dto';
 import { UpdateWidgetDto } from './dto/update-widget.dto';
 import { Widget } from './interface/widget.interface';
 import { WidgetResponseDto } from './dto/response-widget.dto';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class WidgetService {
+  private readonly logger = new LoggerService(WidgetService.name);
   constructor(
     @Inject('WIDGET_MODEL')
     private widgetModel: Model<Widget>,
   ) {}
+
   async create(
     createWidgetDto: CreateWidgetDto,
     deviceId: string,
@@ -21,6 +24,7 @@ export class WidgetService {
       deviceId,
     });
     await createdWidget.save();
+    this.logger.log(`user create widget successfully deviceID: ${deviceId}`)
     return this.mapToWidgetResponseDto(createdWidget);
   }
 
@@ -56,11 +60,13 @@ export class WidgetService {
     if (!existingWidget) {
       throw new NotFoundException('Widget not found');
     }
+    this.logger.log(`user update widget successfully deviceID: ${widgetId}`)
     return this.mapToWidgetResponseDto(existingWidget);
   }
 
   async delete(widgetId: string): Promise<boolean> {
     const result = await this.widgetModel.deleteOne({ _id: widgetId }).exec();
+    this.logger.log(`user dalete widget successfully deviceID: ${widgetId}`)
     return result.deletedCount > 0;
   }
   private mapToWidgetResponseDto(widget: Widget): WidgetResponseDto {

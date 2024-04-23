@@ -27,6 +27,7 @@ import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
 import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
+import { LoggerService } from 'src/logger/logger.service';
 
 @ApiTags('Widget')
 @Controller('widgets')
@@ -35,7 +36,7 @@ import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
 @UseGuards(AuthGuard, RolesGuard)
 export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
-
+  
   @Post(':deviceId')
   @ApiOperation({ summary: 'Create a new widget' })
   @ApiBearerAuth()
@@ -49,7 +50,11 @@ export class WidgetController {
     @Req() req: Request,
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ): Promise<WidgetResponseDto> {
-    return this.widgetService.create(createWidgetDto, deviceId);
+    try {
+      return this.widgetService.create(createWidgetDto, deviceId);
+    } catch (error) {
+      throw error
+    }
   }
 
   @Get(':deviceId')

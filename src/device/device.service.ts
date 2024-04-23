@@ -14,6 +14,7 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
 import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class DeviceService {
@@ -21,7 +22,7 @@ export class DeviceService {
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
   ) {}
-
+  private readonly logger = new LoggerService(DeviceService.name);
   async create(
     createDeviceDto: CreateDeviceDto,
     userID: string,
@@ -58,6 +59,7 @@ export class DeviceService {
       topics: topicsGenerated,
     });
     await device.save();
+    this.logger.log(`user ${userID} create device successfully`)
     return this.mapToDeviceResponseDto(device);
   }
 
@@ -214,7 +216,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('Device not found');
       }
-
+      this.logger.log(`user ${userID} update device successfully`)
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -226,7 +228,7 @@ export class DeviceService {
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-    await this.deviceModel.deleteOne({ _id: id, userID });
+    this.logger.log(`user ${userID} delete device successfully`)
     return await this.deviceModel.deleteOne({ _id: id, userID });
   }
 
@@ -249,6 +251,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
+      this.logger.log(`user ${userID} update permission device successfully`)
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -270,6 +273,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
+      this.logger.log(`user ${userID} update save data device successfully`)
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;

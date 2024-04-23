@@ -38,6 +38,7 @@ import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { Throttle } from '@nestjs/throttler';
+import { LoggerService } from 'src/logger/logger.service';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
@@ -65,6 +66,7 @@ export class DeviceController {
     @Body() createDeviceDto: CreateDeviceDto,
   ): Promise<DeviceResponseDto> {
     const { sub } = req['user'];
+
     try {
       return await this.deviceService.create(createDeviceDto, sub);
     } catch (error) {
@@ -280,6 +282,7 @@ export class DeviceController {
   ) {
     try {
       const { sub } = req['user'];
+
       await this.deviceService.delete(id, sub);
       return {
         message: 'device deleted successfully',
@@ -306,6 +309,7 @@ export class DeviceController {
   ) {
     try {
       const { sub } = req['user'];
+
       const { permission } = setPermissions;
       return this.deviceService.setPermission(permission, sub, id);
     } catch (error) {
