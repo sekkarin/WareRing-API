@@ -157,7 +157,7 @@ export class UsersController {
       return this.usersService.setBanned(bannedState, id);
     } catch (error) {
       console.log(error);
-      
+
       throw error;
     }
   }
