@@ -18,15 +18,18 @@ import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new LoggerService(AuthService.name);
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
   ) {}
+
   async signIn(username: string, pass: string) {
     try {
       const user = await this.usersService.findOne(username);
@@ -179,8 +182,8 @@ export class AuthService {
       const { email } = await this.jwtService.verify(uniqueString, {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       });
-      this.usersService.verifiredUserEmail(email);
-      return;
+      
+      return this.usersService.verifiredUserEmail(email);
     } catch (err) {
       throw new HttpException(
         'Unauthorized - token is not valid',
@@ -213,7 +216,7 @@ export class AuthService {
       });
       return mail;
     } catch (err) {
-      throw err
+      throw err;
     }
   }
 
@@ -242,5 +245,4 @@ export class AuthService {
     }
     return user.isActive;
   }
-  
 }

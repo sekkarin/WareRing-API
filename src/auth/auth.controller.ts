@@ -87,29 +87,37 @@ export class AuthController {
     @Body() signInDto: BodyUserLoginDto,
     @Res() res: Response,
   ) {
-    this.logger.log(`Request for\t${ip}\t${AuthController.name}`);
-    const checkIsActive = await this.authService.checkIsActive(
-      signInDto.username,
-    );
-    if (!checkIsActive) {
-      throw new UnauthorizedException('User is banned');
-    }
-    const user = await this.authService.signIn(
-      signInDto.username,
-      signInDto.password,
-    );
-    const expiresInSeconds = this.configService.getOrThrow<number>(
-      'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
-    );
-    const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
+    this.logger.log(`${AuthController.name} Login attempt from IP: ${ip}`);
+    try {
+      const checkIsActive = await this.authService.checkIsActive(
+        signInDto.username,
+      );
+      if (!checkIsActive) {
+        this.logger.warn(`User ${signInDto.username} is banned or inactive`);
+        throw new UnauthorizedException('User is banned');
+      }
+      const user = await this.authService.signIn(
+        signInDto.username,
+        signInDto.password,
+      );
+      const expiresInSeconds = this.configService.getOrThrow<number>(
+        'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
+      );
+      const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
 
-    res.cookie('refresh_token', user.refresh_token, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      maxAge: maxAgeMilliseconds,
-    });
-    return res.status(200).json({ access_token: user.access_token });
+      res.cookie('refresh_token', user.refresh_token, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        maxAge: maxAgeMilliseconds,
+      });
+      this.logger.log(
+        `${AuthController.name} User ${signInDto.username} logged in successfully`,
+      );
+      return res.status(200).json({ access_token: user.access_token });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Post('register')
@@ -124,10 +132,9 @@ export class AuthController {
     description: 'Array of validation error messages',
   })
   @HttpCode(HttpStatus.CREATED)
-  async signUp(@Body() signUpDto: CreateUserDto) {
+  async signUp(@Ip() ip: string, @Body() signUpDto: CreateUserDto) {
+    this.logger.log(`${AuthController.name} Register attempt from IP: ${ip}`);
     try {
-      // console.log(signUpDto);
-
       const result = await this.authService.signUp(signUpDto);
       await this.sendEmailVerifyQueue.add(
         'send-email-verify',
@@ -155,10 +162,15 @@ export class AuthController {
   @Roles(Role.User, Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
-    const username = req.user.username;
-    await this.authService.logOut(username);
-    res.clearCookie('refresh_token');
-    res.status(200).json({ message: "logout's" });
+    try {
+      const username = req.user.username;
+      await this.authService.logOut(username);
+      res.clearCookie('refresh_token');
+      this.logger.log(`User ${username} logged out`);
+      res.status(200).json({ message: "logout's" });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('refresh')
@@ -219,8 +231,15 @@ export class AuthController {
     description: 'Unauthorized - token is not valid',
   })
   async verifyEmail(@Param('token') token, @Res() res: Response) {
-    await this.authService.verifyEmail(token);
-    res.status(200).json({ msg: 'Your email is verifired' });
+    try {
+      const verifyEmailResult = await this.authService.verifyEmail(token);
+      this.logger.log(
+        `verification email ${verifyEmailResult.email} successfully`,
+      );
+      res.status(200).json({ msg: 'Your email is verifired' });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('/forget-password/:email')
@@ -242,6 +261,7 @@ export class AuthController {
     description: "NotFound - Can't find user account with email that your sent",
   }) // Response description
   async sendEmailForgetPassword(@Param('email') email, @Res() res: Response) {
+    this.logger.log(`Forget password email sent to: ${email}`);
     try {
       const isEmailSent = await this.authService.sendEmailForgetPassword(email);
       if (isEmailSent) {
@@ -282,7 +302,11 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res() res: Response,
   ) {
-    await this.authService.resetPassword(token, resetPasswordDto.newPassword);
+    const resetResult = await this.authService.resetPassword(
+      token,
+      resetPasswordDto.newPassword,
+    );
+    this.logger.log(`Reset password email from: ${resetResult.email}`);
     res.status(200).json({ msg: 'Reset your password already' });
   }
 }

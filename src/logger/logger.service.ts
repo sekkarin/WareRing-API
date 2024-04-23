@@ -6,13 +6,45 @@ import * as path from 'path';
 @Injectable()
 export class LoggerService extends ConsoleLogger {
   log(message: any, context?: string) {
-    const entry = `${context}\t${message}`;
+    let entry = '';
+    if (context) {
+      super.log(message, context);
+      entry = `level:info\t${context}\t${message}`;
+    } else {
+      entry = `level:info\t${message}`;
+      super.log(message);
+    }
     this.logFile(entry);
-    super.log(message, context);
   }
-
   error(message: any, stackOrContext?: string) {
-    const entry = `${stackOrContext}\t${message}`;
+    const entry = `level:error\t${stackOrContext}\t${message}`;
+    this.logFile(entry);
+    super.error(message, stackOrContext);
+  }
+  verbose(message: any, context?: string) {
+    let entry = '';
+    if (context) {
+      super.verbose(message, context);
+      entry = `level:verbose\t${context}\t${message}`;
+    } else {
+      entry = `level:verbose\t${message}`;
+      super.verbose(message);
+    }
+    this.logFile(entry);
+  }
+  warn(message: any, context?: string) {
+    let entry = '';
+    if (context) {
+      super.warn(message, context);
+      entry = `level:verbose\t${context}\t${message}`;
+    } else {
+      entry = `level:verbose\t${message}`;
+      super.warn(message);
+    }
+    this.logFile(entry);
+  }
+  fatal(message: any, stackOrContext?: string) {
+    const entry = `level:fatal\t${stackOrContext}\t${message}`;
     this.logFile(entry);
     super.error(message, stackOrContext);
   }
@@ -23,12 +55,12 @@ export class LoggerService extends ConsoleLogger {
       timeStyle: 'short',
       timeZone: 'Asia/Bangkok',
     }).format(new Date())}\t${entry}\n`;
-    try { 
-      if (!fs.existsSync(path.join(__dirname, '..','..', '..', 'logs'))) {
-        await fsPromises.mkdir(path.join(__dirname, '..','..', '..', 'logs'))
+    try {
+      if (!fs.existsSync(path.join(__dirname, '..', '..', '..', 'logs'))) {
+        await fsPromises.mkdir(path.join(__dirname, '..', '..', '..', 'logs'));
       }
       await fsPromises.appendFile(
-        path.join(__dirname,'..', '..', '..', 'logs', 'loggerFile.log'),
+        path.join(__dirname, '..', '..', '..', 'logs', 'loggerFile.log'),
         formattedEntry,
       );
     } catch (error) {

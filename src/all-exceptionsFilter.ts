@@ -4,11 +4,13 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  PayloadTooLargeException,
 } from '@nestjs/common';
-import { BaseExceptionFilter, HttpAdapterHost } from '@nestjs/core';
+import { BaseExceptionFilter } from '@nestjs/core';
 import { LoggerService } from './logger/logger.service';
 import { MongooseError } from 'mongoose';
 import { Request, Response } from 'express';
+
 type ResponseObjAllExceptions = {
   statusCode: number;
   timeStamp: string;
@@ -35,14 +37,20 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       responseObj.response = exception.getResponse();
     } else if (exception instanceof MongooseError) {
       responseObj.statusCode = 422;
-      responseObj.response = exception.message.replace(/\n/g, '');
+      responseObj.response = exception.message
+    } else if (exception instanceof PayloadTooLargeException) {
+      responseObj.statusCode = 413;
+      responseObj.response = exception.message
     } else {
       responseObj.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       responseObj.response = 'Internal Server Error';
     }
 
     response.status(responseObj.statusCode).json(responseObj);
-    this.logger.error(responseObj.response, AllExceptionsFilter.name);
-    // super.catch(exception,host)
+    this.logger.error(
+      JSON.stringify(responseObj.response),
+      AllExceptionsFilter.name,
+    );
+    super.catch(exception, host);
   }
 }
