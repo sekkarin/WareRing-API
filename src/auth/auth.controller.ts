@@ -40,6 +40,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { LoggerService } from 'src/logger/logger.service';
 
+// TODO: resize image
 @Controller('auth')
 @ApiTags('Authentication')
 @Throttle({ default: { limit: 3, ttl: 60000 } })
