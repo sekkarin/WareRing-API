@@ -18,6 +18,7 @@ import { BullModule } from '@nestjs/bull';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from './logger/logger.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 const configService = new ConfigService();
 
@@ -72,6 +73,7 @@ const configService = new ConfigService();
       errorMessage:"Access limited. Please try again later."
     }),
     LoggerModule,
+    DashboardModule,
   ],
   providers: [
     {
