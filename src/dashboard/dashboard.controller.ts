@@ -13,7 +13,13 @@ import {
 import { DashboardService } from './dashboard.service';
 import { CreateDashboardDto } from './dto/create-dashboard.dto';
 import { UpdateDashboardDto } from './dto/update-dashboard.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
@@ -35,6 +41,7 @@ export class DashboardController {
     description: 'Dashboard created successfully',
     type: CreateDashboardDto, // Specify the response DTO
   })
+  @ApiOperation({ summary: 'Create a new dashboard' })
   create(@Req() req: Request, @Body() createDashboardDto: CreateDashboardDto) {
     try {
       const { sub } = req['user'];
@@ -45,6 +52,7 @@ export class DashboardController {
   }
 
   @Post('/:dashboardId/widget/:widgetId')
+  @ApiOperation({ summary: 'Add a new widget' })
   addWidget(
     @Req() req: Request,
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
@@ -58,14 +66,32 @@ export class DashboardController {
   }
 
   @Get()
+  @ApiQuery({
+    name: 'query',
+    type: String,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiOperation({ summary: 'Get dashboards' })
   findAll(
     @Req() req: Request,
-    @Query('query') query: string,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
   ) {
     const { sub } = req['user'];
     try {
-      const { page, limit } = paginationQueryparamsDto;
+      const { page, limit, query } = paginationQueryparamsDto;
       return this.dashboardService.findAll(query, page, limit, sub);
     } catch (error) {
       throw error;
@@ -73,6 +99,7 @@ export class DashboardController {
   }
 
   @Get(':dashboardId')
+  @ApiOperation({ summary: 'Get a dashboard by Id' })
   findOne(
     @Req() req: Request,
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
@@ -86,6 +113,7 @@ export class DashboardController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a dashboard by Id' })
   update(
     @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateDashboardDto: UpdateDashboardDto,
@@ -98,6 +126,7 @@ export class DashboardController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a dashboard by Id' })
   deleteDashboard(@Param('id', MongoDBObjectIdPipe) id: string) {
     try {
       return this.dashboardService.remove(id);
@@ -107,6 +136,7 @@ export class DashboardController {
   }
 
   @Delete('/:dashboardId/widget/:widgetId')
+  @ApiOperation({ summary: 'Delete a widget in dashboard' })
   deleteWidget(
     @Req() req: Request,
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
