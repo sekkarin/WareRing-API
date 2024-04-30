@@ -10,6 +10,7 @@ import { Model } from 'mongoose';
 import { Dashboard } from './interfaces/dashboard.interface';
 import { DashboardResponseDto } from './dto/dashboard-response';
 import { Widget } from 'src/widget/interface/widget.interface';
+import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 
 @Injectable()
 export class DashboardService {
@@ -30,26 +31,43 @@ export class DashboardService {
     }
   }
 
-  async findAll(userID: string) {
-    const dashboards = await this.dashboardModel
-      .find({ userID })
-      .populate({
-        path:'widgets',
-        populate:{
-          path:"deviceId",
-          model:'Device'
-        }
-      });
-    const dashboardResponse = dashboards.map((dashboard) =>
-      this.mapToDashboardResponseDto(dashboard),
-    );
-    return dashboardResponse;
+  async findAll(query= '', page = 1, limit = 10, currentUserId: string) {
+    try {
+      const dashboards = await this.dashboardModel
+        .find({
+          _id: { $ne: currentUserId },
+          $or: [
+            { nameDashboard: { $regex: query, $options: 'i' } },
+            { description: { $regex: query, $options: 'i' } },
+          ],
+        })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate({
+          path: 'widgets',
+          populate: {
+            path: 'deviceId',
+            model: 'Device',
+          },
+        });
+      const dashboardResponse = dashboards.map((dashboard) =>
+        this.mapToDashboardResponseDto(dashboard),
+      );
+      return new PaginatedDto<DashboardResponseDto>(
+        dashboardResponse,
+        page,
+        limit,
+        dashboards.length,
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 
   async addWidget(dashboardId: string, widgetId: string) {
     try {
       const widgetExists = await this.widgetModel.findOne({ _id: widgetId });
-     
+
       if (!widgetExists) {
         throw new NotFoundException('not found widget');
       }
@@ -83,11 +101,11 @@ export class DashboardService {
     const dashboard = await this.dashboardModel
       .findOne({ _id: dashboardId, userID })
       .populate({
-        path:'widgets',
-        populate:{
-          path:"deviceId",
-          model:'Device'
-        }
+        path: 'widgets',
+        populate: {
+          path: 'deviceId',
+          model: 'Device',
+        },
       });
     if (!dashboard) {
       throw new NotFoundException('Dashboard not found');
@@ -162,9 +180,9 @@ export class DashboardService {
     return {
       id: dashboard.id,
       userID: dashboard.userID,
-      widgets: dashboard.widgets,
       nameDashboard: dashboard.nameDashboard,
       description: dashboard.description,
+      widgets: dashboard.widgets,
       createdAt: dashboard.createdAt,
     };
   }

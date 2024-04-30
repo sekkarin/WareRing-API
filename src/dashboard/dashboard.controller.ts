@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { CreateDashboardDto } from './dto/create-dashboard.dto';
@@ -18,6 +19,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
+import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
@@ -56,10 +58,15 @@ export class DashboardController {
   }
 
   @Get()
-  findAll(@Req() req: Request) {
+  findAll(
+    @Req() req: Request,
+    @Query('query') query: string,
+    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
+  ) {
     const { sub } = req['user'];
     try {
-      return this.dashboardService.findAll(sub);
+      const { page, limit } = paginationQueryparamsDto;
+      return this.dashboardService.findAll(query, page, limit, sub);
     } catch (error) {
       throw error;
     }
