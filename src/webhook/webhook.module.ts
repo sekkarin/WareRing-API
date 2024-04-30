@@ -4,10 +4,22 @@ import { WebhookController } from './webhook.controller';
 import { DatabaseModule } from 'src/database/database.module';
 import { deviceProviders } from 'src/device/provider/provider';
 import { dataProviders } from './provider/provider';
+import { BullModule } from '@nestjs/bull';
+import { WebhooksConsumer } from './webhooks.process';
 
 @Module({
   controllers: [WebhookController],
-  providers: [WebhookService, ...deviceProviders, ...dataProviders],
-  imports: [DatabaseModule],
+  providers: [
+    WebhookService,
+    ...deviceProviders,
+    ...dataProviders,
+    WebhooksConsumer,
+  ],
+  imports: [
+    DatabaseModule,
+    BullModule.registerQueue({
+      name: 'webhooksQueue',
+    }),
+  ],
 })
 export class WebhookModule {}

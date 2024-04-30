@@ -11,17 +11,35 @@ import {
 import { WebhookService } from './webhook.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { SkipThrottle } from "@nestjs/throttler";
+import { SkipThrottle } from '@nestjs/throttler';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 @Controller('webhooks')
 @ApiTags('Webhooks')
 @SkipThrottle()
 export class WebhookController {
-  constructor(private readonly webhookService: WebhookService) {}
+  constructor(
+    private readonly webhookService: WebhookService,
+    @InjectQueue('webhooksQueue') private webhooksQueue: Queue,
+  ) {}
 
   @Post('/save')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(CacheInterceptor)
-  saveData(@Body() body: any) {
-  return this.webhookService.save(body);
+  async saveData(@Body() body: any) {
+    const {device,toObject} = await this.webhookService.save(body);
+    await this.webhooksQueue.add(
+      'save-data',
+      {
+        device,
+        toObject
+      },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+        
+      },
+    );
+    return toObject
   }
 }

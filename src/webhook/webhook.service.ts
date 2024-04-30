@@ -8,6 +8,8 @@ import { Model } from 'mongoose';
 import { Device } from 'src/device/interface/device.interface';
 import { Data } from './interfaces/data.interface';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class WebhookService {
@@ -36,7 +38,7 @@ export class WebhookService {
         });
         await this.cacheManager.set(topic, JSON.stringify(device), 60000);
       }
-    
+
       if (!device) {
         throw new NotFoundException('Device not found.');
       }
@@ -46,13 +48,17 @@ export class WebhookService {
         };
       }
       const toObject = JSON.parse(payload.replace(/'/g, '"'));
-      const dataDevice = await this.dataModel.create({
-        deviceId: device._id,
-        payload: toObject,
-      });
-      return dataDevice;
+      // const dataDevice = await this.insertData(device, toObject);
+      return { device, toObject };
     } catch (error) {
       throw error;
     }
+  }
+
+  async insertData(device: any, toObject: any) {
+    return await this.dataModel.create({
+      deviceId: device._id,
+      payload: toObject,
+    });
   }
 }
