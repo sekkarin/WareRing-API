@@ -17,6 +17,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
@@ -40,11 +41,12 @@ export class DashboardController {
       throw error;
     }
   }
+
   @Post('/:dashboardId/widget/:widgetId')
   addWidget(
     @Req() req: Request,
-    @Param('widgetId') widgetId: string,
-    @Param('dashboardId') dashboardId: string,
+    @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
     try {
       return this.dashboardService.addWidget(dashboardId, widgetId);
@@ -64,7 +66,10 @@ export class DashboardController {
   }
 
   @Get(':dashboardId')
-  findOne(@Req() req: Request, @Param('dashboardId') dashboardId: string) {
+  findOne(
+    @Req() req: Request,
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
+  ) {
     const { sub } = req['user'];
     try {
       return this.dashboardService.findOne(sub, dashboardId);
@@ -75,22 +80,30 @@ export class DashboardController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateDashboardDto: UpdateDashboardDto,
   ) {
-    return this.dashboardService.update(+id, updateDashboardDto);
+    try {
+      return this.dashboardService.update(id, updateDashboardDto);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.dashboardService.remove(+id);
+  deleteDashboard(@Param('id', MongoDBObjectIdPipe) id: string) {
+    try {
+      return this.dashboardService.remove(id);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Delete('/:dashboardId/widget/:widgetId')
   deleteWidget(
     @Req() req: Request,
-    @Param('widgetId') widgetId: string,
-    @Param('dashboardId') dashboardId: string,
+    @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
     try {
       const { sub } = req['user'];
