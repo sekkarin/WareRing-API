@@ -38,12 +38,12 @@ import { PaginationQueryparamsDto } from './dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from '../utils/pipes/mongodb-objectid.pipe';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { Throttle } from '@nestjs/throttler';
-import { LoggerService } from 'src/logger/logger.service';
+import { IsActivateUser } from 'src/users/guard/active.guard';
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
 @Throttle({ default: { limit: 30, ttl: 60000 } })
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 

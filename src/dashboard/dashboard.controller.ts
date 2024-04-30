@@ -26,12 +26,13 @@ import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
+import { IsActivateUser } from 'src/users/guard/active.guard';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
 @Controller('dashboards')
 @Roles(Role.User)
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

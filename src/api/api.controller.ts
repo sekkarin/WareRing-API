@@ -5,11 +5,12 @@ import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
 import { Role } from './../auth/enums/role.enum';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { IsActivateUser } from 'src/users/guard/active.guard';
 
 @Controller('api')
 @ApiTags('Api')
 @Roles(Role.User)
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
   @Get('overview')

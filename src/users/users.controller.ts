@@ -42,6 +42,7 @@ import { storageFiles } from './../utils/storageFiles';
 import { ConfigService } from '@nestjs/config';
 import { BannedDto } from './dto/banned.dto';
 import { Throttle } from '@nestjs/throttler';
+import { IsActivateUser } from './guard/active.guard';
 
 @ApiTags('User')
 @Controller('users')
@@ -54,8 +55,8 @@ export class UsersController {
 
   @Put()
   @ApiBearerAuth()
-  @Roles(Role.Admin, Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.User,)
+  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a user' }) // Operation summary
   @ApiResponse({
@@ -191,7 +192,7 @@ export class UsersController {
     type: UserResponseDto,
     isArray: true,
   })
-  async searchDevices(
+  async searchUsers(
     @Req() req: Request,
     @Query('query') query: string,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
@@ -236,8 +237,8 @@ export class UsersController {
   @Delete()
   @Roles(Role.User)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Delete a user', description: 'Roles Admin' }) // Operation summary
+  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+  @ApiOperation({ summary: 'Delete a user', description: 'Roles User' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({
     status: 400,
@@ -260,7 +261,7 @@ export class UsersController {
 
   @Get(':id')
   @Roles(Role.User)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
   @ApiOperation({ summary: 'Get user by id' }) // Operation summary
   @ApiResponse({
     status: 200,
