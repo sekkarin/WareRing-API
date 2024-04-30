@@ -116,15 +116,15 @@ User <|-right- Adminstrator
 ' class Client สืบทอดคุณสมบัติของ class User
 User <|-down- Client
 ' ภายใน Device มี Client ประกอบอยู่ 1 , 0..many
-Client "1" -left-* "0..*" Device 
+Client "1" -left-o "0..*" Device 
 ' ภายใน Dashboard มี Client ประกอบอยู่ 1, 0..many
-Client "1" -right-* "0..*" Dashboard
+' Client "1" -right-o "0..*" Dashboard
 ' ภายใน Dashboard มี Widget ประกอบอยู่ ไม่มีหรือมีแค่ 1, 0..many
-Dashboard "1" o-- "0..*" Widget
+Dashboard "1" o-- "0..*" Device
 ' ภายใน Widget มี Device ประกอบอยู่ 1, 0..many
-Device "1" --* "0..*" Widget
+Device "1" --o "0..*" Widget
 ' ภายใน Data มี Device ประกอบอยู่ 1, 0..many
-Device "1" -left-* "0..*" Data
+Device "1" -left-o "0..*" Data
 
 
 @enduml

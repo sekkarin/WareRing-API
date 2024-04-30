@@ -1,0 +1,44 @@
+[
+  {
+    "id": "6630af5fe3b06552b25cee13",
+    "userID": "6626411290a1bbcb5d5980bf",
+    "widgets": [
+      {
+        "_id": "662a0e2b8cfcbbf438ad6158",
+        "deviceId": {
+          "_id": "6627834940dedfed87c2e10d",
+          "userID": "6626411290a1bbcb5d5980bf",
+          "nameDevice": "MyDevice",
+          "usernameDevice": "device1",
+          "password_hash": "$2b$10$vCOkM4thxu.J/fsHnwhzYeiPWBVBkdjghCUqg7Xm4sUG4UbxGZl/.",
+          "password_law": "hashed_password",
+          "description": "Smart home controller",
+          "permission": "allow",
+          "topics": [
+            "6626411290a1bbcb5d5980bf/topic2/publish",
+            "6626411290a1bbcb5d5980bf/topic2/subscribe"
+          ],
+          "action": "all",
+          "qos": 0,
+          "retain": true,
+          "isSaveData": true,
+          "createdAt": "2024-04-23T09:45:45.268Z",
+          "updatedAt": "2024-04-23T09:45:45.268Z",
+          "__v": 0
+        },
+        "label": "My Device",
+        "type": "Temperature",
+        "configWidget": {
+          "threshold": 30,
+          "unit": "Celsius"
+        },
+        "createdAt": "2024-04-25T08:02:51.705Z",
+        "updatedAt": "2024-04-25T08:02:51.705Z",
+        "__v": 0
+      }
+    ],
+    "nameDashboard": "My Dashboard1",
+    "description": "This is a sample dashboard",
+    "createdAt": "2024-04-30T08:44:15.755Z"
+  }
+]
