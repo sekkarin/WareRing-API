@@ -169,7 +169,7 @@ export class UsersService {
   }
   private mapToUserResponseDto(user: User): UserResponseDto {
     return {
-      id: user.id,
+      id: user._id,
       email: user.email,
       fname: user.firstName,
       lname: user.lastName,
