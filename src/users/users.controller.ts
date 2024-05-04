@@ -103,7 +103,7 @@ export class UsersController {
       host +
       `:${this.configService.get<string>('PORT')}` +
       originUrl +
-      '/profile/';
+      'profile/';
 
     try {
       // TODO: delete image old

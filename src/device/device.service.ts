@@ -90,6 +90,8 @@ export class DeviceService {
     getDevicesFilterDto: GetDevicesFilterDto,
   ) {
     try {
+      console.log("sadasdsa");
+      
       let options = {};
       ({ options, getDevicesFilterDto } = this.getFilter(getDevicesFilterDto));
 
@@ -113,6 +115,8 @@ export class DeviceService {
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
       );
+      console.log(devicesResponse);
+      
       return new PaginatedDto<DeviceResponseDto>(
         devicesResponse,
         page,
@@ -125,6 +129,8 @@ export class DeviceService {
   }
 
   private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    console.log(getDevicesSortDto);
+    
     if (getDevicesSortDto) {
       devicesQuery = devicesQuery.sort(getDevicesSortDto);
     } else {
