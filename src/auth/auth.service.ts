@@ -13,7 +13,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from './../users/users.service';
-import { User } from './../users/interfaces/user.interface';
 import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
@@ -118,29 +117,24 @@ export class AuthService {
       if (!foundUser) {
         throw new NotFoundException('user not found');
       }
+      const verifyToken = await this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
 
-      try {
-        const verifyToken = await this.jwtService.verify(refreshToken, {
-          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        });
-
-        if (verifyToken.username != foundUser.username) {
-          throw new ForbiddenException('invalid token');
-        }
-        const payload = {
-          sub: foundUser.id,
-          username: foundUser.username,
-          roles: foundUser.roles,
-        };
-
-        const access_token = await this.jwtService.signAsync(payload, {
-          expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
-          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-        });
-        return access_token;
-      } catch (error) {
+      if (verifyToken.username != foundUser.username) {
         throw new ForbiddenException('invalid token');
       }
+      const payload = {
+        sub: foundUser.id,
+        username: foundUser.username,
+        roles: foundUser.roles,
+      };
+
+      const access_token = await this.jwtService.signAsync(payload, {
+        expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      });
+      return access_token;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new ForbiddenException('token expired');
@@ -163,7 +157,7 @@ export class AuthService {
         from: this.configService.get<string>('EMAIL_AUTH'),
         to: email,
         subject: 'Verify Your Email',
-        html: FORM_VERIFY_EMAIL(uniqueString,clientUrl),
+        html: FORM_VERIFY_EMAIL(uniqueString, clientUrl),
       });
       return true;
     } catch (err) {
@@ -177,7 +171,7 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       });
 
-      return this.usersService.verifiredUserEmail(email);
+      return await this.usersService.verifiredUserEmail(email);
     } catch (err) {
       throw new HttpException(
         'Unauthorized - token is not valid',

@@ -305,11 +305,15 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res() res: Response,
   ) {
-    const resetResult = await this.authService.resetPassword(
-      token,
-      resetPasswordDto.newPassword,
-    );
-    this.logger.log(`Reset password email from: ${resetResult.email}`);
-    res.status(200).json({ msg: 'Reset your password already' });
+    try {
+      const resetResult = await this.authService.resetPassword(
+        token,
+        resetPasswordDto.newPassword,
+      );
+      this.logger.log(`Reset password email from: ${resetResult.email}`);
+      res.status(200).json({ msg: 'Reset your password already' });
+    } catch (error) {
+      throw error;
+    }
   }
 }

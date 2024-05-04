@@ -8,6 +8,7 @@ import { BullModule } from '@nestjs/bull';
 import { AuthConsumer } from './auth.process';
 import { LoggerService } from 'src/logger/logger.service';
 import { AuthGuard } from './guards/auth.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   controllers: [AuthController],
@@ -19,8 +20,7 @@ import { AuthGuard } from './guards/auth.guard';
     }),
     BullModule.registerQueue({
       name: 'sendEmailVerify',
-    })
-    
+    }),
   ],
 })
 export class AuthModule {}
