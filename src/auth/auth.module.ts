@@ -7,10 +7,12 @@ import { UsersModule } from './../users/users.module';
 import { BullModule } from '@nestjs/bull';
 import { AuthConsumer } from './auth.process';
 import { LoggerService } from 'src/logger/logger.service';
+import { AuthGuard } from './guards/auth.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, AuthConsumer],
+  providers: [AuthService, AuthConsumer,AuthGuard],
   imports: [
     UsersModule,
     JwtModule.register({
@@ -18,7 +20,7 @@ import { LoggerService } from 'src/logger/logger.service';
     }),
     BullModule.registerQueue({
       name: 'sendEmailVerify',
-    })
+    }),
   ],
 })
 export class AuthModule {}

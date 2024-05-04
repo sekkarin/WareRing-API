@@ -13,7 +13,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from './../users/users.service';
-import { User } from './../users/interfaces/user.interface';
 import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
@@ -95,22 +94,20 @@ export class AuthService {
     }
   }
 
-  async logOut(username: string): Promise<User | undefined> {
+  async logOut(username: string) {
     try {
       const fondUser = await this.usersService.findOne(username);
       if (!fondUser) {
-        throw new HttpException('FORBIDDEN', HttpStatus.FORBIDDEN);
+        throw new NotFoundException('user not found');
       }
       fondUser.refreshToken = '';
-      return await fondUser.save();
+      await fondUser.save();
+      return;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new ForbiddenException('Token expired');
       }
-      throw new HttpException(
-        'INTERNAL_SERVER_ERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -118,38 +115,31 @@ export class AuthService {
     try {
       const foundUser = await this.usersService.findOneToken(refreshToken);
       if (!foundUser) {
-        throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new NotFoundException('user not found');
       }
+      const verifyToken = await this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
 
-      try {
-        const verifyToken = this.jwtService.verify(refreshToken, {
-          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        });
-        if (verifyToken.username != foundUser.username) {
-          throw new ForbiddenException();
-        }
-        const payload = {
-          sub: foundUser.id,
-          username: foundUser.username,
-          roles: foundUser.roles,
-        };
-
-        const access_token = await this.jwtService.signAsync(payload, {
-          expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
-          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-        });
-        return access_token;
-      } catch (error) {
-        throw new ForbiddenException();
+      if (verifyToken.username != foundUser.username) {
+        throw new ForbiddenException('invalid token');
       }
+      const payload = {
+        sub: foundUser.id,
+        username: foundUser.username,
+        roles: foundUser.roles,
+      };
+
+      const access_token = await this.jwtService.signAsync(payload, {
+        expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      });
+      return access_token;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        throw new ForbiddenException('token expired');
       }
-      throw new HttpException(
-        'INTERNAL_SERVER_ERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -162,18 +152,16 @@ export class AuthService {
       },
     );
     try {
+      const clientUrl = this.configService.get<string>('CLIENT_URL');
       await this.mailerService.sendMail({
         from: this.configService.get<string>('EMAIL_AUTH'),
         to: email,
         subject: 'Verify Your Email',
-        html: FORM_VERIFY_EMAIL(uniqueString),
+        html: FORM_VERIFY_EMAIL(uniqueString, clientUrl),
       });
       return true;
     } catch (err) {
-      throw new HttpException(
-        'INTERNAL_SERVER_ERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw err;
     }
   }
 
@@ -182,8 +170,8 @@ export class AuthService {
       const { email } = await this.jwtService.verify(uniqueString, {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       });
-      
-      return this.usersService.verifiredUserEmail(email);
+
+      return await this.usersService.verifiredUserEmail(email);
     } catch (err) {
       throw new HttpException(
         'Unauthorized - token is not valid',
