@@ -20,6 +20,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from './logger/logger.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { IsActivateUser } from './users/guard/active.guard';
+import { ExportModule } from './export/export.module';
 
 const configService = new ConfigService();
 
@@ -75,6 +76,7 @@ const configService = new ConfigService();
     }),
     LoggerModule,
     DashboardModule,
+    ExportModule,
   ],
   providers: [
     {

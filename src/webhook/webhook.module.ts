@@ -21,5 +21,8 @@ import { WebhooksConsumer } from './webhooks.process';
       name: 'webhooksQueue',
     }),
   ],
+  exports:[
+    ...dataProviders
+  ]
 })
 export class WebhookModule {}
