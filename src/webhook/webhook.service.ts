@@ -8,8 +8,6 @@ import { Model } from 'mongoose';
 import { Device } from 'src/device/interface/device.interface';
 import { Data } from './interfaces/data.interface';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 
 @Injectable()
 export class WebhookService {
