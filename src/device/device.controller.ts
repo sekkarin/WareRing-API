@@ -111,7 +111,6 @@ export class DeviceController {
   }
 
   @Get()
-  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get a paginated list of devices',
@@ -185,7 +184,6 @@ export class DeviceController {
   }
 
   @Get(':id')
-  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get Device by ID',
