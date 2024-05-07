@@ -4,13 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Model } from 'mongoose';
+
 import { CreateDashboardDto } from './dto/create-dashboard.dto';
 import { UpdateDashboardDto } from './dto/update-dashboard.dto';
-import { Model } from 'mongoose';
 import { Dashboard } from './interfaces/dashboard.interface';
 import { DashboardResponseDto } from './dto/dashboard-response';
-import { Widget } from 'src/widget/interface/widget.interface';
+
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { Widget } from 'src/widget/interface/widget.interface';
 
 @Injectable()
 export class DashboardService {
@@ -31,7 +33,7 @@ export class DashboardService {
     }
   }
 
-  async findAll(query= '', page = 1, limit = 10, currentUserId: string) {
+  async findAll(query = '', page = 1, limit = 10, currentUserId: string) {
     try {
       const dashboards = await this.dashboardModel
         .find({
@@ -42,14 +44,7 @@ export class DashboardService {
           ],
         })
         .skip((page - 1) * limit)
-        .limit(limit)
-        .populate({
-          path: 'widgets',
-          populate: {
-            path: 'deviceId',
-            model: 'Device',
-          },
-        });
+        .limit(limit);
       const dashboardResponse = dashboards.map((dashboard) =>
         this.mapToDashboardResponseDto(dashboard),
       );
@@ -66,32 +61,68 @@ export class DashboardService {
 
   async addWidget(dashboardId: string, widgetId: string) {
     try {
-      const widgetExists = await this.widgetModel.findOne({ _id: widgetId });
-
+      // Find the widget by ID
+      const widgetExists = await this.widgetModel.findById(widgetId);
       if (!widgetExists) {
-        throw new NotFoundException('not found widget');
+        throw new NotFoundException('Widget not found');
       }
-      const widgetDuplicates = await this.dashboardModel.findOne({
-        widgets: widgetId,
+
+      // Find the dashboard that matches the widget's device
+      let addWidget = await this.dashboardModel.findOne({
         _id: dashboardId,
+        'dashboardInfo.device': widgetExists.deviceId,
       });
 
-      if (widgetDuplicates) {
+      // If dashboard with the matching device is not found, create a new dashboardInfo
+      if (!addWidget) {
+        addWidget = await this.dashboardModel
+          .findOneAndUpdate(
+            { _id: dashboardId },
+            {
+              $push: {
+                dashboardInfo: {
+                  device: widgetExists.deviceId,
+                  widgets: [widgetExists._id],
+                },
+              },
+            },
+            { new: true },
+          )
+          .populate('dashboardInfo.device')
+          .populate('dashboardInfo.widgets');
+        return addWidget;
+      }
+
+      // Check if the widget is already added to the dashboard
+      const widgetDuplicate = addWidget.dashboardInfo.find((info) =>
+        info.widgets.includes(widgetId),
+      );
+      if (widgetDuplicate) {
         throw new ConflictException('Widget already exists in the dashboard');
       }
-      const dashboard = await this.dashboardModel.findOneAndUpdate(
-        { _id: dashboardId },
-        {
-          $push: { widgets: widgetId },
-        },
-        {
-          new: true,
-        },
-      );
-      if (!dashboard) {
-        throw new NotFoundException('Dashboard not found');
+
+      // Add the widget to the existing dashboardInfo
+      const insertWidget = await this.dashboardModel
+        .findOneAndUpdate(
+          {
+            _id: dashboardId,
+            'dashboardInfo.device': widgetExists.deviceId,
+          },
+          {
+            $push: {
+              'dashboardInfo.$.widgets': widgetExists._id,
+            },
+          },
+          { new: true },
+        )
+        .populate('dashboardInfo.device')
+        .populate('dashboardInfo.widgets');
+
+      if (!insertWidget) {
+        throw new NotFoundException('Widget not found');
       }
-      return this.mapToDashboardResponseDto(dashboard);
+
+      return insertWidget;
     } catch (error) {
       throw error;
     }
@@ -100,13 +131,8 @@ export class DashboardService {
   async findOne(userID: string, dashboardId: string) {
     const dashboard = await this.dashboardModel
       .findOne({ _id: dashboardId, userID })
-      .populate({
-        path: 'widgets',
-        populate: {
-          path: 'deviceId',
-          model: 'Device',
-        },
-      });
+      .populate('dashboardInfo.device')
+      .populate('dashboardInfo.widgets');
     if (!dashboard) {
       throw new NotFoundException('Dashboard not found');
     }
@@ -129,7 +155,6 @@ export class DashboardService {
     } catch (error) {
       throw error;
     }
-    return `This action updates a #${id} dashboard`;
   }
 
   async remove(id: string) {
@@ -156,9 +181,10 @@ export class DashboardService {
         {
           _id: dashboardId,
           userID,
+          'dashboardInfo.device': widgetExists.deviceId,
         },
         {
-          $pull: { widgets: widgetId },
+          $pull: { 'dashboardInfo.$.widgets': widgetId }, // Remove the widget from the widgets array
         },
         {
           new: true,
@@ -168,7 +194,13 @@ export class DashboardService {
       if (!dashboard) {
         throw new NotFoundException('Dashboard not found');
       }
-      return this.mapToDashboardResponseDto(dashboard);
+      const updatedDashboard = await this.dashboardModel.findOneAndUpdate(
+        { _id: dashboardId },
+        { $pull: { dashboardInfo: { widgets: { $size: 0 } } } },
+        { new: true },
+      );
+
+      return this.mapToDashboardResponseDto(updatedDashboard);
     } catch (error) {
       throw error;
     }
@@ -182,7 +214,7 @@ export class DashboardService {
       userID: dashboard.userID,
       nameDashboard: dashboard.nameDashboard,
       description: dashboard.description,
-      widgets: dashboard.widgets,
+      dashboardInfo: dashboard.dashboardInfo,
       createdAt: dashboard.createdAt,
     };
   }

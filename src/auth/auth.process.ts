@@ -1,5 +1,6 @@
 import { OnQueueCompleted, Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
+
 import { AuthService } from './auth.service';
 import { LoggerService } from 'src/logger/logger.service';
 

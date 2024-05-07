@@ -10,7 +10,12 @@ import { userProviders } from 'src/users/provider/user.providers';
 
 @Module({
   controllers: [ExportController],
-  providers: [ExportService, ...dataProviders,...deviceProviders,...userProviders],
+  providers: [
+    ExportService,
+    ...dataProviders,
+    ...deviceProviders,
+    ...userProviders,
+  ],
   imports: [DatabaseModule],
 })
 export class ExportModule {}

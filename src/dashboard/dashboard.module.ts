@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { DashboardService } from './dashboard.service';
-import { DashboardController } from './dashboard.controller';
+
 import { dashboardProviders } from './provider/provider';
-import { DatabaseModule } from 'src/database/database.module';
 import { widgetProviders } from 'src/widget/provider/provider';
 import { userProviders } from 'src/users/provider/user.providers';
+
+import { DashboardService } from './dashboard.service';
+import { DashboardController } from './dashboard.controller';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
   controllers: [DashboardController],

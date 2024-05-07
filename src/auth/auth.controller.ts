@@ -24,12 +24,17 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
+import { LoggerService } from 'src/logger/logger.service';
+
 import { Roles } from './decorator/roles.decorator';
 import { Role } from './enums/role.enum';
 import { AuthGuard } from './guards/auth.guard';
+import { IsActivateUser } from 'src/users/guard/active.guard';
 import { RolesGuard } from './guards/roles.guard';
+
 import { CreateUserDto } from './../users/dto/user.dto';
 import {
   AccessTokenResponseDto,
@@ -37,9 +42,6 @@ import {
   ResetPasswordDto,
   UserResponseDto,
 } from './dto/auth.dto';
-import { Throttle } from '@nestjs/throttler';
-import { LoggerService } from 'src/logger/logger.service';
-import { IsActivateUser } from 'src/users/guard/active.guard';
 
 // TODO: resize image
 @Controller('auth')

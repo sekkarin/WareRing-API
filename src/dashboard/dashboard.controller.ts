@@ -10,9 +10,6 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
-import { DashboardService } from './dashboard.service';
-import { CreateDashboardDto } from './dto/create-dashboard.dto';
-import { UpdateDashboardDto } from './dto/update-dashboard.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -20,19 +17,24 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import { IsActivateUser } from 'src/users/guard/active.guard';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+
+import { DashboardService } from './dashboard.service';
+import { CreateDashboardDto } from './dto/create-dashboard.dto';
+import { UpdateDashboardDto } from './dto/update-dashboard.dto';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
-import { IsActivateUser } from 'src/users/guard/active.guard';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
 @Controller('dashboards')
 @Roles(Role.User)
-@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+@UseGuards(AuthGuard, RolesGuard, IsActivateUser)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
