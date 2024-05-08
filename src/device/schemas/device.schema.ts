@@ -1,6 +1,9 @@
 import * as mongoose from 'mongoose';
+import { Dashboard } from 'src/dashboard/interfaces/dashboard.interface';
+import { Widget } from 'src/widget/interface/widget.interface';
+
 const { Types } = mongoose;
-export const DeviceSchema = new mongoose.Schema(
+const DeviceSchema = new mongoose.Schema(
   {
     userID: {
       type: Types.ObjectId,
@@ -10,7 +13,7 @@ export const DeviceSchema = new mongoose.Schema(
       type: String,
       required: true,
       min: 1,
-      max:25,
+      max: 25,
       trim: true,
     },
     usernameDevice: {
@@ -18,7 +21,7 @@ export const DeviceSchema = new mongoose.Schema(
       unique: true,
       required: true,
       min: 1,
-      max:25,
+      max: 25,
       trim: true,
     },
     password_hash: {
@@ -34,7 +37,7 @@ export const DeviceSchema = new mongoose.Schema(
     description: {
       type: String,
       min: 1,
-      max:255,
+      max: 255,
       trim: true,
     },
     permission: {
@@ -69,3 +72,18 @@ export const DeviceSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+DeviceSchema.pre('findOneAndDelete', async function (next) {
+  const deviceId = this.getQuery()._id;
+  await this.model.db
+    .model<Widget>('Widget')
+    .deleteMany({ deviceId: deviceId });
+  await this.model.db
+    .model<Dashboard>('Dashboard')
+    .updateMany(
+      { 'dashboardInfo.device': deviceId },
+      { $pull: { dashboardInfo: { device: deviceId } } },
+      { new: true },
+    );
+  next();
+});
+export { DeviceSchema };

@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
+import { Dashboard } from 'src/dashboard/interfaces/dashboard.interface';
 const { Types } = mongoose;
-export const WidgetSchema = new mongoose.Schema(
+const WidgetSchema = new mongoose.Schema(
   {
     deviceId: {
       type: Types.ObjectId,
@@ -9,20 +10,44 @@ export const WidgetSchema = new mongoose.Schema(
     label: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
     type: {
       type: String,
       trim: true,
-      required: true
+      required: true,
     },
-    configWidget:{
+    configWidget: {
       type: Object,
-      required: true
-    }
-   
+      required: true,
+    },
   },
   {
     timestamps: true,
   },
 );
+WidgetSchema.pre('deleteOne', async function (next) {
+  const widgetId = this.getQuery()._id;
+  await this.model.db.model<Dashboard>('Dashboard').updateMany(
+    { 'dashboardInfo.widgets': widgetId },
+    {
+      $pull: {
+        'dashboardInfo.$.widgets': widgetId,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  await this.model.db
+    .model<Dashboard>('Dashboard')
+    .updateMany(
+      {},
+      { $pull: { dashboardInfo: { widgets: { $size: 0 } } } },
+      { new: true },
+    );
+
+  next();
+});
+export { WidgetSchema };
