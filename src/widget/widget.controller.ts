@@ -36,7 +36,7 @@ import { LoggerService } from 'src/logger/logger.service';
 @UseGuards(AuthGuard, RolesGuard)
 export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
-  
+
   @Post(':deviceId')
   @ApiOperation({ summary: 'Create a new widget' })
   @ApiBearerAuth()
@@ -53,7 +53,7 @@ export class WidgetController {
     try {
       return this.widgetService.create(createWidgetDto, deviceId);
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
@@ -82,9 +82,7 @@ export class WidgetController {
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async findOne(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
-
   ): Promise<WidgetResponseDto> {
-    
     return this.widgetService.findOne(widgetId);
   }
 
@@ -101,7 +99,6 @@ export class WidgetController {
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Body() updateWidgetDto: UpdateWidgetDto,
   ) {
-
     return this.widgetService.update(widgetId, updateWidgetDto);
   }
 
@@ -112,10 +109,11 @@ export class WidgetController {
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async delete(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
-  ): Promise<void> {
+  ) {
     const deleted = await this.widgetService.delete(widgetId);
     if (!deleted) {
       throw new NotFoundException('Widget not found');
     }
+    return { message: 'Widget deleted successfully' };
   }
 }

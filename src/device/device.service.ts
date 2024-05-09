@@ -59,7 +59,7 @@ export class DeviceService {
       topics: topicsGenerated,
     });
     await device.save();
-    this.logger.log(`user ${userID} create device successfully`)
+    this.logger.log(`user ${userID} create device successfully`);
     return this.mapToDeviceResponseDto(device);
   }
 
@@ -90,14 +90,11 @@ export class DeviceService {
     getDevicesFilterDto: GetDevicesFilterDto,
   ) {
     try {
-      console.log("sadasdsa");
-      
       let options = {};
       ({ options, getDevicesFilterDto } = this.getFilter(getDevicesFilterDto));
 
       const itemCount = await this.deviceModel.countDocuments({
         userID,
-        ...options,
       });
       let devicesQuery = this.deviceModel.find({
         userID,
@@ -115,8 +112,7 @@ export class DeviceService {
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
       );
-      console.log(devicesResponse);
-      
+
       return new PaginatedDto<DeviceResponseDto>(
         devicesResponse,
         page,
@@ -130,7 +126,7 @@ export class DeviceService {
 
   private getSort(getDevicesSortDto: string, devicesQuery: any) {
     console.log(getDevicesSortDto);
-    
+
     if (getDevicesSortDto) {
       devicesQuery = devicesQuery.sort(getDevicesSortDto);
     } else {
@@ -222,7 +218,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('Device not found');
       }
-      this.logger.log(`user ${userID} update device successfully`)
+      this.logger.log(`user ${userID} update device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -230,12 +226,12 @@ export class DeviceService {
   }
 
   async delete(id: string, userID: string) {
-    const device = await this.deviceModel.findOne({ _id: id, userID });
+    const device = await this.deviceModel.findOneAndDelete({ _id: id, userID });
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-    this.logger.log(`user ${userID} delete device successfully`)
-    return await this.deviceModel.deleteOne({ _id: id, userID });
+    this.logger.log(`user ${userID} delete device successfully`);
+    return device;
   }
 
   async setPermission(
@@ -257,7 +253,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
-      this.logger.log(`user ${userID} update permission device successfully`)
+      this.logger.log(`user ${userID} update permission device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -279,7 +275,7 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
-      this.logger.log(`user ${userID} update save data device successfully`)
+      this.logger.log(`user ${userID} update save data device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;

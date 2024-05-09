@@ -88,7 +88,6 @@ export class UsersService {
     let profileUrl: string | undefined = undefined;
     let hashPassword: string | undefined = undefined;
     try {
-      
       const user = await this.userModel.findOne({ _id: id });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -111,7 +110,7 @@ export class UsersService {
         )
         .exec();
       const userResponse = this.mapToUserResponseDto(updateUser);
-      this.logger.log(`user ${id} update information successfully`)
+      this.logger.log(`user ${id} update information successfully`);
       return userResponse;
     } catch (error) {
       throw error;
@@ -146,8 +145,16 @@ export class UsersService {
     return userResponse;
   }
   async deleteUser(id: string) {
-    await this.deviceModel.deleteMany({ userID: id });
-    this.logger.log(`user ${id} delete account successfully`)
+    this.logger.log(`user ${id} delete account successfully`);
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user?.profileUrl) {
+      const fullUrl = user.profileUrl.split('/profile/')[1];
+      this.deleteFile(fullUrl);
+    }
     return await this.userModel.deleteOne({ _id: id });
   }
   async verifiredUserEmail(email: string) {
