@@ -73,7 +73,8 @@ const DeviceSchema = new mongoose.Schema(
   },
 );
 DeviceSchema.pre('findOneAndDelete', async function (next) {
-  const deviceId = this.getQuery()._id;
+  try {
+    const deviceId = this.getQuery()._id;
   await this.model.db
     .model<Widget>('Widget')
     .deleteMany({ deviceId: deviceId });
@@ -85,5 +86,9 @@ DeviceSchema.pre('findOneAndDelete', async function (next) {
       { new: true },
     );
   next();
+  } catch (error) {
+    throw error
+  }
+  
 });
 export { DeviceSchema };

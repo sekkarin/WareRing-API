@@ -95,7 +95,6 @@ export class DeviceService {
 
       const itemCount = await this.deviceModel.countDocuments({
         userID,
-        ...options,
       });
       let devicesQuery = this.deviceModel.find({
         userID,
@@ -232,7 +231,7 @@ export class DeviceService {
       throw new NotFoundException('Device not found');
     }
     this.logger.log(`user ${userID} delete device successfully`);
-    return device
+    return device;
   }
 
   async setPermission(

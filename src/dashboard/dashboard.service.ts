@@ -35,6 +35,9 @@ export class DashboardService {
 
   async findAll(query = '', page = 1, limit = 10, currentUserId: string) {
     try {
+      const itemCount = await this.dashboardModel.countDocuments({
+        userID: currentUserId,
+      });
       const dashboards = await this.dashboardModel
         .find({
           _id: { $ne: currentUserId },
@@ -52,7 +55,7 @@ export class DashboardService {
         dashboardResponse,
         page,
         limit,
-        dashboards.length,
+        itemCount,
       );
     } catch (error) {
       throw error;

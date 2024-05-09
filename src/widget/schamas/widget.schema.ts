@@ -27,27 +27,31 @@ const WidgetSchema = new mongoose.Schema(
   },
 );
 WidgetSchema.pre('deleteOne', async function (next) {
-  const widgetId = this.getQuery()._id;
-  await this.model.db.model<Dashboard>('Dashboard').updateMany(
-    { 'dashboardInfo.widgets': widgetId },
-    {
-      $pull: {
-        'dashboardInfo.$.widgets': widgetId,
+  try {
+    const widgetId = this.getQuery()._id;
+    await this.model.db.model<Dashboard>('Dashboard').updateMany(
+      { 'dashboardInfo.widgets': widgetId },
+      {
+        $pull: {
+          'dashboardInfo.$.widgets': widgetId,
+        },
       },
-    },
-    {
-      new: true,
-    },
-  );
-
-  await this.model.db
-    .model<Dashboard>('Dashboard')
-    .updateMany(
-      {},
-      { $pull: { dashboardInfo: { widgets: { $size: 0 } } } },
-      { new: true },
+      {
+        new: true,
+      },
     );
 
-  next();
+    await this.model.db
+      .model<Dashboard>('Dashboard')
+      .updateMany(
+        {},
+        { $pull: { dashboardInfo: { widgets: { $size: 0 } } } },
+        { new: true },
+      );
+
+    next();
+  } catch (error) {
+    throw error;
+  }
 });
 export { WidgetSchema };
