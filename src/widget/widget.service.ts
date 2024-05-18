@@ -64,10 +64,20 @@ export class WidgetService {
     return this.mapToWidgetResponseDto(existingWidget);
   }
 
-  async delete(widgetId: string): Promise<boolean> {
-    const result = await this.widgetModel.deleteOne({ _id: widgetId }).exec();
-    this.logger.log(`user dalete widget successfully deviceID: ${widgetId}`);
-    return result.deletedCount > 0;
+  async delete(widgetId: string, deviceId: string) {
+    try {
+      const result = await this.widgetModel
+        .findOneAndRemove({ _id: widgetId, deviceId:deviceId })
+        .exec();
+
+      if (!result) {
+        throw new NotFoundException('Widget not found');
+      }
+      this.logger.log(`user delete widget successfully deviceID: ${widgetId}`);
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
   private mapToWidgetResponseDto(widget: Widget): WidgetResponseDto {
     return {

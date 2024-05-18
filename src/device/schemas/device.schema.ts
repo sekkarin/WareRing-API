@@ -75,20 +75,26 @@ const DeviceSchema = new mongoose.Schema(
 DeviceSchema.pre('findOneAndDelete', async function (next) {
   try {
     const deviceId = this.getQuery()._id;
-  await this.model.db
-    .model<Widget>('Widget')
-    .deleteMany({ deviceId: deviceId });
-  await this.model.db
-    .model<Dashboard>('Dashboard')
-    .updateMany(
-      { 'dashboardInfo.device': deviceId },
-      { $pull: { dashboardInfo: { device: deviceId } } },
+    const widgets = await this.model.db
+      .model<Widget>('Widget')
+      .find({ deviceId: deviceId });
+
+    await this.model.db.model<Dashboard>('Dashboard').updateMany(
+      { devices: deviceId },
+      {
+        $pull: {
+          widgets: { $in: widgets.map((widget) => widget._id.toString()) },
+          devices: deviceId,
+        },
+      },
       { new: true },
     );
-  next();
+    await this.model.db
+      .model<Widget>('Widget')
+      .deleteMany({ deviceId: deviceId });
+    next();
   } catch (error) {
-    throw error
+    throw error;
   }
-  
 });
 export { DeviceSchema };

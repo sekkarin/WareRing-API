@@ -29,7 +29,12 @@ export class DashboardResponseDto {
     example: ['{userId}/topic/subscribe', '{userId}/topic/publish'],
     description: 'Topics associated with the device',
   })
-  dashboardInfo: any[];
+  devices: any[];
+  @ApiProperty({
+    example: ['{userId}/topic/subscribe', '{userId}/topic/publish'],
+    description: 'Topics associated with the device',
+  })
+  widgets: any[];
 
   @ApiProperty({
     example: '2024-02-01T06:27:34.882Z',

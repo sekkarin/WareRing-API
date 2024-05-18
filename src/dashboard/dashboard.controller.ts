@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Query,
+  Put,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -29,6 +30,7 @@ import { CreateDashboardDto } from './dto/create-dashboard.dto';
 import { UpdateDashboardDto } from './dto/update-dashboard.dto';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
+import { DashboardPositionDto } from './dto/position-dashboarrd.dto';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
@@ -123,6 +125,18 @@ export class DashboardController {
   ) {
     try {
       return this.dashboardService.update(id, updateDashboardDto);
+    } catch (error) {
+      throw error;
+    }
+  }
+  @Put(':id/position')
+  @ApiOperation({ summary: 'Update a dashboard by Id' })
+  updatePosition(
+    @Param('id', MongoDBObjectIdPipe) id: string,
+    @Body() dashboardPositionDto: DashboardPositionDto,
+  ) {
+    try {
+      return this.dashboardService.updatePosition(id, dashboardPositionDto);
     } catch (error) {
       throw error;
     }

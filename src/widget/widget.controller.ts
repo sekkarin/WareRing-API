@@ -102,18 +102,22 @@ export class WidgetController {
     return this.widgetService.update(widgetId, updateWidgetDto);
   }
 
-  @Delete(':widgetId')
+  @Delete('/:widgetId/device/:deviceId')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a widget' })
   @ApiResponse({ status: 200, description: 'Widget deleted successfully' })
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async delete(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
+    @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ) {
-    const deleted = await this.widgetService.delete(widgetId);
-    if (!deleted) {
-      throw new NotFoundException('Widget not found');
+    try {
+      
+      await this.widgetService.delete(widgetId,deviceId);
+      return { message: 'Widget deleted successfully' };
+    } catch (error) {
+      throw error
     }
-    return { message: 'Widget deleted successfully' };
+    
   }
 }

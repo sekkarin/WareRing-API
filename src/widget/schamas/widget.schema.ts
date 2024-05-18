@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { Dashboard } from 'src/dashboard/interfaces/dashboard.interface';
+import { Widget } from '../interface/widget.interface';
 const { Types } = mongoose;
 const WidgetSchema = new mongoose.Schema(
   {
@@ -26,28 +27,39 @@ const WidgetSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-WidgetSchema.pre('deleteOne', async function (next) {
+WidgetSchema.pre('findOneAndRemove', async function (next) {
   try {
-    const widgetId = this.getQuery()._id;
-    await this.model.db.model<Dashboard>('Dashboard').updateMany(
-      { 'dashboardInfo.widgets': widgetId },
-      {
-        $pull: {
-          'dashboardInfo.$.widgets': widgetId,
-        },
-      },
-      {
-        new: true,
-      },
-    );
+    const _id = this.getQuery()._id;
+    const deviceId = this.getQuery().deviceId;
 
-    await this.model.db
+    const dashboard = await this.model.db
       .model<Dashboard>('Dashboard')
-      .updateMany(
-        {},
-        { $pull: { dashboardInfo: { widgets: { $size: 0 } } } },
-        { new: true },
+      .findOneAndUpdate(
+        { widgets: _id.toString() },
+        {
+          $pull: {
+            widgets: _id.toString(),
+          },
+        },
+        {
+          new: true,
+        },
       );
+
+    if (dashboard) {
+      const removeDevice = dashboard.widgets.some((widget: Widget) =>
+        widget.deviceId.toString().includes(deviceId.toString()),
+      );
+
+      if (!removeDevice) {
+        const filteredDevice = dashboard.devices.filter(
+          (device) => device.toString() !== deviceId.toString(),
+        );
+
+        dashboard.devices = filteredDevice;
+        await dashboard.save();
+      }
+    }
 
     next();
   } catch (error) {
