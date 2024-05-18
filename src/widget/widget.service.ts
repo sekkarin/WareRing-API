@@ -14,7 +14,7 @@ export class WidgetService {
     @Inject('WIDGET_MODEL')
     private widgetModel: Model<Widget>,
   ) {}
-
+  //TODO: check device exiting
   async create(
     createWidgetDto: CreateWidgetDto,
     deviceId: string,
@@ -24,7 +24,7 @@ export class WidgetService {
       deviceId,
     });
     await createdWidget.save();
-    this.logger.log(`user create widget successfully deviceID: ${deviceId}`)
+    this.logger.log(`user create widget successfully deviceID: ${deviceId}`);
     return this.mapToWidgetResponseDto(createdWidget);
   }
 
@@ -60,13 +60,13 @@ export class WidgetService {
     if (!existingWidget) {
       throw new NotFoundException('Widget not found');
     }
-    this.logger.log(`user update widget successfully deviceID: ${widgetId}`)
+    this.logger.log(`user update widget successfully deviceID: ${widgetId}`);
     return this.mapToWidgetResponseDto(existingWidget);
   }
 
   async delete(widgetId: string): Promise<boolean> {
     const result = await this.widgetModel.deleteOne({ _id: widgetId }).exec();
-    this.logger.log(`user dalete widget successfully deviceID: ${widgetId}`)
+    this.logger.log(`user dalete widget successfully deviceID: ${widgetId}`);
     return result.deletedCount > 0;
   }
   private mapToWidgetResponseDto(widget: Widget): WidgetResponseDto {

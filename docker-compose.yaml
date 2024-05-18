@@ -1,69 +1,51 @@
-version: '3.1'
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
 
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
 services:
-  mongo:
-    container_name: warering-mongoDB
-    image: mongo:4.4
-    restart: always
+  server:
+    build:
+      context: .
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoAdmin
-      MONGO_INITDB_ROOT_PASSWORD: 125478963m
-      MONGO_INITDB_DATABASE: warering-project
-      MONGODB_DATABASE: warering-project
+      NODE_ENV: production
     ports:
-      - 27018:27017
-    volumes:
-      - mongodb:/data/db
-  emqx:
-      container_name: emqx
-      image: emqx:5.4.1
-      restart: always
+      - 3000:3000
 
-      ports:
-        - 18083:18083
-        - 1883:1883
-        - 8083:8083
-        - 8085:8081
-
-      volumes:
-        - vol-emqx-data:/opt/emqx/data
-        - vol-emqx-log:/opt/emqx/log
-        - ./conf/emqx.conf:/opt/emqx/etc/emqx.conf
-
-    
-      links:
-        - mongo
-
-      extra_hosts:
-        - "localhost:192.168.0.6"
-
-      environment:
-        EMQX_NAME: warering-emqx
-        EMQX_HOST: 127.0.0.1 
-
-        # DEFAULT DASH PASS
-        EMQX_DASHBOARD__DEFAULT_USERNAME: adminEMQX
-        EMQX_DASHBOARD__DEFAULT_PASSWORD: 125478963m
-
-        # DEFAULT APP SECRET
-        EMQX_MANAGEMENT__DEFAULT_APPLICATION__SECRET: "warering-cecret"
-        EMQX_AUTH__MONGO__SERVER: "mongo:27017"
-        EMQX_AUTH__MONGO__POOL: 18
-
-  redis:
-    container_name: warering-redis
-    image: redis:7.2.4
-    restart: always
-    ports:
-    - '6379:6379'
-
- 
-volumes:
-  mongodb:
-  vol-emqx-data:
-    name: foo-emqx-data
-  vol-emqx-log:
-    name: foo-emqx-log
-  vol-emqx-conf:
-    name: foo-emqx-conf
+# The commented out section below is an example of how to define a PostgreSQL
+# database that your application can use. `depends_on` tells Docker Compose to
+# start the database before your application. The `db-data` volume persists the
+# database data between container restarts. The `db-password` secret is used
+# to set the database password. You must create `db/password.txt` and add
+# a password of your choosing to it before running `docker-compose up`.
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#   db:
+#     image: postgres
+#     restart: always
+#     user: postgres
+#     secrets:
+#       - db-password
+#     volumes:
+#       - db-data:/var/lib/postgresql/data
+#     environment:
+#       - POSTGRES_DB=example
+#       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+#     expose:
+#       - 5432
+#     healthcheck:
+#       test: [ "CMD", "pg_isready" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+# volumes:
+#   db-data:
+# secrets:
+#   db-password:
+#     file: db/password.txt
 
