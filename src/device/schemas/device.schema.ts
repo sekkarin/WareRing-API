@@ -83,7 +83,9 @@ DeviceSchema.pre('findOneAndDelete', async function (next) {
       { devices: deviceId },
       {
         $pull: {
-          widgets: { $in: widgets.map((widget) => widget._id.toString()) },
+          widgets: {
+            widget: { $in: widgets.map((widget) => widget._id.toString()) },
+          },
           devices: deviceId,
         },
       },

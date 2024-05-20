@@ -67,7 +67,7 @@ export class WidgetService {
   async delete(widgetId: string, deviceId: string) {
     try {
       const result = await this.widgetModel
-        .findOneAndRemove({ _id: widgetId, deviceId:deviceId })
+        .findOneAndRemove({ _id: widgetId, deviceId: deviceId })
         .exec();
 
       if (!result) {
