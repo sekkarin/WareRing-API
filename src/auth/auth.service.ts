@@ -181,32 +181,36 @@ export class AuthService {
     }
   }
 
-  async sendEmailForgetPassword(email: string): Promise<boolean> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new HttpException('LOGIN_USER_NOT_FOUND', HttpStatus.NOT_FOUND);
-    }
-
+  async sendEmailForgetPassword(email: string) {
     try {
-      const resetPassToken = await this.jwtService.signAsync(
-        { email },
-        {
-          expiresIn: this.configService.get<string>(
-            'EXPIRES_IN_RESET_PASS_TOKEN',
-          ),
-          secret: this.configService.get<string>('SECRET_RESET_PASS'),
-        },
-      );
-      const mail = await this.mailerService.sendMail({
-        from: this.configService.get<string>('EMAIL_AUTH'),
-        to: email,
-        subject: 'Reset your password',
-        html: FORM_FORGET_PASS(resetPassToken),
-      });
-      return mail;
+      const user = await this.usersService.findByEmail(email);
+      if (!user) {
+        throw new HttpException('LOGIN_USER_NOT_FOUND', HttpStatus.NOT_FOUND);
+      }
+
+      return user;
     } catch (err) {
       throw err;
     }
+  }
+
+  public async sendMailResetPassword(email: string) {
+    const resetPassToken = await this.jwtService.signAsync(
+      { email },
+      {
+        expiresIn: this.configService.get<string>(
+          'EXPIRES_IN_RESET_PASS_TOKEN',
+        ),
+        secret: this.configService.get<string>('SECRET_RESET_PASS'),
+      },
+    );
+    const mail = await this.mailerService.sendMail({
+      from: this.configService.get<string>('EMAIL_AUTH'),
+      to: email,
+      subject: 'Reset your password',
+      html: FORM_FORGET_PASS(resetPassToken),
+    });
+    return mail;
   }
 
   async resetPassword(token: string, newPassword: string) {

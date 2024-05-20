@@ -35,10 +35,10 @@ WidgetSchema.pre('findOneAndRemove', async function (next) {
     const dashboard = await this.model.db
       .model<Dashboard>('Dashboard')
       .findOneAndUpdate(
-        { widgets: _id.toString() },
+        { 'widgets.widget': _id.toString() },
         {
           $pull: {
-            widgets: _id.toString(),
+            widgets: { widget: _id.toString() },
           },
         },
         {
@@ -47,8 +47,8 @@ WidgetSchema.pre('findOneAndRemove', async function (next) {
       );
 
     if (dashboard) {
-      const removeDevice = dashboard.widgets.some((widget: Widget) =>
-        widget.deviceId.toString().includes(deviceId.toString()),
+      const removeDevice = dashboard.widgets.some((widget) =>
+        widget.widget.toString().includes(deviceId.toString()),
       );
 
       if (!removeDevice) {
@@ -63,6 +63,7 @@ WidgetSchema.pre('findOneAndRemove', async function (next) {
 
     next();
   } catch (error) {
+    console.log('error delete');
     throw error;
   }
 });

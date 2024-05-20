@@ -117,36 +117,39 @@ export class DashboardController {
     }
   }
 
-  @Patch(':id')
+  @Patch(':dashboardId')
   @ApiOperation({ summary: 'Update a dashboard by Id' })
   update(
-    @Param('id', MongoDBObjectIdPipe) id: string,
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
     @Body() updateDashboardDto: UpdateDashboardDto,
   ) {
     try {
-      return this.dashboardService.update(id, updateDashboardDto);
+      return this.dashboardService.update(dashboardId, updateDashboardDto);
     } catch (error) {
       throw error;
     }
   }
-  @Put(':id/position')
+  @Put(':dashboardId/position')
   @ApiOperation({ summary: 'Update a dashboard by Id' })
   updatePosition(
-    @Param('id', MongoDBObjectIdPipe) id: string,
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
     @Body() dashboardPositionDto: DashboardPositionDto,
   ) {
     try {
-      return this.dashboardService.updatePosition(id, dashboardPositionDto);
+      return this.dashboardService.updatePosition(
+        dashboardId,
+        dashboardPositionDto,
+      );
     } catch (error) {
       throw error;
     }
   }
 
-  @Delete(':id')
+  @Delete(':dashboardId')
   @ApiOperation({ summary: 'Delete a dashboard by Id' })
-  deleteDashboard(@Param('id', MongoDBObjectIdPipe) id: string) {
+  deleteDashboard(@Param('id', MongoDBObjectIdPipe) dashboardId: string) {
     try {
-      return this.dashboardService.remove(id);
+      return this.dashboardService.remove(dashboardId);
     } catch (error) {
       throw error;
     }

@@ -510,10 +510,8 @@ describe('AuthService', () => {
 
       expect(usersService.findByEmail).toHaveBeenCalledWith(email);
       expect(jwtService.signAsync).toHaveBeenCalled();
-      expect(configService.get).toHaveBeenCalledWith(
-        'EXPIRES_IN_RESET_PASS_TOKEN',
-      );
-      expect(result).toBe(true);
+
+      expect(result).toStrictEqual({ email: email });
     });
 
     it('should throw HttpException when user not found', async () => {
@@ -526,28 +524,6 @@ describe('AuthService', () => {
       ).rejects.toThrowError(
         new HttpException('LOGIN_USER_NOT_FOUND', HttpStatus.NOT_FOUND),
       );
-    });
-
-    it('should throw error when sending email fails', async () => {
-      const email = 'test@example.com';
-      const expiresIn = '1h';
-      const resetPassToken = 'mockedResetPassToken';
-
-      jest
-        .spyOn(usersService, 'findByEmail')
-        .mockResolvedValueOnce({ email } as any);
-
-      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce(resetPassToken);
-
-      jest.spyOn(configService, 'get').mockReturnValueOnce(expiresIn);
-
-      jest
-        .spyOn(mailerService, 'sendMail')
-        .mockRejectedValueOnce(new Error('Failed to send email'));
-
-      await expect(
-        authService.sendEmailForgetPassword(email),
-      ).rejects.toThrowError(new Error('Failed to send email'));
     });
   });
 
@@ -670,6 +646,40 @@ describe('AuthService', () => {
       await expect(authService.checkIsActive(username)).rejects.toThrowError(
         new NotFoundException('not found user'),
       );
+    });
+  });
+  describe('sendEmailResetPassword', () => {
+    it('should send reset password email', async () => {
+      const mockEmail = 'test@example.com';
+      const mockToken = 'resetToken';
+      const mockMailResponse = { messageId: '12345' };
+
+      mockJwtService.signAsync.mockResolvedValue(mockToken);
+      mockConfigService.get.mockImplementation((key: string) => {
+        switch (key) {
+          case 'EXPIRES_IN_RESET_PASS_TOKEN':
+            return '1h';
+          case 'SECRET_RESET_PASS':
+            return 'secret';
+          case 'EMAIL_AUTH':
+            return 'no-reply@example.com';
+          default:
+            return null;
+        }
+      });
+      mockMailerService.sendMail.mockResolvedValue(mockMailResponse);
+
+      const result = await authService.sendMailResetPassword(mockEmail);
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        { email: mockEmail },
+        {
+          expiresIn: '1h',
+          secret: 'secret',
+        },
+      );
+
+      expect(result).toEqual(true);
     });
   });
 });

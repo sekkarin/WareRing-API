@@ -268,14 +268,22 @@ export class AuthController {
   async sendEmailForgetPassword(@Param('email') email, @Res() res: Response) {
     this.logger.log(`Forget password email sent to: ${email}`);
     try {
-      const isEmailSent = await this.authService.sendEmailForgetPassword(email);
-      if (isEmailSent) {
-        return res.status(200).json({ msg: 'LOGIN_EMAIL_RESENT' });
-      } else {
-        return res
-          .status(401)
-          .json({ msg: 'REGISTRATION_ERROR_MAIL_NOT_SENT' });
-      }
+      const emailUser = await this.authService.sendEmailForgetPassword(email);
+      // await this.authService.sendMailResetPassword(emailUser.email);
+      await this.sendEmailVerifyQueue.add(
+        'send-email-reset-password',
+        {
+          email: emailUser.email,
+        },
+        {
+          attempts: 3,
+          priority: 2,
+          removeOnComplete: true,
+          removeOnFail: true,
+          delay: 1000,
+        },
+      );
+      return res.status(200).json({ msg: 'LOGIN_EMAIL_RESENT' });
     } catch (err) {
       return res.status(400).json({ msg: 'LOGIN_ERROR_SEND_EMAIL' });
     }

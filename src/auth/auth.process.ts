@@ -21,11 +21,24 @@ export class AuthConsumer {
       throw error;
     }
   }
+  @Process('send-email-reset-password')
+  async sendEmailResetPasswordQueue(job: Job) {
+    const { email } = job.data;
+    try {
+      const sendEmail = await this.authService.sendMailResetPassword(email);
+
+      if (sendEmail) {
+        return email;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
 
   @OnQueueCompleted()
   async onQueueCompleted(job: Job, result: any) {
     this.logger.verbose(
-      `${AuthConsumer.name} send email verification successful "${result}"`,
+      `${AuthConsumer.name} send email  successful "${result}"`,
     );
     // console.log('job on completed: job ', job.id, ' -> result: ', result);
   }

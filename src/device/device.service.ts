@@ -125,8 +125,6 @@ export class DeviceService {
   }
 
   private getSort(getDevicesSortDto: string, devicesQuery: any) {
-    console.log(getDevicesSortDto);
-
     if (getDevicesSortDto) {
       devicesQuery = devicesQuery.sort(getDevicesSortDto);
     } else {

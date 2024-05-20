@@ -289,20 +289,20 @@ describe('AuthController', () => {
       });
     });
 
-    it('should handle unauthorized when email not sent', async () => {
-      const mockEmail = 'test@example.com';
-      mockAuthService.sendEmailForgetPassword.mockResolvedValueOnce(false);
+    // it('should handle unauthorized when email not sent', async () => {
+    //   const mockEmail = 'test@example.com';
+    //   mockAuthService.sendEmailForgetPassword.mockResolvedValueOnce(false);
 
-      await authController.sendEmailForgetPassword(mockEmail, mockResponse);
+    //   await authController.sendEmailForgetPassword(mockEmail, mockResponse);
 
-      expect(mockAuthService.sendEmailForgetPassword).toHaveBeenCalledWith(
-        mockEmail,
-      );
-      expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        msg: 'REGISTRATION_ERROR_MAIL_NOT_SENT',
-      });
-    });
+    //   expect(mockAuthService.sendEmailForgetPassword).toHaveBeenCalledWith(
+    //     mockEmail,
+    //   );
+    //   expect(mockResponse.status).toHaveBeenCalledWith(401);
+    //   expect(mockResponse.json).toHaveBeenCalledWith({
+    //     msg: 'REGISTRATION_ERROR_MAIL_NOT_SENT',
+    //   });
+    // });
 
     it('should handle error when email not found', async () => {
       const mockEmail = 'nonexistent@example.com';

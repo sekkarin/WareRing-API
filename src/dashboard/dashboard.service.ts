@@ -14,6 +14,7 @@ import { DashboardResponseDto } from './dto/dashboard-response';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
 import { Widget } from 'src/widget/interface/widget.interface';
 import { DashboardPositionDto } from './dto/position-dashboarrd.dto';
+import { Columns } from './schemas/dashboard.schema';
 
 @Injectable()
 export class DashboardService {
@@ -70,6 +71,10 @@ export class DashboardService {
       if (!widgetExists) {
         throw new NotFoundException('Widget not found');
       }
+      const dashboardExists = await this.dashboardModel.findById(dashboardId);
+      if (!dashboardExists) {
+        throw new NotFoundException('Dashboard not found');
+      }
 
       // Find the dashboard that matches the widget's device
       let addWidget = await this.dashboardModel.findOne({
@@ -84,7 +89,12 @@ export class DashboardService {
           {
             $push: {
               devices: [widgetExists.deviceId],
-              widgets: [widgetExists._id],
+              widgets: [
+                {
+                  widget: widgetExists._id,
+                  column: Columns.Column1,
+                },
+              ],
             },
           },
           { new: true },
@@ -94,7 +104,10 @@ export class DashboardService {
       }
 
       // Check if the widget is already added to the dashboard
-      const widgetDuplicate = addWidget.widgets.includes(widgetId);
+      const widgetDuplicate = addWidget.widgets.find(
+        (value) => value.widget._id.toString() === widgetId,
+      );
+
       if (widgetDuplicate) {
         throw new ConflictException('Widget already exists in the dashboard');
       }
@@ -107,7 +120,10 @@ export class DashboardService {
         },
         {
           $push: {
-            widgets: widgetExists._id,
+            widgets: {
+              widget: widgetExists._id,
+              column: Columns.Column1,
+            },
           },
         },
         { new: true },
@@ -127,7 +143,7 @@ export class DashboardService {
     const dashboard = await this.dashboardModel
       .findOne({ _id: dashboardId, userID })
       .populate('devices')
-      .populate('widgets');
+      .populate('widgets.widget');
     if (!dashboard) {
       throw new NotFoundException('Dashboard not found');
     }
@@ -191,6 +207,13 @@ export class DashboardService {
       if (!widgetExists) {
         throw new NotFoundException('not found widget');
       }
+      const widgetExistingDashboard = await this.dashboardModel.findOne({
+        _id: dashboardId,
+        'widgets.widget': widgetId,
+      });
+      if (!widgetExistingDashboard) {
+        throw new NotFoundException('widget not found in dashboard');
+      }
       const dashboard = await this.dashboardModel
         .findOneAndUpdate(
           {
@@ -199,20 +222,20 @@ export class DashboardService {
             devices: widgetExists.deviceId,
           },
           {
-            $pull: { widgets: widgetId }, // Remove the widget from the widgets array
+            $pull: { widgets: { widget: widgetId } }, // Remove the widget from the widgets array
           },
           {
             new: true,
           },
         )
-        .populate('widgets');
+        .populate('widgets.widget');
 
       if (!dashboard) {
         throw new NotFoundException('Dashboard not found');
       }
 
-      const removeDevice = dashboard.widgets.some((widget: Widget) =>
-        widget.deviceId.toString().includes(widgetExists.deviceId),
+      const removeDevice = dashboard.widgets.some((widget) =>
+        widget.widget.toString().includes(widgetExists.deviceId),
       );
 
       if (!removeDevice) {
@@ -223,7 +246,10 @@ export class DashboardService {
         dashboard.devices = filteredDevice;
         await dashboard.save();
       }
-      return this.mapToDashboardResponseDto(dashboard);
+      const populatedDashboard = await this.dashboardModel
+        .findById(dashboard._id)
+        .lean();
+      return this.mapToDashboardResponseDto(populatedDashboard);
     } catch (error) {
       throw error;
     }
@@ -233,7 +259,7 @@ export class DashboardService {
     dashboard: Dashboard,
   ): DashboardResponseDto {
     return {
-      id: dashboard.id,
+      id: dashboard._id,
       userID: dashboard.userID,
       nameDashboard: dashboard.nameDashboard,
       description: dashboard.description,
