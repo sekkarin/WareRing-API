@@ -38,7 +38,7 @@ export class AuthConsumer {
   @OnQueueCompleted()
   async onQueueCompleted(job: Job, result: any) {
     this.logger.verbose(
-      `${AuthConsumer.name} send email verification successful "${result}"`,
+      `${AuthConsumer.name} send email  successful "${result}"`,
     );
     // console.log('job on completed: job ', job.id, ' -> result: ', result);
   }
