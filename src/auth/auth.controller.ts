@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Ip,
+  NotFoundException,
   Param,
   Post,
   Req,
@@ -160,17 +161,17 @@ export class AuthController {
   }
 
   @Post('logout')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'User logout' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
-  @Roles(Role.User, Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
   async logOut(@Req() req: Request, @Res() res: Response) {
     try {
-      const username = req.user.username;
-      await this.authService.logOut(username);
+      const token = req.cookies['refresh_token'];
+      if (!token) {
+        throw new NotFoundException('Refresh token not found');
+      }
+      const user = await this.authService.logOut(token);
       res.clearCookie('refresh_token');
-      this.logger.log(`User ${username} logged out`);
+      this.logger.log(`User ${user._id} logged out`);
       res.status(200).json({ message: "logout's" });
     } catch (error) {
       throw error;

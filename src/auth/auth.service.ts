@@ -95,15 +95,15 @@ export class AuthService {
     }
   }
 
-  async logOut(username: string) {
+  async logOut(refreshToken: string) {
     try {
-      const fondUser = await this.usersService.findOne(username);
+      const fondUser = await this.usersService.findRefreshToken(refreshToken);
       if (!fondUser) {
         throw new NotFoundException('user not found');
       }
       fondUser.refreshToken = '';
       await fondUser.save();
-      return;
+      return fondUser
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new ForbiddenException('Token expired');
