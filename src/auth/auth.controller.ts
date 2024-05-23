@@ -179,7 +179,6 @@ export class AuthController {
   }
 
   @Get('refresh')
-  @UseGuards(AuthGuard, IsActivateUser)
   @Throttle({ default: { limit: 6, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth('refresh_token')
