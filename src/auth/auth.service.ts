@@ -172,7 +172,7 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       });
 
-      return await this.usersService.verifiredUserEmail(email);
+      return await this.usersService.verifiedUserEmail(email);
     } catch (err) {
       throw new HttpException(
         'Unauthorized - token is not valid',
