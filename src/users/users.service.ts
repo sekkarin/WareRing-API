@@ -238,6 +238,7 @@ export class UsersService {
       if (!userExist.profileUrl) {
         throw new NotFoundException('profileUrl not set');
       }
+      await this.manageFileS3Service.deleteImage(userExist.profileUrl);
       userExist.profileUrl = null;
       userExist.save();
       return this.mapToUserResponseDto(userExist);
