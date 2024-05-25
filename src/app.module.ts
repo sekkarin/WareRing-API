@@ -72,7 +72,7 @@ const configService = new ConfigService();
           limit: 250,
         },
       ],
-      errorMessage:"Access limited. Please try again later."
+      errorMessage: 'Access limited. Please try again later.',
     }),
     LoggerModule,
     DashboardModule,

@@ -59,8 +59,7 @@ export class ApiService {
         totalDeviceDeny,
       };
     } catch (error) {
-      // console.log(error);
-      if (error instanceof AxiosError && error.response.status == 401) {
+      if (error instanceof AxiosError) {
         await this.loginDashboard();
         return this.overview(userID);
       }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Inject,
   Injectable,
@@ -15,6 +16,8 @@ import { UserResponseDto } from './../auth/dto/auth.dto';
 import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { Device } from './../device/interface/device.interface';
 import { LoggerService } from 'src/logger/logger.service';
+import { ManageFileS3Service } from 'src/utils/services/up-load-file-s3/up-load-file-s3.service';
+import { ResetNewPasswordDTO } from './dto/reset-new-password.DTO';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +27,7 @@ export class UsersService {
     private userModel: Model<User>,
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
+    private readonly manageFileS3Service: ManageFileS3Service,
   ) {}
 
   async findOne(username: string) {
@@ -82,33 +86,24 @@ export class UsersService {
       return error;
     }
   }
-  async update(
-    userUpdate: UpdateUserDto,
-    id: string,
-    file: Express.Multer.File | undefined,
-    url: string,
-  ) {
-    let profileUrl: string | undefined = undefined;
+  async updateUser(userUpdate: UpdateUserDto, id: string, nameFile?: string) {
     let hashPassword: string | undefined = undefined;
     try {
       const user = await this.userModel.findOne({ _id: id });
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      if (file?.filename) {
-        profileUrl = url + file.filename;
-        if (user?.profileUrl) {
-          const fullUrl = user.profileUrl.split('/profile/')[1];
-          this.deleteFile(fullUrl);
-        }
+      if (nameFile && user.profileUrl) {
+        await this.manageFileS3Service.deleteImage(user.profileUrl);
       }
+
       if (userUpdate?.password) {
         hashPassword = await bcrypt.hash(userUpdate?.password, 10);
       }
       const updateUser = await this.userModel
         .findOneAndUpdate(
           { _id: id },
-          { ...userUpdate, profileUrl, password: hashPassword },
+          { ...userUpdate, profileUrl: nameFile, password: hashPassword },
           { new: true },
         )
         .exec();
@@ -160,7 +155,7 @@ export class UsersService {
     }
     return await this.userModel.deleteOne({ _id: id });
   }
-  async verifiredUserEmail(email: string) {
+  async verifiedUserEmail(email: string) {
     return await this.userModel.findOneAndUpdate(
       { email },
       { verifired: true },
@@ -233,5 +228,43 @@ export class UsersService {
       limit,
       itemCount,
     );
+  }
+  async deleteProfileImage(userId: string) {
+    try {
+      const userExist = await this.userModel.findById(userId);
+      if (!userExist) {
+        throw new NotFoundException('user not found');
+      }
+      if (!userExist.profileUrl) {
+        throw new NotFoundException('profileUrl not set');
+      }
+      userExist.profileUrl = null;
+      userExist.save();
+      return this.mapToUserResponseDto(userExist);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async resetNewPassword(
+    userId: string,
+    { passwordNew, passwordOld }: ResetNewPasswordDTO,
+  ) {
+    try {
+      const userExist = await this.userModel.findById(userId);
+      if (!userExist) {
+        throw new NotFoundException('user not found');
+      }
+      const isMath = await bcrypt.compare(passwordOld, userExist.password);
+      if (!isMath) {
+        throw new BadRequestException('Old password is incorrect');
+      }
+      const newHashPassword = await bcrypt.hash(passwordNew, 10);
+      userExist.password = newHashPassword;
+      await userExist.save();
+
+      return { message: 'Password has been successfully reset' };
+    } catch (error) {
+      throw error;
+    }
   }
 }

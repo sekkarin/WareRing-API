@@ -28,7 +28,7 @@ describe('AuthService', () => {
     findByEmail: jest.fn(),
     createUser: jest.fn(),
     findOneToken: jest.fn(),
-    verifiredUserEmail: jest.fn(),
+    verifiedUserEmail: jest.fn(),
     setNewPassword: jest.fn(),
   };
   const mockJwtService = {
@@ -453,7 +453,7 @@ describe('AuthService', () => {
         .spyOn(jwtService, 'verify')
         .mockImplementation(() => Promise.resolve(payload));
       jest
-        .spyOn(usersService, 'verifiredUserEmail')
+        .spyOn(usersService, 'verifiedUserEmail')
         .mockResolvedValueOnce(payload as any);
 
       const result = await authService.verifyEmail(uniqueString);
@@ -461,7 +461,7 @@ describe('AuthService', () => {
       expect(jwtService.verify).toHaveBeenCalledWith(uniqueString, {
         secret: expect.any(String), // Adjust as per your configuration
       });
-      expect(usersService.verifiredUserEmail).toHaveBeenCalledWith(
+      expect(usersService.verifiedUserEmail).toHaveBeenCalledWith(
         payload.email,
       );
       expect(result).toBeTruthy();

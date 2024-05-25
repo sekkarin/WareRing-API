@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Post,
   Put,
   Query,
   Req,
@@ -17,7 +18,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import * as fs from 'fs';
 import {
   ApiBearerAuth,
   ApiConsumes,
@@ -38,25 +38,26 @@ import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { UserResponseDto } from './../auth/dto/auth.dto';
 import { PaginationQueryparamsDto } from './../device/dto/pagination-query-params.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { storageFiles } from './../utils/storageFiles';
-import { ConfigService } from '@nestjs/config';
 import { BannedDto } from './dto/banned.dto';
 import { Throttle } from '@nestjs/throttler';
 import { IsActivateUser } from './guard/active.guard';
+import * as multer from 'multer';
+import { ManageFileS3Service } from 'src/utils/services/up-load-file-s3/up-load-file-s3.service';
+import { ResetNewPasswordDTO } from './dto/reset-new-password.DTO';
 
 @ApiTags('User')
 @Controller('users')
-@Throttle({ default: { limit: 30, ttl: 60000 } })
+@Throttle({ default: { limit: 60, ttl: 60000 } })
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly configService: ConfigService,
+    private readonly uploadFileS3Service: ManageFileS3Service,
   ) {}
 
   @Put()
   @ApiBearerAuth()
-  @Roles(Role.Admin, Role.User,)
-  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+  @Roles(Role.Admin, Role.User)
+  @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a user' }) // Operation summary
   @ApiResponse({
@@ -76,7 +77,7 @@ export class UsersController {
   @ApiBearerAuth() // Specify Bearer token authentication
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: storageFiles(),
+      storage: multer.memoryStorage(),
       fileFilter(req, file, callback) {
         if (!file.originalname.match(/\.(jpg|png|jpeg)$/)) {
           return callback(new BadRequestException('Invalid file type'), false);
@@ -84,57 +85,36 @@ export class UsersController {
         callback(null, true);
       },
       limits: {
-        fileSize: 5000,
+        fileSize: 5000000,
       },
     }),
   )
   @ApiConsumes('multipart/form-data')
-  update(
+  async update(
     @Body() updateUserDto: UpdateUserDto,
     @Req() req: Request,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const protocol = req.protocol;
-    const host = req.hostname;
-    const originUrl = req.originalUrl;
-    const fullUrl =
-      protocol +
-      '://' +
-      host +
-      `:${this.configService.get<string>('PORT')}` +
-      originUrl +
-      'profile/';
-
     try {
-      // TODO: delete image old
-      // TODO: Refactor code and clean up
-      // TODO: SAVE image when error
-      // FIXME: dto update
-      // FIXME: fix full path
-
       const id = req['user'].sub;
-      //  console.log(req?.fileValidationError);
+      let nameFile: string | undefined = undefined;
 
+      if (file) {
+        nameFile = await this.uploadFileS3Service.uploadFile(file);
+      }
       if (Object.keys(updateUserDto).length === 0 && !file) {
         throw new BadRequestException(
           'Please provide at least one field to update.',
         );
       }
 
-      const updatedUser = this.usersService.update(
+      const updatedUser = this.usersService.updateUser(
         updateUserDto,
         id,
-        file,
-        fullUrl,
+        nameFile,
       );
       return updatedUser;
     } catch (error) {
-      if (file) {
-        const filePath = file.path;
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
       throw error;
     }
   }
@@ -161,45 +141,6 @@ export class UsersController {
 
       throw error;
     }
-  }
-
-  @Get('search')
-  @Roles(Role.Admin)
-  @UseGuards(AuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Search all users, Roles Admin' }) // Operation summary
-  @ApiQuery({
-    name: 'query',
-    type: String,
-    required: false,
-    description: 'string query to search',
-  })
-  @ApiQuery({
-    name: 'page',
-    type: Number,
-    required: false,
-    description: 'Page number for pagination (default: 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: Number,
-    required: false,
-    description: 'limit Number of items  (default: 10)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns a paginated list of user',
-    type: UserResponseDto,
-    isArray: true,
-  })
-  async searchUsers(
-    @Req() req: Request,
-    @Query('query') query: string,
-    @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
-  ) {
-    const { sub } = req['user'];
-    const { page, limit } = paginationQueryparamsDto;
-    return this.usersService.searchUsers(query, page, limit, sub);
   }
 
   @Get()
@@ -237,7 +178,7 @@ export class UsersController {
   @Delete()
   @Roles(Role.User)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+  @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
   @ApiOperation({ summary: 'Delete a user', description: 'Roles User' }) // Operation summary
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({
@@ -261,7 +202,7 @@ export class UsersController {
 
   @Get(':id')
   @Roles(Role.User)
-  @UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+  @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
   @ApiOperation({ summary: 'Get user by id' }) // Operation summary
   @ApiResponse({
     status: 200,
@@ -295,13 +236,46 @@ export class UsersController {
     }
   }
 
-  @Get('profile/:filename')
-  async getProfilePicture(
-    @Param('filename') filename: string,
-    @Res() res: Response,
+  @Delete('/profile')
+  @Roles(Role.User)
+  @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete profile image' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile image deleted successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found or profileUrl not set.',
+  })
+  async deleteProfileImage(@Req() req: Request) {
+    try {
+      const { sub } = req['user'];
+      return this.usersService.deleteProfileImage(sub);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('/reset-password')
+  @Roles(Role.User)
+  @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reset user password' })
+  @ApiResponse({ status: 200, description: 'Password has been successfully reset.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @ApiResponse({ status: 400, description: 'Old password is incorrect.' })
+  resetPassword(
+    @Req() req: Request,
+    @Body() resetNewPasswordDTO: ResetNewPasswordDTO,
   ) {
-    res.sendFile(filename, {
-      root: './uploads/profiles/',
-    });
+    try {
+      const { sub } = req['user'];
+
+      return this.usersService.resetNewPassword(sub, resetNewPasswordDTO);
+    } catch (error) {
+      throw error;
+    }
   }
 }

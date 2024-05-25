@@ -201,7 +201,6 @@ export class AuthController {
     status: 400,
     description: 'Unauthorized - missing refresh token',
   })
-  @ApiBearerAuth()
   async refresh(@Req() request: Request, @Res() res: Response) {
     const cookies = request.cookies;
     if (!cookies.refresh_token) {
