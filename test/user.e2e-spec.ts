@@ -211,7 +211,7 @@ describe('Users (e2e)', () => {
         .delete('/users')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(HttpStatus.OK);
-    
+
       expect(res.body.message).toBe('delete user successfully');
     });
   });
@@ -221,29 +221,27 @@ describe('Users (e2e)', () => {
         .get(`/users/${user_id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(HttpStatus.OK);
-  
+
       // Verify that the retrieved user matches the created user
       expect(getUserResponse.body.id).toBe(user_id);
       expect(getUserResponse.body.email).toBe('sekkri1234@gmail.com');
-      
     });
-  // describe('GET profile image', () => {
-  //   it('should retrieve profile picture by filename', async () => {
-  //     // Assuming you have a test profile picture named 'test.jpg' in the 'uploads/profiles' directory
-  //     const filename = 'test.jpg';
-  
-  //     // Make a request to retrieve the profile picture
-  //     const res = await request(app.getHttpServer())
-  //       .get(`/users/profile/${filename}`)
-  //       .expect(HttpStatus.OK);
-  
-  //     // // Check if the content type of the response is an image
-  //     // expect(res.headers['content-type']).toMatch(/^image/);
-  
-  //     // // Check if the response body matches the content of the profile picture file
-  //     // const fileContent = fs.readFileSync(`./uploads/profiles/${filename}`);
-  //     // expect(res.body).toEqual(fileContent);
-  //   });
-  });
+    // describe('GET profile image', () => {
+    //   it('should retrieve profile picture by filename', async () => {
+    //     // Assuming you have a test profile picture named 'test.jpg' in the 'uploads/profiles' directory
+    //     const filename = 'test.jpg';
 
+    //     // Make a request to retrieve the profile picture
+    //     const res = await request(app.getHttpServer())
+    //       .get(`/users/profile/${filename}`)
+    //       .expect(HttpStatus.OK);
+
+    //     // // Check if the content type of the response is an image
+    //     // expect(res.headers['content-type']).toMatch(/^image/);
+
+    //     // // Check if the response body matches the content of the profile picture file
+    //     // const fileContent = fs.readFileSync(`./uploads/profiles/${filename}`);
+    //     // expect(res.body).toEqual(fileContent);
+    //   });
+  });
 });

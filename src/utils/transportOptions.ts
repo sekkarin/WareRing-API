@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 const configService = new ConfigService();
 // console.log(configService.getOrThrow("PORT"));
 
-
 export const transportOptions = {
   transport: {
     host: 'smtp.gmail.com',

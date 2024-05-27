@@ -9,7 +9,7 @@
     "build": "nest build",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main",
+    "start": "node dist/src/main",
     "start:dev": "cross-env NODE_ENV=dev nest start --watch ",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
@@ -52,7 +52,8 @@
     "mongoose": "^7.6.11",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
-    "sharp": "^0.33.4"
+    "sharp": "^0.33.4",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.24",

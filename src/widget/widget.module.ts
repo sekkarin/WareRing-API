@@ -6,7 +6,7 @@ import { widgetProviders } from './provider/provider';
 
 @Module({
   controllers: [WidgetController],
-  providers: [WidgetService,...widgetProviders],
+  providers: [WidgetService, ...widgetProviders],
   imports: [DatabaseModule],
 })
 export class WidgetModule {}

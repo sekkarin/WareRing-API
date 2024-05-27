@@ -6,13 +6,11 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from './../users/users.module';
 import { BullModule } from '@nestjs/bull';
 import { AuthConsumer } from './auth.process';
-import { LoggerService } from 'src/logger/logger.service';
 import { AuthGuard } from './guards/auth.guard';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, AuthConsumer,AuthGuard],
+  providers: [AuthService, AuthConsumer, AuthGuard],
   imports: [
     UsersModule,
     JwtModule.register({

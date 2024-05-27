@@ -13,7 +13,10 @@ export class WebhooksConsumer {
     const { device, toObject } = job.data;
     try {
       // console.log(device, toObject);
-      const isSaveData = await this.webhooksService.insertData(device, toObject);
+      const isSaveData = await this.webhooksService.insertData(
+        device,
+        toObject,
+      );
 
       if (isSaveData) {
         return isSaveData;
@@ -22,6 +25,4 @@ export class WebhooksConsumer {
       throw error;
     }
   }
-
-
 }

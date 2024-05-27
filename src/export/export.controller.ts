@@ -12,7 +12,6 @@ import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 
-
 @Controller('export')
 @ApiTags('Exports Data')
 @ApiBearerAuth()

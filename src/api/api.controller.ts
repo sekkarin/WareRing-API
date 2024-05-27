@@ -10,7 +10,7 @@ import { IsActivateUser } from 'src/users/guard/active.guard';
 @Controller('api')
 @ApiTags('Api')
 @Roles(Role.User)
-@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+@UseGuards(AuthGuard, RolesGuard, IsActivateUser)
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
   @Get('overview')

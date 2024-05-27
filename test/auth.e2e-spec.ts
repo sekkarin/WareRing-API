@@ -212,13 +212,13 @@ describe('Auth (e2e)', () => {
         })
         .expect(HttpStatus.OK);
 
-        const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
-      
-        const logOutResponse = await request(app.getHttpServer())
-          .post('/auth/logout')
-          .set('Cookie', refreshTokenCookie)
-          .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
-          .expect(HttpStatus.OK);
+      const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
+
+      const logOutResponse = await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', refreshTokenCookie)
+        .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
+        .expect(HttpStatus.OK);
 
       // Check if the response contains the 'logout' message
       expect(logOutResponse.body.message).toEqual("logout's");
@@ -265,25 +265,25 @@ describe('Auth (e2e)', () => {
         })
         .expect(HttpStatus.CREATED);
 
-        // Sign in a user
-        const signInResponse = await request(app.getHttpServer())
-          .post('/auth/login')
-          .send({
-            username: 'johndoe',
-            password: '1234567Test',
-          })
-          .expect(HttpStatus.OK);
-        const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
-        // Use the refresh token to get a new access token
-        const refreshResponse = await request(app.getHttpServer())
-          .get('/auth/refresh')
-          .set('Cookie', refreshTokenCookie)
-          .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
-          .expect(HttpStatus.OK);
+      // Sign in a user
+      const signInResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          username: 'johndoe',
+          password: '1234567Test',
+        })
+        .expect(HttpStatus.OK);
+      const refreshTokenCookie = signInResponse.get('Set-Cookie')[0];
+      // Use the refresh token to get a new access token
+      const refreshResponse = await request(app.getHttpServer())
+        .get('/auth/refresh')
+        .set('Cookie', refreshTokenCookie)
+        .set('Authorization', `Bearer ${signInResponse.body.access_token}`)
+        .expect(HttpStatus.OK);
 
-        expect(refreshResponse.body.access_token).toBeDefined();
-        await mongooseConnection.db.dropCollection('users');
-      });
+      expect(refreshResponse.body.access_token).toBeDefined();
+      await mongooseConnection.db.dropCollection('users');
+    });
 
     it('should return 401 with missing refresh token', async () => {
       await request(app.getHttpServer())

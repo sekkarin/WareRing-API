@@ -47,7 +47,9 @@ describe('RolesGuard', () => {
     });
 
     it('should return false if user does not have any of the required roles', () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValueOnce(['role-invalid']);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValueOnce(['role-invalid']);
 
       const result = guard.canActivate(mockContext);
 

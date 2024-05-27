@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Permission } from '../types/permission.type';
-import { IsString, IsNotEmpty,IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
 
 export class PermissionsDto {
   @ApiProperty({
@@ -10,6 +10,6 @@ export class PermissionsDto {
   })
   @IsNotEmpty()
   @IsString()
-  @IsEnum(["deny", "allow"])
+  @IsEnum(['deny', 'allow'])
   permission: Permission;
 }

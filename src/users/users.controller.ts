@@ -263,7 +263,10 @@ export class UsersController {
   @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reset user password' })
-  @ApiResponse({ status: 200, description: 'Password has been successfully reset.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password has been successfully reset.',
+  })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @ApiResponse({ status: 400, description: 'Old password is incorrect.' })
   resetPassword(

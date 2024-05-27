@@ -43,7 +43,7 @@ import { IsActivateUser } from 'src/users/guard/active.guard';
 @Controller('devices')
 @Roles(Role.User)
 @Throttle({ default: { limit: 30, ttl: 60000 } })
-@UseGuards(AuthGuard, RolesGuard,IsActivateUser)
+@UseGuards(AuthGuard, RolesGuard, IsActivateUser)
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 

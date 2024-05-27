@@ -37,10 +37,10 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       responseObj.response = exception.getResponse();
     } else if (exception instanceof MongooseError) {
       responseObj.statusCode = 422;
-      responseObj.response = exception.message
+      responseObj.response = exception.message;
     } else if (exception instanceof PayloadTooLargeException) {
       responseObj.statusCode = 413;
-      responseObj.response = exception.message
+      responseObj.response = exception.message;
     } else {
       responseObj.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       responseObj.response = 'Internal Server Error';

@@ -112,12 +112,10 @@ export class WidgetController {
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ) {
     try {
-      
-      await this.widgetService.delete(widgetId,deviceId);
+      await this.widgetService.delete(widgetId, deviceId);
       return { message: 'Widget deleted successfully' };
     } catch (error) {
-      throw error
+      throw error;
     }
-    
   }
 }

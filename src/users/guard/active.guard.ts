@@ -19,7 +19,7 @@ export class IsActivateUser implements CanActivate {
     const userId = request['user'].sub;
     const isUserActive = await this.userModel.findOne({ _id: userId });
     if (!isUserActive) {
-      throw new NotFoundException('User not found verify activate')
+      throw new NotFoundException('User not found verify activate');
     }
     return isUserActive.isActive;
   }

@@ -60,12 +60,15 @@ COPY package.json .
 
 # Copy the production dependencies from the deps stage and also
 # the built application from the build stage into the image.
-COPY --from=deps /usr/src/app/node_modules ./node_modules
+# Set permissions for the /usr/src/app/dist directory --chown=node:node 
+COPY --from=deps  /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
+RUN chown -R node:node /usr/src/app
+USER node
 
 
 # Expose the port that the application listens on.
 EXPOSE 3000
-# RUN npm install cross-env
+
 # Run the application.
 CMD npm run start:prod
