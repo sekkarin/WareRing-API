@@ -31,7 +31,7 @@ export class UsersService {
   ) {}
 
   async findOne(username: string) {
-    return this.userModel.findOne({ username: username }).exec();
+    return this.userModel.findOne({ username: username });
   }
   async findRefreshToken(token: string) {
     return this.userModel.findOne({ refreshToken: token }).exec();

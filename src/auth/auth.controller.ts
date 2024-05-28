@@ -252,13 +252,12 @@ export class AuthController {
     description: 'Unauthorized - token is not valid',
   })
   async verifyEmail(
-    @Req() request,
     @Param('token') token,
     @Res() res: Response,
   ) {
     try {
       this.logger.info(
-        `${AuthController.name} User attempt verify from IP: ${request.ip}`,
+        `${AuthController.name} User attempt verify`,
       );
       const verifyEmailResult = await this.authService.verifyEmail(token);
       this.logger.info(

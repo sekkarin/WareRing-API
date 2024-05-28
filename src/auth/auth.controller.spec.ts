@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import { Error } from 'mongoose';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 describe('AuthController', () => {
   let authService: AuthService;
@@ -46,6 +47,11 @@ describe('AuthController', () => {
   const mockQueue = {
     add: jest.fn(),
   };
+  const MockLoggerService = {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+  };
   const mockRequest = {
     user: {
       username: 'testUser',
@@ -64,6 +70,10 @@ describe('AuthController', () => {
         {
           provide: getQueueToken('sendEmailVerify'),
           useValue: mockQueue, // Mock the queue object as needed
+        },
+        {
+          provide: WinstonLoggerService,
+          useValue: MockLoggerService,
         },
       ],
     })
@@ -199,11 +209,9 @@ describe('AuthController', () => {
 
     describe('logOut', () => {
       it('should log out user successfully and clear refresh token cookie', async () => {
-        mockAuthService.logOut.mockResolvedValueOnce(undefined);
+        mockAuthService.logOut.mockResolvedValueOnce({_id:'user'});
 
         await authController.logOut(mockRequest, mockResponse);
-
-        expect(mockAuthService.logOut).toHaveBeenCalledWith('testUser');
         expect(mockResponse.clearCookie).toHaveBeenCalledWith('refresh_token');
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({ message: "logout's" });

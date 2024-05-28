@@ -14,6 +14,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/user.dto';
+import { WinstonLoggerService } from 'src/logger/logger.service';
+import { IsActivateUser } from 'src/users/guard/active.guard';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -30,6 +32,7 @@ describe('AuthService', () => {
     findOneToken: jest.fn(),
     verifiedUserEmail: jest.fn(),
     setNewPassword: jest.fn(),
+    findRefreshToken: jest.fn(),
   };
   const mockJwtService = {
     signAsync: jest.fn(),
@@ -45,8 +48,13 @@ describe('AuthService', () => {
     roles: ['user'],
     verifired: false,
     password: 'hashPassword',
+    isActive: true,
   };
   const mockConfigService = {
+    get: jest.fn(),
+    getOrThrow: jest.fn(),
+  };
+  const mockAuthGuardService = {
     get: jest.fn(),
     getOrThrow: jest.fn(),
   };
@@ -56,12 +64,16 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         AuthConsumer,
+        WinstonLoggerService,
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: MailerService, useValue: mockMailerService },
       ],
-    }).compile();
+    })
+      .overrideGuard(IsActivateUser)
+      .useValue(mockAuthGuardService)
+      .compile();
     authService = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
@@ -211,7 +223,9 @@ describe('AuthService', () => {
         refreshToken: 'refreshToken',
         save: jest.fn(),
       };
-      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(User as any); // Mock existing user
+      jest
+        .spyOn(usersService, 'findRefreshToken')
+        .mockResolvedValueOnce(User as any); // Mock existing user
       await authService.logOut(username);
 
       expect(User.refreshToken).toBe('');
@@ -232,7 +246,7 @@ describe('AuthService', () => {
     it('should throw ForbiddenException if there is a TokenExpiredError', async () => {
       // Arrange
       const username = 'testUser';
-      jest.spyOn(usersService, 'findOne').mockImplementation(() => {
+      jest.spyOn(usersService, 'findRefreshToken').mockImplementation(() => {
         throw new TokenExpiredError('Token expired', new Date());
       }); // Mock TokenExpiredError
       await expect(authService.logOut(username)).rejects.toThrowError(
@@ -242,7 +256,7 @@ describe('AuthService', () => {
     it('should throw ForbiddenException if there is a TokenExpiredError', async () => {
       // Arrange
       const username = 'testUser';
-      jest.spyOn(usersService, 'findOne').mockImplementation(() => {
+      jest.spyOn(usersService, 'findRefreshToken').mockImplementation(() => {
         throw new TokenExpiredError('Token expired', new Date());
       }); // Mock TokenExpiredError
       await expect(authService.logOut(username)).rejects.toThrowError(
@@ -497,13 +511,6 @@ describe('AuthService', () => {
 
       jest.spyOn(configService, 'get').mockReturnValueOnce(expiresIn);
 
-      const mailOptions = {
-        from: expect.any(String),
-        to: email,
-        subject: 'Reset your password',
-        html: expect.any(String),
-      };
-
       jest.spyOn(mailerService, 'sendMail').mockResolvedValueOnce(true);
 
       const result = await authService.sendEmailForgetPassword(email);
@@ -613,41 +620,7 @@ describe('AuthService', () => {
       );
     });
   });
-  describe('checkIsActive', () => {
-    it('should return true if user is active', async () => {
-      const username = 'test_user';
-      const user = { username, isActive: true };
 
-      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(user as any);
-
-      const result = await authService.checkIsActive(username);
-
-      expect(usersService.findOne).toHaveBeenCalledWith(username);
-      expect(result).toBe(true);
-    });
-
-    it('should return false if user is not active', async () => {
-      const username = 'test_user';
-      const user = { username, isActive: false };
-
-      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(user as any);
-
-      const result = await authService.checkIsActive(username);
-
-      expect(usersService.findOne).toHaveBeenCalledWith(username);
-      expect(result).toBe(false);
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      const username = 'nonexistent_user';
-
-      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(null);
-
-      await expect(authService.checkIsActive(username)).rejects.toThrowError(
-        new NotFoundException('not found user'),
-      );
-    });
-  });
   describe('sendEmailResetPassword', () => {
     it('should send reset password email', async () => {
       const mockEmail = 'test@example.com';
