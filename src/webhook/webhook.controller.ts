@@ -25,21 +25,20 @@ export class WebhookController {
 
   @Post('/save')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(CacheInterceptor)
+  // @UseInterceptors(CacheInterceptor)
   async saveData(@Body() body: any) {
-    const {device,toObject} = await this.webhookService.save(body);
+    const { device, toObject } = await this.webhookService.save(body);
     await this.webhooksQueue.add(
       'save-data',
       {
         device,
-        toObject
+        toObject,
       },
       {
         removeOnComplete: true,
         removeOnFail: true,
-        
       },
     );
-    return toObject
+    return toObject;
   }
 }

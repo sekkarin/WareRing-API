@@ -9,7 +9,7 @@ export const DataSchema = new mongoose.Schema({
     type: Object,
   },
   timestamps: {
-    type:Date,
-    default: new Date()
-  }
+    type: Date,
+    default: new Date(),
+  },
 });

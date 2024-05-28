@@ -1,4 +1,12 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class PaginationQueryparamsDto {
@@ -6,7 +14,7 @@ export class PaginationQueryparamsDto {
   @IsInt()
   @Min(1)
   readonly page?: number = 1;
-  
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -33,6 +41,5 @@ export class PaginationQueryparamsDto {
   @IsString()
   @IsOptional()
   @IsEnum(['allow', 'deny'])
-  readonly permission?: string ;
-
+  readonly permission?: string;
 }

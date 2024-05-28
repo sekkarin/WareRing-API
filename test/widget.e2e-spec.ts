@@ -107,8 +107,6 @@ describe('Device (e2e)', () => {
         expect(response.status).toBe(400);
       });
     });
-
-   
   });
 });
 async function createDevice(

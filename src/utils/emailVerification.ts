@@ -1,4 +1,4 @@
-export const FORM_VERIFY_EMAIL = (token: string,clientUrl:string) => {
+export const FORM_VERIFY_EMAIL = (token: string, clientUrl: string) => {
   return `<!DOCTYPE html>
   <html>
   <head>

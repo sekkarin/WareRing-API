@@ -25,6 +25,5 @@ export class PaginatedDto<T> {
   }
   setData(data: T[]) {
     this.data = data;
-    
   }
 }

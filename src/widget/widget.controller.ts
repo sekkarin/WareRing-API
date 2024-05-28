@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   NotFoundException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { WidgetService } from './widget.service';
 import { CreateWidgetDto } from './dto/create-widget.dto';
@@ -27,15 +28,21 @@ import { Role } from './../auth/enums/role.enum';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { RolesGuard } from './../auth/guards/roles.guard';
 import { MongoDBObjectIdPipe } from './../utils/pipes/mongodb-objectid.pipe';
-import { LoggerService } from 'src/logger/logger.service';
+import { IsActivateUser } from 'src/users/guard/active.guard';
+import { CustomLoggerInterceptor } from 'src/utils/interceptors/customLoggerInterceptor';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @ApiTags('Widget')
 @Controller('widgets')
 @Roles(Role.User)
 @Throttle({ default: { limit: 30, ttl: 60000 } })
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard, IsActivateUser)
+@UseInterceptors(CustomLoggerInterceptor)
 export class WidgetController {
-  constructor(private readonly widgetService: WidgetService) {}
+  constructor(
+    private readonly widgetService: WidgetService,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   @Post(':deviceId')
   @ApiOperation({ summary: 'Create a new widget' })
@@ -51,6 +58,9 @@ export class WidgetController {
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ): Promise<WidgetResponseDto> {
     try {
+      this.logger.info(
+        `${WidgetController.name} User ${req['user'].username} create widget ${createWidgetDto.label}`,
+      );
       return this.widgetService.create(createWidgetDto, deviceId);
     } catch (error) {
       throw error;
@@ -67,8 +77,16 @@ export class WidgetController {
   })
   findAll(
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
+    @Req() req: Request,
   ): Promise<WidgetResponseDto[]> {
-    return this.widgetService.findAll(deviceId);
+    try {
+      this.logger.info(
+        `${WidgetController.name} User ${req['user'].username} get widgets from device id ${deviceId}`,
+      );
+      return this.widgetService.findAll(deviceId);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get(':widgetId/widget')
@@ -82,8 +100,16 @@ export class WidgetController {
   @ApiResponse({ status: 404, description: 'Widget not found' })
   async findOne(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
+    @Req() req: Request,
   ): Promise<WidgetResponseDto> {
-    return this.widgetService.findOne(widgetId);
+    try {
+      this.logger.info(
+        `${WidgetController.name} User ${req['user'].username} get widget id ${widgetId}`,
+      );
+      return this.widgetService.findOne(widgetId);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Patch(':widgetId')
@@ -98,8 +124,16 @@ export class WidgetController {
   update(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Body() updateWidgetDto: UpdateWidgetDto,
+    @Req() req: Request,
   ) {
-    return this.widgetService.update(widgetId, updateWidgetDto);
+    this.logger.info(
+      `${WidgetController.name} User ${req['user'].username} update widget id ${widgetId}`,
+    );
+    try {
+      return this.widgetService.update(widgetId, updateWidgetDto);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Delete('/:widgetId/device/:deviceId')
@@ -110,14 +144,16 @@ export class WidgetController {
   async delete(
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
+    @Req() req: Request,
   ) {
+    this.logger.info(
+      `${WidgetController.name} User ${req['user'].username} delete widget id ${widgetId} device id ${deviceId}`,
+    );
     try {
-      
-      await this.widgetService.delete(widgetId,deviceId);
+      await this.widgetService.delete(widgetId, deviceId);
       return { message: 'Widget deleted successfully' };
     } catch (error) {
-      throw error
+      throw error;
     }
-    
   }
 }

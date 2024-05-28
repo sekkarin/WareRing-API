@@ -16,7 +16,7 @@ export class CreateDeviceDto {
     example: 'MyDevice',
     description: 'Name of the device',
   })
-  @Length(1,25)
+  @Length(1, 25)
   @IsString()
   @IsNotEmpty()
   nameDevice: string;
@@ -25,7 +25,7 @@ export class CreateDeviceDto {
     example: 'device_username',
     description: 'Username for device authentication',
   })
-  @Length(1,25)
+  @Length(1, 25)
   @IsString()
   @IsNotEmpty()
   usernameDevice: string;
@@ -43,7 +43,7 @@ export class CreateDeviceDto {
     example: 'Smart home controller',
     description: 'Description of the device',
   })
-  @Length(0,255)
+  @Length(0, 255)
   @IsString()
   @IsOptional()
   description?: string;
@@ -53,7 +53,7 @@ export class CreateDeviceDto {
     description: 'The device is subscribed to',
   })
   @IsString()
-  @Length(1,25)
+  @Length(1, 25)
   @IsNotEmpty()
   topics: string;
 
@@ -65,7 +65,7 @@ export class CreateDeviceDto {
   @IsNotEmpty()
   @IsEnum([0, 1, 2])
   qos: number;
-  
+
   @ApiProperty({
     example: true,
     description: 'Whether the device retains messages',

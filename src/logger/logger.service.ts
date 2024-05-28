@@ -1,72 +1,51 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import { promises as fsPromises } from 'fs';
-import * as path from 'path';
+import { LoggerService, Injectable } from '@nestjs/common';
+import * as winston from 'winston';
+import 'winston-daily-rotate-file';
 
 @Injectable()
-export class LoggerService extends ConsoleLogger {
-  log(message: any, context?: string) {
-    let entry = '';
-    if (context) {
-      super.log(message, context);
-      entry = `level:info\t${context}\t${message}`;
-    } else {
-      entry = `level:info\t${message}`;
-      super.log(message);
-    }
-    this.logFile(entry);
+export class WinstonLoggerService implements LoggerService {
+  private readonly logger: winston.Logger;
+  constructor() {
+    this.logger = winston.createLogger({
+      level: 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message, context }) => {
+          return `${timestamp} [${level}] ${context}: ${message}`;
+        }),
+      ),
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.DailyRotateFile({
+          filename: 'logs/application-%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          maxSize: '20m',
+          maxFiles: '14d',
+        }),
+      ],
+    });
   }
-  error(message: any, stackOrContext?: string) {
-    const entry = `level:error\t${stackOrContext}\t${message}`;
-    this.logFile(entry);
-    super.error(message, stackOrContext);
+  log(message: string, context?: string) {
+    this.logger.log(message, { context });
   }
-  verbose(message: any, context?: string) {
-    let entry = '';
-    if (context) {
-      super.verbose(message, context);
-      entry = `level:verbose\t${context}\t${message}`;
-    } else {
-      entry = `level:verbose\t${message}`;
-      super.verbose(message);
-    }
-    this.logFile(entry);
-  }
-  warn(message: any, context?: string) {
-    let entry = '';
-    if (context) {
-      super.warn(message, context);
-      entry = `level:verbose\t${context}\t${message}`;
-    } else {
-      entry = `level:verbose\t${message}`;
-      super.warn(message);
-    }
-    this.logFile(entry);
-  }
-  fatal(message: any, stackOrContext?: string) {
-    const entry = `level:fatal\t${stackOrContext}\t${message}`;
-    this.logFile(entry);
-    super.error(message, stackOrContext);
+  info(message: string, context?: string) {
+    this.logger.info(message, { context });
   }
 
-  async logFile(entry: string) {
-    const formattedEntry = `${Intl.DateTimeFormat('en-US', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-      timeZone: 'Asia/Bangkok',
-    }).format(new Date())}\t${entry}\n`;
-    try {
-      if (!fs.existsSync(path.join(__dirname, '..', '..', '..', 'logs'))) {
-        await fsPromises.mkdir(path.join(__dirname, '..', '..', '..', 'logs'));
-      }
-      await fsPromises.appendFile(
-        path.join(__dirname, '..', '..', '..', 'logs', 'loggerFile.log'),
-        formattedEntry,
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
-    }
+  error(message: string, trace: string, context?: string) {
+    this.logger.error(`${message} -> ${trace}`, { context });
+  }
+
+  warn(message: string, context?: string) {
+    this.logger.warn(message, { context });
+  }
+
+  debug(message: string, context?: string) {
+    this.logger.debug(message, { context });
+  }
+
+  verbose(message: string, context?: string) {
+    this.logger.verbose(message, { context });
   }
 }

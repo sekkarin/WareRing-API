@@ -51,21 +51,24 @@ FROM base as final
 
 # Use production node environment by default.
 ENV NODE_ENV production
-
+RUN chown -R node.node /usr/src/app
 # Run the application as a non-root user.
+COPY --chown=node:node . .
 USER node
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
 
+
 # Copy the production dependencies from the deps stage and also
 # the built application from the build stage into the image.
-COPY --from=deps /usr/src/app/node_modules ./node_modules
+# Set permissions for the /usr/src/app/dist directory --chown=node:node 
+COPY --from=deps  /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 
 
 # Expose the port that the application listens on.
 EXPOSE 3000
-# RUN npm install cross-env
+
 # Run the application.
 CMD npm run start:prod

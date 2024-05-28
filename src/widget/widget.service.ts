@@ -5,14 +5,14 @@ import { CreateWidgetDto } from './dto/create-widget.dto';
 import { UpdateWidgetDto } from './dto/update-widget.dto';
 import { Widget } from './interface/widget.interface';
 import { WidgetResponseDto } from './dto/response-widget.dto';
-import { LoggerService } from 'src/logger/logger.service';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class WidgetService {
-  private readonly logger = new LoggerService(WidgetService.name);
   constructor(
     @Inject('WIDGET_MODEL')
     private widgetModel: Model<Widget>,
+    private readonly logger: WinstonLoggerService,
   ) {}
   //TODO: check device exiting
   async create(

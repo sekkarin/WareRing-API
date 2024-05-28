@@ -82,7 +82,9 @@ describe('AuthGuard', () => {
           new JsonWebTokenError('Invalid', new Error('Invalid')),
         );
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrowError(ForbiddenException) 
+      await expect(guard.canActivate(mockContext)).rejects.toThrowError(
+        ForbiddenException,
+      );
 
       // expect(result).toBe(true);
     });

@@ -10,6 +10,7 @@ import {
   Req,
   Query,
   Put,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -31,14 +32,17 @@ import { UpdateDashboardDto } from './dto/update-dashboard.dto';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
 import { DashboardPositionDto } from './dto/position-dashboarrd.dto';
+import { CustomLoggerInterceptor } from 'src/utils/interceptors/customLoggerInterceptor';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @ApiBearerAuth()
 @ApiTags('Dashboards')
 @Controller('dashboards')
 @Roles(Role.User)
 @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
+@UseInterceptors(CustomLoggerInterceptor)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService,private readonly logger:WinstonLoggerService) {}
 
   @Post()
   @ApiResponse({
@@ -48,6 +52,9 @@ export class DashboardController {
   })
   @ApiOperation({ summary: 'Create a new dashboard' })
   create(@Req() req: Request, @Body() createDashboardDto: CreateDashboardDto) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} create Dashboard ${createDashboardDto.nameDashboard}`,
+    );
     try {
       const { sub } = req['user'];
       return this.dashboardService.create(createDashboardDto, sub);
@@ -63,6 +70,9 @@ export class DashboardController {
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} add widget id ${widgetId} to  Dashboard id ${dashboardId}`,
+    );
     try {
       return this.dashboardService.addWidget(dashboardId, widgetId);
     } catch (error) {
@@ -94,6 +104,9 @@ export class DashboardController {
     @Req() req: Request,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} get Dashboards`,
+    );
     const { sub } = req['user'];
     try {
       const { page, limit, query } = paginationQueryparamsDto;
@@ -109,6 +122,9 @@ export class DashboardController {
     @Req() req: Request,
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} get Dashboard id ${dashboardId}`,
+    );
     const { sub } = req['user'];
     try {
       return this.dashboardService.findOne(sub, dashboardId);
@@ -122,7 +138,11 @@ export class DashboardController {
   update(
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
     @Body() updateDashboardDto: UpdateDashboardDto,
+    @Req() req: Request,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} update Dashboard id ${dashboardId}`,
+    );
     try {
       return this.dashboardService.update(dashboardId, updateDashboardDto);
     } catch (error) {
@@ -134,7 +154,11 @@ export class DashboardController {
   updatePosition(
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
     @Body() dashboardPositionDto: DashboardPositionDto,
+    @Req() req: Request,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} update position widget, Dashboard id ${dashboardId}`,
+    );
     try {
       return this.dashboardService.updatePosition(
         dashboardId,
@@ -147,7 +171,10 @@ export class DashboardController {
 
   @Delete(':dashboardId')
   @ApiOperation({ summary: 'Delete a dashboard by Id' })
-  deleteDashboard(@Param('id', MongoDBObjectIdPipe) dashboardId: string) {
+  deleteDashboard(@Param('id', MongoDBObjectIdPipe) dashboardId: string,@Req() req: Request,) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
+    );
     try {
       return this.dashboardService.remove(dashboardId);
     } catch (error) {
@@ -162,6 +189,9 @@ export class DashboardController {
     @Param('widgetId', MongoDBObjectIdPipe) widgetId: string,
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
+    this.logger.info(
+      `${DashboardController.name} User ${req['user'].sub} delete widget in Dashboard id ${dashboardId}`,
+    );
     try {
       const { sub } = req['user'];
       return this.dashboardService.deleteWidget(dashboardId, widgetId, sub);

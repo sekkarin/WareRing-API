@@ -5,6 +5,9 @@
 # https://docs.docker.com/go/build-context-dockerignore/
 
 **/.classpath
+**/env
+**/coverage
+**/documentation
 **/.dockerignore
 **/.env
 **/.git

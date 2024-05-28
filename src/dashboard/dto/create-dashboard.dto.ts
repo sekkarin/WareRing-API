@@ -9,7 +9,7 @@ export class CreateDashboardDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(1,50)
+  @Length(1, 50)
   nameDashboard: string;
 
   @ApiProperty({
@@ -19,6 +19,6 @@ export class CreateDashboardDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(1,255)
+  @Length(1, 255)
   description: string;
 }

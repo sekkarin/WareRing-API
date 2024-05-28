@@ -72,7 +72,7 @@ export class UpdateUserDto {
   @ApiProperty({
     description: 'Password for the user',
     example: 'Password123',
-    required: false 
+    required: false,
   })
   @Length(8)
   @IsOptional()
@@ -84,27 +84,26 @@ export class UpdateUserDto {
   @ApiProperty({
     description: 'First name of the user',
     example: 'John',
-    required: false 
+    required: false,
   })
- 
   @IsOptional()
   @IsString()
   @MinLength(3)
   @MaxLength(30)
   @Matches('^[a-zA-Z\\s]+$', undefined)
-   firstName?: string;
+  firstName?: string;
 
   @ApiProperty({
     description: 'Last name of the user',
     example: 'Doe',
-    required: false 
+    required: false,
   })
   @IsString()
   @IsOptional()
   @MinLength(3)
   @MaxLength(30)
   @Matches('^[a-zA-Z\\s]+$', undefined)
-   lastName?: string;
+  lastName?: string;
 
   @ApiProperty({ type: 'string', format: 'binary', required: false })
   file?: FileUploadDto;

@@ -4,6 +4,9 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { BullModule } from '@nestjs/bull';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
@@ -14,13 +17,10 @@ import { DeviceModule } from './device/device.module';
 import { ApiModule } from './api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
-import { BullModule } from '@nestjs/bull';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from './logger/logger.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-import { IsActivateUser } from './users/guard/active.guard';
 import { ExportModule } from './export/export.module';
+import { WinstonLoggerService } from './logger/logger.service';
 
 const configService = new ConfigService();
 
@@ -54,15 +54,16 @@ const configService = new ConfigService();
       useFactory: async () => ({
         store: await redisStore({
           socket: {
-            host: 'localhost',
-            port: 6379,
+            host: configService.getOrThrow<string>('REDIS_URL'),
+            port: configService.getOrThrow<number>('REDIS_PORT'),
           },
         }),
       }),
     }),
     BullModule.forRoot({
       redis: {
-        port: 6379,
+        host: configService.getOrThrow<string>('REDIS_URL'),
+        port: configService.getOrThrow<number>('REDIS_PORT'),
       },
     }),
     ThrottlerModule.forRoot({

@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
-import {  IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class GetDevicesSortDto {
-  
   @Type(() => String)
   @IsString()
   @IsOptional()

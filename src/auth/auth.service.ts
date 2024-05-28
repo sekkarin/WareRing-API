@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -12,7 +13,6 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 
-import { LoggerService } from 'src/logger/logger.service';
 import { UsersService } from './../users/users.service';
 
 import { CreateUserDto } from './../users/dto/user.dto';
@@ -22,7 +22,6 @@ import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new LoggerService(AuthService.name);
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -103,7 +102,7 @@ export class AuthService {
       }
       fondUser.refreshToken = '';
       await fondUser.save();
-      return fondUser
+      return fondUser;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new ForbiddenException('Token expired');
