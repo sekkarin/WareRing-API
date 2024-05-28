@@ -14,15 +14,16 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
 import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
-import { LoggerService } from 'src/logger/logger.service';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
+    private readonly logger: WinstonLoggerService,
   ) {}
-  private readonly logger = new LoggerService(DeviceService.name);
+
   async create(
     createDeviceDto: CreateDeviceDto,
     userID: string,

@@ -15,19 +15,19 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from './../auth/dto/auth.dto';
 import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { Device } from './../device/interface/device.interface';
-import { LoggerService } from 'src/logger/logger.service';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 import { ManageFileS3Service } from 'src/utils/services/up-load-file-s3/up-load-file-s3.service';
 import { ResetNewPasswordDTO } from './dto/reset-new-password.DTO';
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new LoggerService(UsersService.name);
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
     private readonly manageFileS3Service: ManageFileS3Service,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   async findOne(username: string) {

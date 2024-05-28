@@ -19,11 +19,9 @@ import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
-import { LoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new LoggerService(AuthService.name);
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,

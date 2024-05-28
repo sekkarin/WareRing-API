@@ -10,14 +10,14 @@ import * as compression from 'compression';
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
 import { AllExceptionsFilter } from './all-exceptionsFilter';
-import { LoggerService } from './logger/logger.service';
+import { WinstonLoggerService } from './logger/logger.service';
 
 const configService = new ConfigService();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
-  app.useLogger(app.get(LoggerService));
+  app.useLogger(app.get(WinstonLoggerService));
   app.use(cookieParser());
   app.use(compression());
   app.use(helmet());

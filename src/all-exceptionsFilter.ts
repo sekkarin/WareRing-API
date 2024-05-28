@@ -7,7 +7,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { LoggerService } from './logger/logger.service';
+import { WinstonLoggerService } from './logger/logger.service';
 import { MongooseError } from 'mongoose';
 import { Request, Response } from 'express';
 
@@ -19,8 +19,6 @@ type ResponseObjAllExceptions = {
 };
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
-  private readonly logger = new LoggerService(AllExceptionsFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -47,10 +45,6 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     }
 
     response.status(responseObj.statusCode).json(responseObj);
-    this.logger.error(
-      JSON.stringify(responseObj.response),
-      AllExceptionsFilter.name,
-    );
     super.catch(exception, host);
   }
 }

@@ -20,6 +20,7 @@ import { WebhookModule } from './webhook/webhook.module';
 import { LoggerModule } from './logger/logger.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ExportModule } from './export/export.module';
+import { WinstonLoggerService } from './logger/logger.service';
 
 const configService = new ConfigService();
 
@@ -61,7 +62,8 @@ const configService = new ConfigService();
     }),
     BullModule.forRoot({
       redis: {
-        port: 6379,
+        host: configService.getOrThrow<string>('REDIS_URL'),
+        port: configService.getOrThrow<number>('REDIS_PORT'),
       },
     }),
     ThrottlerModule.forRoot({
