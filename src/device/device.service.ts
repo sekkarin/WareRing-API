@@ -14,14 +14,12 @@ import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
 import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
-import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
-    private readonly logger: WinstonLoggerService,
   ) {}
 
   async create(
@@ -52,15 +50,13 @@ export class DeviceService {
       );
     }
     const password_hash = await bcrypt.hash(createDeviceDto.password, 10);
-    const device = new this.deviceModel({
+    const device = await this.deviceModel.create({
       ...createDeviceDto,
       password_hash,
       password_law: createDeviceDto.password,
       userID,
       topics: topicsGenerated,
     });
-    await device.save();
-    this.logger.log(`user ${userID} create device successfully`);
     return this.mapToDeviceResponseDto(device);
   }
 
@@ -217,7 +213,6 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('Device not found');
       }
-      this.logger.log(`user ${userID} update device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -229,7 +224,6 @@ export class DeviceService {
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-    this.logger.log(`user ${userID} delete device successfully`);
     return device;
   }
 
@@ -252,7 +246,6 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
-      this.logger.log(`user ${userID} update permission device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -274,7 +267,6 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('not found device');
       }
-      this.logger.log(`user ${userID} update save data device successfully`);
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -282,11 +274,6 @@ export class DeviceService {
   }
 
   async searchDevices(query: string, userID: string, page = 1, limit = 10) {
-    // page = 1,
-    // limit = 10,
-    // userID: string,
-    // getDevicesSortDto: string,
-    // getDevicesFilterDto: GetDevicesFilterDto,
     const itemCount = await this.deviceModel
       .find({
         userID: userID,
