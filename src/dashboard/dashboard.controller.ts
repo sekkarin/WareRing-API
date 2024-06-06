@@ -88,6 +88,12 @@ export class DashboardController {
     description: 'Page number for pagination (default: 1)',
   })
   @ApiQuery({
+    name: 'createdAt',
+    enum: ['+createdAt', '-createdAt'],
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
+  @ApiQuery({
     name: 'page',
     type: Number,
     required: false,
@@ -109,8 +115,8 @@ export class DashboardController {
     );
     const { sub } = req['user'];
     try {
-      const { page, limit, query } = paginationQueryparamsDto;
-      return this.dashboardService.findAll(query, page, limit, sub);
+      const { page, limit, query,createdAt } = paginationQueryparamsDto;
+      return this.dashboardService.findAll(query, page, limit,createdAt, sub);
     } catch (error) {
       throw error;
     }
@@ -171,7 +177,7 @@ export class DashboardController {
 
   @Delete(':dashboardId')
   @ApiOperation({ summary: 'Delete a dashboard by Id' })
-  deleteDashboard(@Param('id', MongoDBObjectIdPipe) dashboardId: string,@Req() req: Request,) {
+  deleteDashboard(@Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,@Req() req: Request,) {
     this.logger.info(
       `${DashboardController.name} User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
     );

@@ -13,7 +13,7 @@ export const dashboardSchema = new mongoose.Schema(
       ref: 'User',
     },
     nameDashboard: { type: String, required: true, trim: true, max: 50 },
-    description: { type: String, required: true, trim: true, max: 255 },
+    description: { type: String, trim: true, max: 255 },
     devices: [{ type: Types.ObjectId, ref: 'Device' }],
     widgets: [
       {

@@ -90,10 +90,16 @@ export class DeviceService {
       let options = {};
       ({ options, getDevicesFilterDto } = this.getFilter(getDevicesFilterDto));
 
-      const itemCount = await this.deviceModel.countDocuments({
-        userID,
-      });
       let devicesQuery = this.deviceModel.find({
+        userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+        ...options,
+      });
+      const itemCount = await this.deviceModel.countDocuments({
         userID,
         $or: [
           { nameDevice: { $regex: query, $options: 'i' } },

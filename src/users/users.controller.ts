@@ -162,6 +162,18 @@ export class UsersController {
     required: false,
     description: 'limit Number of items  (default: 10)',
   })
+  @ApiQuery({
+    name: 'query',
+    type: String,
+    required: false,
+    description: 'Page number for pagination (default: 1)',
+  })
+  @ApiQuery({
+    name: 'createdAt',
+    enum: ['+createdAt', '-createdAt'],
+    required: false,
+    description: 'limit Number of items  (default: 10)',
+  })
   @ApiBearerAuth()
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
@@ -170,9 +182,9 @@ export class UsersController {
     @Req() req: Request,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
   ): Promise<PaginatedDto<UserResponseDto>> {
-    const { page, limit } = paginationQueryparamsDto;
+    const { page, limit, query, createdAt } = paginationQueryparamsDto;
     const { sub } = req['user'];
-    return await this.usersService.getAll(page, limit, sub);
+    return await this.usersService.getAll(query, page, limit, createdAt, sub);
   }
 
   @Delete()

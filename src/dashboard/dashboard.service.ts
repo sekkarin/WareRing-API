@@ -35,19 +35,30 @@ export class DashboardService {
     }
   }
 
-  async findAll(query = '', page = 1, limit = 10, currentUserId: string) {
+  async findAll(
+    query = '',
+    page = 1,
+    limit = 10,
+    createdAt: string,
+    currentUserId: string,
+  ) {
     try {
-      const itemCount = await this.dashboardModel.countDocuments({
-        userID: currentUserId,
+      let dashboardsQuery = this.dashboardModel.find({
+        _id: { $ne: currentUserId },
+        $or: [
+          { nameDashboard: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
       });
-      const dashboards = await this.dashboardModel
-        .find({
-          _id: { $ne: currentUserId },
-          $or: [
-            { nameDashboard: { $regex: query, $options: 'i' } },
-            { description: { $regex: query, $options: 'i' } },
-          ],
-        })
+      const itemCount = await this.dashboardModel.countDocuments({
+        _id: { $ne: currentUserId },
+        $or: [
+          { nameDashboard: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+      });
+      dashboardsQuery = this.getSort(createdAt, dashboardsQuery);
+      const dashboards = await dashboardsQuery
         .skip((page - 1) * limit)
         .limit(limit);
       const dashboardResponse = dashboards.map((dashboard) =>
@@ -62,6 +73,14 @@ export class DashboardService {
     } catch (error) {
       throw error;
     }
+  }
+  private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    if (getDevicesSortDto) {
+      devicesQuery = devicesQuery.sort(getDevicesSortDto);
+    } else {
+      devicesQuery = devicesQuery.sort({ createdAt: -1 });
+    }
+    return devicesQuery;
   }
 
   async addWidget(dashboardId: string, widgetId: string) {

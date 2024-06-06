@@ -34,10 +34,8 @@ const DeviceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    // FIXME: allow description empty string
     description: {
       type: String,
-      min: 1,
       max: 255,
       trim: true,
     },
@@ -46,7 +44,7 @@ const DeviceSchema = new mongoose.Schema(
       enum: ['deny', 'allow'],
       default: 'allow',
     },
-    
+
     topics: {
       type: [String],
     },

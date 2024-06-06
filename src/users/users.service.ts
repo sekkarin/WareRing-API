@@ -57,15 +57,35 @@ export class UsersService {
       .select('-password -refreshToken -isAlive -role')
       .exec();
   }
-  async getAll(page = 1, limit = 10, currentUserId: string) {
+  async getAll(
+    query = '',
+    page = 1,
+    limit = 10,
+    createdAt: string,
+    currentUserId: string,
+  ) {
+    let usersQuery = this.userModel.find({
+      _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { isActive: { $regex: query, $options: 'i' } },
+      ],
+    });
     const itemCount = await this.userModel.countDocuments({
       _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { isActive: { $regex: query, $options: 'i' } },
+      ],
     });
-    const users = await this.userModel
-      .find({ _id: { $ne: currentUserId } })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
+    usersQuery = this.getSort(createdAt, usersQuery);
+    const users = await usersQuery.skip((page - 1) * limit).limit(limit);
     const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
     return new PaginatedDto<UserResponseDto>(
       usersResponse,
@@ -73,6 +93,14 @@ export class UsersService {
       limit,
       itemCount,
     );
+  }
+  private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    if (getDevicesSortDto) {
+      devicesQuery = devicesQuery.sort(getDevicesSortDto);
+    } else {
+      devicesQuery = devicesQuery.sort({ createdAt: -1 });
+    }
+    return devicesQuery;
   }
   async findOneById(id: string): Promise<UserResponseDto> {
     try {
