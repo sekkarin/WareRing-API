@@ -43,7 +43,7 @@ import { CustomLoggerInterceptor } from 'src/utils/interceptors/customLoggerInte
 @ApiTags('Device')
 @Controller('devices')
 @Roles(Role.User)
-@Throttle({ default: { limit: 30, ttl: 60000 } })
+@Throttle({ default: { limit: 120, ttl: 60000 } })
 @UseInterceptors(CustomLoggerInterceptor)
 @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
 export class DeviceController {
