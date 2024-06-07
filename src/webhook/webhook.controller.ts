@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { WebhookService } from './webhook.service';
@@ -14,9 +15,11 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 import { SkipThrottle } from '@nestjs/throttler';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { ApiKeyGuard } from './guards/api-key.guard';
 @Controller('webhooks')
 @ApiTags('Webhooks')
 @SkipThrottle()
+@UseGuards(ApiKeyGuard)
 export class WebhookController {
   constructor(
     private readonly webhookService: WebhookService,
@@ -25,7 +28,6 @@ export class WebhookController {
 
   @Post('/save')
   @HttpCode(HttpStatus.OK)
-  // @UseInterceptors(CacheInterceptor)
   async saveData(@Body() body: any) {
     const { device, toObject } = await this.webhookService.save(body);
     await this.webhooksQueue.add(
@@ -41,4 +43,6 @@ export class WebhookController {
     );
     return toObject;
   }
+
+  
 }

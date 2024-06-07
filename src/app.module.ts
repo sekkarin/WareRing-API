@@ -21,6 +21,7 @@ import { LoggerModule } from './logger/logger.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ExportModule } from './export/export.module';
 import { WinstonLoggerService } from './logger/logger.service';
+import { ApiKeyModule } from './api-key/api-key.module';
 
 const configService = new ConfigService();
 
@@ -78,6 +79,7 @@ const configService = new ConfigService();
     LoggerModule,
     DashboardModule,
     ExportModule,
+    ApiKeyModule,
   ],
   providers: [
     {
