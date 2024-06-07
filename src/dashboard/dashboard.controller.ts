@@ -42,7 +42,10 @@ import { WinstonLoggerService } from 'src/logger/logger.service';
 @UseGuards(AuthGuard, RolesGuard, IsActivateUser)
 @UseInterceptors(CustomLoggerInterceptor)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService,private readonly logger:WinstonLoggerService) {}
+  constructor(
+    private readonly dashboardService: DashboardService,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   @Post()
   @ApiResponse({
@@ -115,8 +118,8 @@ export class DashboardController {
     );
     const { sub } = req['user'];
     try {
-      const { page, limit, query,createdAt } = paginationQueryparamsDto;
-      return this.dashboardService.findAll(query, page, limit,createdAt, sub);
+      const { page, limit, query, createdAt } = paginationQueryparamsDto;
+      return this.dashboardService.findAll(query, page, limit, createdAt, sub);
     } catch (error) {
       throw error;
     }
@@ -177,7 +180,10 @@ export class DashboardController {
 
   @Delete(':dashboardId')
   @ApiOperation({ summary: 'Delete a dashboard by Id' })
-  deleteDashboard(@Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,@Req() req: Request,) {
+  deleteDashboard(
+    @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
+    @Req() req: Request,
+  ) {
     this.logger.info(
       `${DashboardController.name} User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
     );

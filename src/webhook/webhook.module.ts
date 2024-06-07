@@ -6,6 +6,7 @@ import { deviceProviders } from 'src/device/provider/provider';
 import { dataProviders } from './provider/provider';
 import { BullModule } from '@nestjs/bull';
 import { WebhooksConsumer } from './webhooks.process';
+import { apiKeyProviders } from 'src/api-key/provider/provider';
 
 @Module({
   controllers: [WebhookController],
@@ -13,6 +14,7 @@ import { WebhooksConsumer } from './webhooks.process';
     WebhookService,
     ...deviceProviders,
     ...dataProviders,
+    ...apiKeyProviders,
     WebhooksConsumer,
   ],
   imports: [
