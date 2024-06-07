@@ -22,6 +22,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
 import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
 import { UpdateActiveApiKeyDto } from './dto/update-active-api-key.dto';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @Controller('api-key')
 @ApiTags('ApiKey (Admin)')
@@ -31,10 +32,16 @@ import { UpdateActiveApiKeyDto } from './dto/update-active-api-key.dto';
 @UseInterceptors(CustomLoggerInterceptor)
 @UseGuards(AuthGuard, RolesGuard)
 export class ApiKeyController {
-  constructor(private readonly apiKeyService: ApiKeyService) {}
+  constructor(
+    private readonly apiKeyService: ApiKeyService,
+    private readonly logger: WinstonLoggerService,
+  ) {}
 
   @Post()
   create(@Body() createApiKeyDto: CreateApiKeyDto) {
+    this.logger.info(
+      `${ApiKeyController.name} Admin create a new api key name ${createApiKeyDto.name}`,
+    );
     return this.apiKeyService.create(createApiKeyDto);
   }
 
@@ -77,11 +84,13 @@ export class ApiKeyController {
     @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateActiveApiKeyDto: UpdateActiveApiKeyDto,
   ) {
+    this.logger.info(`${ApiKeyController.name} Admin change active id ${id}`);
     return this.apiKeyService.updateStatus(id, updateActiveApiKeyDto);
   }
 
   @Delete(':id')
   remove(@Param('id', MongoDBObjectIdPipe) id: string) {
+    this.logger.info(`${ApiKeyController.name} Admin delete api key id ${id}`);
     return this.apiKeyService.remove(id);
   }
 }
