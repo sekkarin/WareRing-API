@@ -1,12 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
-import { UpdateApiKeyDto } from './dto/update-api-key.dto';
+
 import { randomBytes } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
 import { APIKey } from './interface/api-key.interface';
 import { ConfigService } from '@nestjs/config';
 import { PaginatedDto } from 'src/utils/dto/paginated.dto';
+import { UpdateActiveApiKeyDto } from './dto/update-active-api-key.dto';
 @Injectable()
 export class ApiKeyService {
   constructor(
@@ -105,6 +106,24 @@ export class ApiKeyService {
     } catch (error) {
       throw error;
     }
+  }
+  async updateStatus(
+    id: string,
+    updateActiveApiKeyDto: UpdateActiveApiKeyDto,
+  ): Promise<APIKey> {
+    const apiKey = await this.apiKeyModel
+      .findByIdAndUpdate(
+        id,
+        { active: updateActiveApiKeyDto.isActive },
+        { new: true },
+      )
+      .exec();
+
+    if (!apiKey) {
+      throw new NotFoundException(`API Key with ID ${id} not found`);
+    }
+
+    return apiKey;
   }
   private generateUniqueKey(): string {
     return randomBytes(32).toString('hex');

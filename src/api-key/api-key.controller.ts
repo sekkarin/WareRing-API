@@ -20,6 +20,8 @@ import { Role } from 'src/auth/enums/role.enum';
 import { CustomLoggerInterceptor } from 'src/utils/interceptors/customLoggerInterceptor';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PaginationQueryparamsDto } from 'src/device/dto/pagination-query-params.dto';
+import { MongoDBObjectIdPipe } from 'src/utils/pipes/mongodb-objectid.pipe';
+import { UpdateActiveApiKeyDto } from './dto/update-active-api-key.dto';
 
 @Controller('api-key')
 @ApiTags('ApiKey (Admin)')
@@ -67,12 +69,19 @@ export class ApiKeyController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', MongoDBObjectIdPipe) id: string) {
     return this.apiKeyService.findOne(id);
+  }
+  @Patch(':id')
+  async updateApiKeyStatus(
+    @Param('id', MongoDBObjectIdPipe) id: string,
+    @Body() updateActiveApiKeyDto: UpdateActiveApiKeyDto,
+  ) {
+    return this.apiKeyService.updateStatus(id, updateActiveApiKeyDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', MongoDBObjectIdPipe) id: string) {
     return this.apiKeyService.remove(id);
   }
 }
