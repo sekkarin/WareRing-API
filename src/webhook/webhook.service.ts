@@ -1,13 +1,18 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+
 import { Device } from 'src/device/interface/device.interface';
 import { Data } from './interfaces/data.interface';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { AuthDeviceDto } from './dto/auth-device.dto';
+import { AuthzDeviceDto } from './dto/authz-device.dto';
 
 @Injectable()
 export class WebhookService {
@@ -48,6 +53,56 @@ export class WebhookService {
       const toObject = JSON.parse(payload.replace(/'/g, '"'));
       // const dataDevice = await this.insertData(device, toObject);
       return { device, toObject };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async authenticationDevice({ clientId, password, username }: AuthDeviceDto) {
+    try {
+      const device = await this.deviceModel.findOne({
+        usernameDevice: username,
+        password_law: password,
+      });
+      if (!device) {
+        throw new NotFoundException(`No device found`);
+      }
+      const result = await bcrypt.compare(password, device.password_hash);
+      if (!result) {
+        throw new ForbiddenException('Password mismatch');
+      }
+      device.clientId = clientId;
+      await device.save();
+      return {
+        result: 'allow',
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async authorizationDevice({
+    clientId,
+    action,
+    username,
+    topic,
+  }: AuthzDeviceDto) {
+    try {
+      const device = await this.deviceModel.findOne({
+        usernameDevice: username,
+        clientId,
+        topics: topic,
+      });
+      if (!device) {
+        throw new ForbiddenException();
+      }
+      if (device.action == 'deny') {
+        return {
+          result: 'deny',
+        };
+      }
+      return {
+        result: 'allow',
+      };
     } catch (error) {
       throw error;
     }
