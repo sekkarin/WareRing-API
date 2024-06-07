@@ -21,6 +21,7 @@ export class ApiKeyService {
     try {
       const payload = { key: this.generateUniqueKey() };
       let token: string;
+      let expiresInDate: string | undefined;
       if (!createApiKeyDto.expireInSeconds) {
         token = this.jwtService.sign(payload, {
           secret: SECRET_API_KEY,
@@ -30,14 +31,26 @@ export class ApiKeyService {
           secret: SECRET_API_KEY,
           expiresIn: createApiKeyDto.expireInSeconds,
         });
+        expiresInDate = new Date(
+          Date.now() + createApiKeyDto.expireInSeconds * 1000, // Convert seconds to milliseconds
+        ).toISOString();
       }
-      await this.apiKeyModel.create({
+
+      const apiKey = await this.apiKeyModel.create({
         key: payload.key,
         name: createApiKeyDto.name,
         description: createApiKeyDto.description,
         active: true,
+        expiresIn: expiresInDate,
       });
-      return { key: token };
+      return {
+        key: token,
+        _id: apiKey._id,
+        name: createApiKeyDto.name,
+        description: createApiKeyDto.description,
+        active: true,
+        expiresIn: expiresInDate,
+      };
     } catch (error) {
       throw error;
     }
@@ -65,16 +78,7 @@ export class ApiKeyService {
       throw error;
     }
   }
-  private getFilter(getFilterDto: any) {
-    let options = {};
 
-    getFilterDto = this.removeUndefined(getFilterDto);
-
-    if (getFilterDto) {
-      options = { ...getFilterDto };
-    }
-    return { options, getFilterDto };
-  }
   private getSort(getDevicesSortDto: string, devicesQuery: any) {
     if (getDevicesSortDto) {
       devicesQuery = devicesQuery.sort(getDevicesSortDto);
