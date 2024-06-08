@@ -50,6 +50,8 @@ export class WebhookController {
   @Post('/auth-device')
   @HttpCode(HttpStatus.OK)
   async authDevice(@Body() body: AuthDeviceDto) {
+    console.log(body.clientId);
+    
     const authDevice = await this.webhookService.authenticationDevice(body);
     return authDevice;
   }

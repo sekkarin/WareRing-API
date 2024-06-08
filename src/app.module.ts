@@ -22,6 +22,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ExportModule } from './export/export.module';
 import { WinstonLoggerService } from './logger/logger.service';
 import { ApiKeyModule } from './api-key/api-key.module';
+import { CustomThrottlerGuard } from './utils/guards/customThrottlerGuard';
 
 const configService = new ConfigService();
 
@@ -74,7 +75,6 @@ const configService = new ConfigService();
           limit: 250,
         },
       ],
-      errorMessage: 'Access limited. Please try again later.',
     }),
     LoggerModule,
     DashboardModule,
@@ -84,7 +84,7 @@ const configService = new ConfigService();
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })
