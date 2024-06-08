@@ -48,6 +48,9 @@ const DeviceSchema = new mongoose.Schema(
     topics: {
       type: [String],
     },
+    clientId: {
+      type: String,
+    },
     action: {
       type: String,
       enum: ['publish', 'subscribe', 'all'],

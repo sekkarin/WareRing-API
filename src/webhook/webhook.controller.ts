@@ -2,8 +2,10 @@ import {
   Body,
   CacheTTL,
   Controller,
+  ForbiddenException,
   HttpCode,
   HttpStatus,
+  NotAcceptableException,
   Post,
   Req,
   UseGuards,
@@ -16,6 +18,8 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { ApiKeyGuard } from './guards/api-key.guard';
+import { AuthDeviceDto } from './dto/auth-device.dto';
+import { AuthzDeviceDto } from './dto/authz-device.dto';
 @Controller('webhooks')
 @ApiTags('Webhooks')
 @SkipThrottle()
@@ -43,6 +47,20 @@ export class WebhookController {
     );
     return toObject;
   }
-
-  
+  @Post('/auth-device')
+  @HttpCode(HttpStatus.OK)
+  async authDevice(@Body() body: AuthDeviceDto) {
+    console.log(body.clientId);
+    
+    const authDevice = await this.webhookService.authenticationDevice(body);
+    return authDevice;
+  }
+  @Post('/authz-device')
+  @HttpCode(HttpStatus.OK)
+  async authzDevice(@Body() body: AuthzDeviceDto) {
+    const authorizationDevice = await this.webhookService.authorizationDevice(
+      body,
+    );
+    return authorizationDevice;
+  }
 }

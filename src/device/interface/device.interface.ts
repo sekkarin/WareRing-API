@@ -10,6 +10,7 @@ export interface Device extends Document {
   permission: string;
   topics: string[];
   action: string;
+  clientId?: string;
   qos: number;
   retain: boolean;
   isSaveData: boolean;

@@ -10,6 +10,7 @@ export class WinstonLoggerService implements LoggerService {
       level: 'info',
       format: winston.format.combine(
         winston.format.timestamp(),
+        winston.format.ms(),
         winston.format.printf(({ timestamp, level, message, context }) => {
           return `${timestamp} [${level}] ${context}: ${message}`;
         }),

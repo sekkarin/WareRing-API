@@ -71,7 +71,6 @@ export class UsersService {
         { firstName: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
-       
       ],
     });
     const itemCount = await this.userModel.countDocuments({
@@ -81,7 +80,6 @@ export class UsersService {
         { firstName: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
-      
       ],
     });
     usersQuery = this.getSort(createdAt, usersQuery);
