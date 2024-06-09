@@ -24,6 +24,11 @@ export class DeviceResponseDto {
     description: 'Username associated with the device',
   })
   usernameDevice: string;
+  @ApiProperty({
+    example: 'password1234',
+    description: 'Password associated with the device',
+  })
+  password: string;
 
   @ApiProperty({
     example: 'Smart home controller',
@@ -72,5 +77,4 @@ export class DeviceResponseDto {
     description: 'Timestamp when the device was created',
   })
   createdAt: Date;
-
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Inject,
   Injectable,
@@ -14,6 +15,9 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserResponseDto } from './../auth/dto/auth.dto';
 import { PaginatedDto } from './../utils/dto/paginated.dto';
 import { Device } from './../device/interface/device.interface';
+import { WinstonLoggerService } from 'src/logger/logger.service';
+import { ManageFileS3Service } from 'src/utils/services/up-load-file-s3/up-load-file-s3.service';
+import { ResetNewPasswordDTO } from './dto/reset-new-password.DTO';
 
 @Injectable()
 export class UsersService {
@@ -22,10 +26,15 @@ export class UsersService {
     private userModel: Model<User>,
     @Inject('DEVICE_MODEL')
     private deviceModel: Model<Device>,
+    private readonly manageFileS3Service: ManageFileS3Service,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   async findOne(username: string) {
-    return this.userModel.findOne({ username: username }).exec();
+    return this.userModel.findOne({ username: username });
+  }
+  async findRefreshToken(token: string) {
+    return this.userModel.findOne({ refreshToken: token }).exec();
   }
   async findOneToken(token: string) {
     return this.userModel.findOne({ refreshToken: token });
@@ -48,15 +57,33 @@ export class UsersService {
       .select('-password -refreshToken -isAlive -role')
       .exec();
   }
-  async getAll(page = 1, limit = 10, currentUserId: string) {
+  async getAll(
+    query = '',
+    page = 1,
+    limit = 10,
+    createdAt: string,
+    currentUserId: string,
+  ) {
+    let usersQuery = this.userModel.find({
+      _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+      ],
+    });
     const itemCount = await this.userModel.countDocuments({
       _id: { $ne: currentUserId },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+      ],
     });
-    const users = await this.userModel
-      .find({ _id: { $ne: currentUserId } })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
+    usersQuery = this.getSort(createdAt, usersQuery);
+    const users = await usersQuery.skip((page - 1) * limit).limit(limit);
     const usersResponse = users.map((user) => this.mapToUserResponseDto(user));
     return new PaginatedDto<UserResponseDto>(
       usersResponse,
@@ -64,6 +91,14 @@ export class UsersService {
       limit,
       itemCount,
     );
+  }
+  private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    if (getDevicesSortDto) {
+      devicesQuery = devicesQuery.sort(getDevicesSortDto);
+    } else {
+      devicesQuery = devicesQuery.sort({ createdAt: -1 });
+    }
+    return devicesQuery;
   }
   async findOneById(id: string): Promise<UserResponseDto> {
     try {
@@ -77,42 +112,32 @@ export class UsersService {
       return error;
     }
   }
-  async update(
-    userUpdate: UpdateUserDto,
-    id: string,
-    file: Express.Multer.File | undefined,
-    url: string,
-  ) {
-    let profileUrl: string | undefined = undefined;
+  async updateUser(userUpdate: UpdateUserDto, id: string, nameFile?: string) {
     let hashPassword: string | undefined = undefined;
     try {
       const user = await this.userModel.findOne({ _id: id });
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      if (file?.filename) {
-        profileUrl = url + file.filename;
-        if (user?.profileUrl) {
-          const fullUrl = user.profileUrl.split('/profile/')[1];
-          this.deleteFile(fullUrl);
-        }
+      if (nameFile && user.profileUrl) {
+        await this.manageFileS3Service.deleteImage(user.profileUrl);
       }
+
       if (userUpdate?.password) {
         hashPassword = await bcrypt.hash(userUpdate?.password, 10);
       }
       const updateUser = await this.userModel
         .findOneAndUpdate(
           { _id: id },
-          { ...userUpdate, profileUrl, password: hashPassword },
+          { ...userUpdate, profileUrl: nameFile, password: hashPassword },
           { new: true },
         )
         .exec();
       const userResponse = this.mapToUserResponseDto(updateUser);
+      this.logger.log(`user ${id} update information successfully`);
       return userResponse;
     } catch (error) {
-      console.log(error);
       throw error;
-      // throw new UnauthorizedException();
     }
   }
   private deleteFile(path: string) {
@@ -144,10 +169,19 @@ export class UsersService {
     return userResponse;
   }
   async deleteUser(id: string) {
-    await this.deviceModel.deleteMany({ userID: id });
+    this.logger.log(`user ${id} delete account successfully`);
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user?.profileUrl) {
+      const fullUrl = user.profileUrl.split('/profile/')[1];
+      this.deleteFile(fullUrl);
+    }
     return await this.userModel.deleteOne({ _id: id });
   }
-  async verifiredUserEmail(email: string) {
+  async verifiedUserEmail(email: string) {
     return await this.userModel.findOneAndUpdate(
       { email },
       { verifired: true },
@@ -166,7 +200,7 @@ export class UsersService {
   }
   private mapToUserResponseDto(user: User): UserResponseDto {
     return {
-      id: user.id,
+      id: user._id,
       email: user.email,
       fname: user.firstName,
       lname: user.lastName,
@@ -220,5 +254,44 @@ export class UsersService {
       limit,
       itemCount,
     );
+  }
+  async deleteProfileImage(userId: string) {
+    try {
+      const userExist = await this.userModel.findById(userId);
+      if (!userExist) {
+        throw new NotFoundException('user not found');
+      }
+      if (!userExist.profileUrl) {
+        throw new NotFoundException('profileUrl not set');
+      }
+      await this.manageFileS3Service.deleteImage(userExist.profileUrl);
+      userExist.profileUrl = null;
+      userExist.save();
+      return this.mapToUserResponseDto(userExist);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async resetNewPassword(
+    userId: string,
+    { passwordNew, passwordOld }: ResetNewPasswordDTO,
+  ) {
+    try {
+      const userExist = await this.userModel.findById(userId);
+      if (!userExist) {
+        throw new NotFoundException('user not found');
+      }
+      const isMath = await bcrypt.compare(passwordOld, userExist.password);
+      if (!isMath) {
+        throw new BadRequestException('Old password is incorrect');
+      }
+      const newHashPassword = await bcrypt.hash(passwordNew, 10);
+      userExist.password = newHashPassword;
+      await userExist.save();
+
+      return { message: 'Password has been successfully reset' };
+    } catch (error) {
+      throw error;
+    }
   }
 }

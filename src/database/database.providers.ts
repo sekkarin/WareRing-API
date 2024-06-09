@@ -25,16 +25,3 @@ export const databaseProviders = [
     },
   },
 ];
-
-// export const databaseProviders = [
-//   {
-//     provide: 'DATABASE_CONNECTION',
-//     useFactory: (): Promise<typeof mongoose> =>
-//       mongoose.connect(
-//         configService.get<string>('DATABASE_URL') || process.env.DATABASE_URL,
-//         {
-//           dbName: 'warering-project',
-//         },
-//       ),
-//   },
-// ];

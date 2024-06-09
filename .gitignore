@@ -1,7 +1,7 @@
 # compiled output
 /dist
 /node_modules
-
+documentation
 # Logs
 logs
 *.log
@@ -12,7 +12,7 @@ yarn-error.log*
 lerna-debug.log*
 # OS
 .DS_Store
-
+.env
 # Tests
 /coverage
 /.nyc_output

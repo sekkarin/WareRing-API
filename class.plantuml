@@ -1,9 +1,41 @@
 @startuml
 title WARERING IOT PLATFORM
+skinparam arrowFontSize 24
+' skinparam linetype ortho
+skinparam arrowColor #000000
+skinparam TitleFontSize 34
+skinparam defaultFontSize 24
 ' scale 1.5
 skinparam width 500
 'scale 1.5 | scale 200 width | scale 100 height | scale [max] 200x100
 class User{
+  - ID: String
+  - firstName: String
+  - lastName: String
+  - email: String
+  - userName: String
+  - password: String
+  - roles: Array
+  - refreshToken : String
+  - createAt : Date
+
+  - mapToUserResponseDto(user:User) : Object
+  - deleteFile(path:string) : Object
+  + findOne(username: string) : Object
+  + findOneToken(token: string) : Object
+  + findByEmail(email: string) : Object
+  + getUserByUserName(username: string) : Object
+  + getUsers(username: string) : Object
+  + findOneById(id: string) : Object
+  + update( userUpdate: UpdateUserDto,id: string,file: Express.Multer.File,url: string) : Object
+  + createUser(crateUserDto: CreateUserDto) : Object
+  + deleteUser(id: string) : Object
+  + verifiredUserEmail(email: string) : Object
+  + setNewPassword(email: string, newPassword: string) : Object
+  + setBanned(banned: boolean, id: string) : Object
+
+}
+class Administrator {
   # ID: String
   # firstName: String
   # lastName: String
@@ -13,25 +45,8 @@ class User{
   # roles: Array
   # refreshToken : String
   # createAt : Date
-  # register() : Object
-  # login() : Object
-  # logOut():boolean
-  # deleteUser() : boolean
-  # verifyLogin(): Object
-}
-class Adminstrator{
-  + updateClients():boolean
-  + manageDevices():Object
-  + manageRoles():String
-  + manageTopics():String
-  + viewClient():Array
-}
-class Client{
-  - tokenEMQX : String
-  - isActive():boolean
-  + updateProfile() : String
-  + forgotPassword() : Object
-  
+  + updateUser():boolean
+  + viewUser():Array
 }
 class Device{
   - deviceID: String
@@ -55,76 +70,86 @@ class Device{
   - retain: boolean
   - isSaveData: boolean
 
-  + createDevicce():Object
-  + updateDevice():Object
-  + daleteDevice():boolean
-  + getDevice():Object
-  + getDevices():Array
-  + setRetain():boolean
-  + setPermission():boolean
-  + getPermission():String
+  + createDevicce(createDevice:Object,userID:string):Object
+  + updateDevice(id:string,userID:string,updateDeviceDto:UpdateDeviceDto):Object
+  + daleteDevice(id:string,userID:string):boolean
+  + getDevice(id:string, userID:string):Object
+  + getDevices(query:string,page:number,limit:number,userID:GetDevicesFilterDto):Array
+  + setPermission(permission:Permission,userID:string,deviceID: string):Object
+  + setStoreData(id:string, userID:string):Object
 }
 class Widget{
   - widgetID: String
   - deviceId: String
-  - nameDevice: String
-  - description: String
+  - label: String
+  - type: String
   - configWidget: Object
-  + createWidget(): boolean
-  + updateWidget(): boolean
-  + deleteWidget(): boolean
-  + getWidget(): Object
-  + getWidgets(): Array
+  - createdAt: Date
+  - mapToWidgetResponseDto(widget:Widget):Object
+  + createWidget(createWidgetDto: CreateWidgetDto,deviceId: string):Object
+  + updateWidget( widgetId: string,updateWidgetDto: UpdateWidgetDto): Object
+  + deleteWidget(widgetId: string): boolean
+  + getWidget(widgetId: string): Object
+  + getWidgets(deviceId: string): Array
 }
-class Data{
+class Webhook{
   - id:String
   - deviceID:String
   - payload: Object
-  - time: Data
-  + getData():Array
-  + export():Object
-  + updateData():boolean
-  + dateData():boolean
+  - timestamps: Data
+
+  + insertData(device: Object, toObject: Object):Void
+  + saveData(body: Object):Object
+}
+class ExportData{
+  + exportData():Object
 }
 class Dashboard{
   - dashboardID:String
   - userID: String
-  - widgetID: String
+  - dashboardInfo: Object
   - nameDashboard: String
   - description: String
   - createAt: Data
   - updateAt: Data
-  - isActive: boolean
-  + createDashboard(): Object
-  + updateDashboard(): boolean
-  + deleteDashboard(): boolean
-  + setIsActive(): boolean
-  + getIsActive(): boolean
-  + getDashboard(): Object
-  + getDashboards():Array
+
+  - mapToDashboardResponseDto(dashboard: Dashboard):Object
+  + createDashboard(createDashboardDto: CreateDashboardDto, userID: string): Object
+  + updateDashboard(query: string, page: number, limit: number, currentUserId: string): Object
+  + deleteDashboard(id: string): Object
+  + updateDashboard(id: string, updateDashboardDto: UpdateDashboardDto): Object
+  + addWidget(dashboardId: string, widgetId: string): Object
+  + findOne(userID: string, dashboardId: string): Object
+  + deleteWidget(dashboardId: string, widgetId: string, userID: string): Object
+}
+class Authentication{
+  ...
+  + SignIn(username: string, pass: string):Object
+  + SignUp(Body: CreateUserDto):Object
+  + LogOut(username: string):Void
+  + Refresh(refreshToken: string):String
+  + SendEmailVerification(email: string):Boolean
+  + VerifyEmail(uniqueString: strin):Object
+  + SendEmailForgetPassword(email: string):Boolean
+  + ResetPassword(token: string, newPassword: string):Void
+  + CheckIsActive(username: string):Boolean
+  + CheckCredentials(username: string):Void
+  + CheckAuthorization(username: string):Void
+  + CheckActiveAccouct(username: string):Void
 }
 
-' Association ระบุ class นั้นมีความสัมพันธ์กัน
-' Aggregation หายไปแต่ยังทํางานได้ ต่างคนต่างอยู่กันได้
-' Composition ถ้าคลาสหนึ่งหายไป อีกคลาสหนึ่งจะอยู่ไม่ได้
-' Dependency ขึ้นตรงอีกคลาสหนึ่ง เปลี่ยนแปลงไปตามคลาสที่พึ่งพา
-' Generalization สืบทอดคุณสมบัติ
-' Reallization สืบทอดจาก interface
+User -- Authentication
+Administrator  -- Authentication
+Administrator  -left-|> User
+Device -- User
+Widget -- Device
+Dashboard -- User
+Dashboard -left- Widget
+Webhook -- Device
+ExportData -- Webhook
 
-' class Adminstrator สืบทอดคุณสมบัติของ class User 
-User <|-right- Adminstrator
-' class Client สืบทอดคุณสมบัติของ class User
-User <|-down- Client
-' ภายใน Device มี Client ประกอบอยู่ 1 , 0..many
-Client "1" -left-* "0..*" Device 
-' ภายใน Dashboard มี Client ประกอบอยู่ 1, 0..many
-Client "1" -right-* "0..*" Dashboard
-' ภายใน Dashboard มี Widget ประกอบอยู่ ไม่มีหรือมีแค่ 1, 0..many
-Dashboard "1" o-- "0..*" Widget
-' ภายใน Widget มี Device ประกอบอยู่ 1, 0..many
-Device "1" --* "0..*" Widget
-' ภายใน Data มี Device ประกอบอยู่ 1, 0..many
-Device "1" -left-* "0..*" Data
+
+
 
 
 @enduml

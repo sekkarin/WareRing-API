@@ -1,6 +1,10 @@
 import * as mongoose from 'mongoose';
+import { Dashboard } from 'src/dashboard/interfaces/dashboard.interface';
+import { Device } from 'src/device/interface/device.interface';
+import { Data } from 'src/webhook/interfaces/data.interface';
+import { Widget } from 'src/widget/interface/widget.interface';
 
-export const UserSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
@@ -49,3 +53,28 @@ export const UserSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+UserSchema.pre('deleteOne', async function (next) {
+  try {
+    const userId = this.getQuery()._id;
+    const devices = await this.model.db
+      .model<Device>('Device')
+      .find({ userID: userId });
+    // filter id devices
+    const devicesId = devices.map((device) => device._id);
+    // delete dashboard
+    await this.model.db
+      .model<Dashboard>('Dashboard')
+      .deleteMany({ userID: userId });
+    // delete data and widgets
+    devicesId.map(async (id) => {
+      await this.model.db.model<Widget>('Widget').deleteMany({ deviceId: id });
+      await this.model.db.model<Data>('DATA').deleteMany({ deviceId: id });
+    });
+    // delete device
+    await this.model.db.model<Device>('Device').deleteMany({ userID: userId });
+    next();
+  } catch (error) {
+    throw error;
+  }
+});
+export { UserSchema };

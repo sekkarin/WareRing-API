@@ -1,4 +1,4 @@
-# Book Project
+# WARERING Project
 
 This is a NestJS project for managing and cataloging books.
 

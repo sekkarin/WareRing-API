@@ -1,21 +1,26 @@
-import { NestFactory } from '@nestjs/core';
-import * as path from 'path';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import * as compression from 'compression';
 
 import { AppModule } from './app.module';
 import { corsOptions } from './utils/corsOptions';
+import { AllExceptionsFilter } from './all-exceptionsFilter';
+import { WinstonLoggerService } from './logger/logger.service';
 
 const configService = new ConfigService();
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['debug', 'error', 'log', 'verbose', 'warn'],
-  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+  app.useLogger(app.get(WinstonLoggerService));
   app.use(cookieParser());
-  // app.useStaticAssets(path.join(__dirname, '../'));
+  app.use(compression());
+  app.use(helmet());
   app.enableCors({ ...corsOptions });
   app.useGlobalPipes(
     new ValidationPipe({

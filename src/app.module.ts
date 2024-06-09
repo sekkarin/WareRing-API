@@ -2,15 +2,27 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService, ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
+import { BullModule } from '@nestjs/bull';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/middlewares/logger.middleware';
 import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
-import { ApiModule } from './api/api.module';
+import { ApiModule } from 'src/api/api.module';
+import { WidgetModule } from './widget/widget.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { LoggerModule } from './logger/logger.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ExportModule } from './export/export.module';
+import { WinstonLoggerService } from './logger/logger.service';
+import { ApiKeyModule } from './api-key/api-key.module';
+import { CustomThrottlerGuard } from './utils/guards/customThrottlerGuard';
 
 const configService = new ConfigService();
 
@@ -37,8 +49,44 @@ const configService = new ConfigService();
         },
       },
     }),
+    WidgetModule,
+    WebhookModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: configService.getOrThrow<string>('REDIS_URL'),
+            port: configService.getOrThrow<number>('REDIS_PORT'),
+          },
+        }),
+      }),
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: configService.getOrThrow<string>('REDIS_URL'),
+        port: configService.getOrThrow<number>('REDIS_PORT'),
+      },
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 6000,
+          limit: 250,
+        },
+      ],
+    }),
+    LoggerModule,
+    DashboardModule,
+    ExportModule,
+    ApiKeyModule,
   ],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

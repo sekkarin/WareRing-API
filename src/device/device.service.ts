@@ -2,7 +2,6 @@ import {
   Inject,
   Injectable,
   BadRequestException,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
@@ -14,12 +13,13 @@ import { Device } from './interface/device.interface';
 import { DeviceResponseDto } from './dto/response-device.dto';
 import { Permission } from './types/permission.type';
 import { PaginatedDto } from '../utils/dto/paginated.dto';
+import { GetDevicesFilterDto } from './dto/get-device-filter.dto';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @Inject('DEVICE_MODEL')
-    private deviceModel: Model<Device>, // private mongdb:Types
+    private deviceModel: Model<Device>,
   ) {}
 
   async create(
@@ -50,13 +50,13 @@ export class DeviceService {
       );
     }
     const password_hash = await bcrypt.hash(createDeviceDto.password, 10);
-    const device = new this.deviceModel({
+    const device = await this.deviceModel.create({
       ...createDeviceDto,
       password_hash,
+      password_law: createDeviceDto.password,
       userID,
       topics: topicsGenerated,
     });
-    await device.save();
     return this.mapToDeviceResponseDto(device);
   }
 
@@ -66,6 +66,7 @@ export class DeviceService {
       userID: device.userID,
       nameDevice: device.nameDevice,
       usernameDevice: device.usernameDevice,
+      password: device.password_law,
       description: device.description,
       permission: device.permission,
       topics: device.topics,
@@ -77,17 +78,44 @@ export class DeviceService {
     };
   }
 
-  async findAll(page = 1, limit = 10, userID: string) {
+  async findAll(
+    query = '',
+    page = 1,
+    limit = 10,
+    userID: string,
+    getDevicesSortDto: string,
+    getDevicesFilterDto: GetDevicesFilterDto,
+  ) {
     try {
-      const itemCount = await this.deviceModel.countDocuments({ userID });
-      const devices = await this.deviceModel
-        .find({ userID })
-        .skip((page - 1) * limit)
-        .limit(limit);
+      let options = {};
+      ({ options, getDevicesFilterDto } = this.getFilter(getDevicesFilterDto));
+
+      let devicesQuery = this.deviceModel.find({
+        userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+        ...options,
+      });
+      const itemCount = await this.deviceModel.countDocuments({
+        userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+        ...options,
+      });
+
+      devicesQuery = this.getSort(getDevicesSortDto, devicesQuery);
+      const devices = await devicesQuery.skip((page - 1) * limit).limit(limit);
 
       const devicesResponse = devices.map((device) =>
         this.mapToDeviceResponseDto(device),
       );
+
       return new PaginatedDto<DeviceResponseDto>(
         devicesResponse,
         page,
@@ -95,10 +123,39 @@ export class DeviceService {
         itemCount,
       );
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw error;
     }
   }
 
+  private getSort(getDevicesSortDto: string, devicesQuery: any) {
+    if (getDevicesSortDto) {
+      devicesQuery = devicesQuery.sort(getDevicesSortDto);
+    } else {
+      devicesQuery = devicesQuery.sort({ createdAt: -1 });
+    }
+    return devicesQuery;
+  }
+
+  private getFilter(getDevicesFilterDto: GetDevicesFilterDto) {
+    let options = {};
+
+    getDevicesFilterDto = this.removeUndefined(getDevicesFilterDto);
+
+    if (getDevicesFilterDto) {
+      options = { ...getDevicesFilterDto };
+    }
+    return { options, getDevicesFilterDto };
+  }
+
+  private removeUndefined<T>(obj: T): T {
+    const newObj = {} as T;
+    for (const key of Object.keys(obj)) {
+      if (obj[key] !== undefined) {
+        newObj[key] = obj[key];
+      }
+    }
+    return newObj;
+  }
   async findOne(id: string, userID: string): Promise<DeviceResponseDto> {
     try {
       const device = await this.deviceModel.findOne({ _id: id, userID });
@@ -118,6 +175,7 @@ export class DeviceService {
   ): Promise<DeviceResponseDto> {
     let topicsGenerated: string[];
     let password_hash: string;
+    let password_law: string | null = null;
     try {
       const existingDeviceUsername = await this.deviceModel.findOne({
         usernameDevice: updateDeviceDto.usernameDevice,
@@ -143,11 +201,17 @@ export class DeviceService {
       }
       if (updateDeviceDto.password) {
         password_hash = await bcrypt.hash(updateDeviceDto.password, 10);
+        password_law = updateDeviceDto.password;
       }
       const device = await this.deviceModel.findByIdAndUpdate(
         { _id: id, userID },
         {
-          $set: { ...updateDeviceDto, topics: topicsGenerated, password_hash },
+          $set: {
+            ...updateDeviceDto,
+            topics: topicsGenerated,
+            password_hash,
+            password_law,
+          },
         },
         { new: true },
       );
@@ -155,7 +219,6 @@ export class DeviceService {
       if (!device) {
         throw new NotFoundException('Device not found');
       }
-
       return this.mapToDeviceResponseDto(device);
     } catch (error) {
       throw error;
@@ -163,12 +226,11 @@ export class DeviceService {
   }
 
   async delete(id: string, userID: string) {
-    const device = await this.deviceModel.findOne({ _id: id, userID });
+    const device = await this.deviceModel.findOneAndDelete({ _id: id, userID });
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-    await this.deviceModel.deleteOne({ _id: id, userID });
-    return await this.deviceModel.deleteOne({ _id: id, userID });
+    return device;
   }
 
   async setPermission(
@@ -218,7 +280,15 @@ export class DeviceService {
   }
 
   async searchDevices(query: string, userID: string, page = 1, limit = 10) {
-    const itemCount = await this.deviceModel.countDocuments({ userID });
+    const itemCount = await this.deviceModel
+      .find({
+        userID: userID,
+        $or: [
+          { nameDevice: { $regex: query, $options: 'i' } },
+          { usernameDevice: { $regex: query, $options: 'i' } },
+        ],
+      })
+      .countDocuments();
     const devices = await this.deviceModel
       .find({
         userID: userID,
