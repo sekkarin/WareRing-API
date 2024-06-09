@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth.service';
 import { ConfigService } from '@nestjs/config';
-import { AuthController } from './auth.controller';
+import { AuthController } from '../auth.controller';
 import { getQueueToken } from '@nestjs/bull';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthGuard } from '../guards/auth.guard';
 import { IsActivateUser } from 'src/users/guard/active.guard';
 import { Request, Response } from 'express'; // Import Response from express
 import {
@@ -17,7 +17,6 @@ import { WinstonLoggerService } from 'src/logger/logger.service';
 
 describe('AuthController', () => {
   let authService: AuthService;
-  let configService: ConfigService;
   let authController: AuthController;
 
   const mockConfigService = {
@@ -84,7 +83,6 @@ describe('AuthController', () => {
       .compile();
 
     authService = module.get<AuthService>(AuthService);
-    configService = module.get<ConfigService>(ConfigService);
     authController = module.get<AuthController>(AuthController);
   });
   it('should be defined', () => {
@@ -209,7 +207,7 @@ describe('AuthController', () => {
 
     describe('logOut', () => {
       it('should log out user successfully and clear refresh token cookie', async () => {
-        mockAuthService.logOut.mockResolvedValueOnce({_id:'user'});
+        mockAuthService.logOut.mockResolvedValueOnce({ _id: 'user' });
 
         await authController.logOut(mockRequest, mockResponse);
         expect(mockResponse.clearCookie).toHaveBeenCalledWith('refresh_token');

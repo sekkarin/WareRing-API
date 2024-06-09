@@ -15,6 +15,5 @@ import { ConfigModule } from '@nestjs/config';
       global: true,
     }),
   ],
-  
 })
 export class ApiKeyModule {}

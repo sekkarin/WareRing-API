@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard } from '../auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtModule, JsonWebTokenError } from '@nestjs/jwt';
 import { UnauthorizedException, ForbiddenException } from '@nestjs/common';

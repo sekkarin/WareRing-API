@@ -6,7 +6,7 @@ import { RolesGuard } from './../auth/guards/roles.guard';
 import { Role } from './../auth/enums/role.enum';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsActivateUser } from 'src/users/guard/active.guard';
-import { SkipThrottle} from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('api')
 @ApiTags('Api')

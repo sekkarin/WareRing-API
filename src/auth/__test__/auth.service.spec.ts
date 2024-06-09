@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth.service';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UsersService } from 'src/users/users.service';
-import { AuthConsumer } from './auth.process';
+import { AuthConsumer } from '../auth.process';
 import * as bcrypt from 'bcrypt';
 import {
   ForbiddenException,

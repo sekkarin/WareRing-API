@@ -1,19 +1,13 @@
 import {
   Body,
-  CacheTTL,
   Controller,
-  ForbiddenException,
   HttpCode,
   HttpStatus,
-  NotAcceptableException,
   Post,
-  Req,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { WebhookService } from './webhook.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CacheInterceptor } from '@nestjs/cache-manager';
 import { SkipThrottle } from '@nestjs/throttler';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
@@ -51,7 +45,7 @@ export class WebhookController {
   @HttpCode(HttpStatus.OK)
   async authDevice(@Body() body: AuthDeviceDto) {
     console.log(body.clientId);
-    
+
     const authDevice = await this.webhookService.authenticationDevice(body);
     return authDevice;
   }

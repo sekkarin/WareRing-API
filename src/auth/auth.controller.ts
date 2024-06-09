@@ -251,14 +251,9 @@ export class AuthController {
     status: 403,
     description: 'Unauthorized - token is not valid',
   })
-  async verifyEmail(
-    @Param('token') token,
-    @Res() res: Response,
-  ) {
+  async verifyEmail(@Param('token') token, @Res() res: Response) {
     try {
-      this.logger.info(
-        `${AuthController.name} User attempt verify`,
-      );
+      this.logger.info(`${AuthController.name} User attempt verify`);
       const verifyEmailResult = await this.authService.verifyEmail(token);
       this.logger.info(
         `verification email ${verifyEmailResult.email} successfully`,
