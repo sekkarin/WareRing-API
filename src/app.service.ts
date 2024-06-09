@@ -73,10 +73,10 @@ export class AppService {
       const res = await this.httpService.axiosRef.post(
         this.configService.get<string>('EMQX_API') + '/login',
         {
-          username: this.configService.get<string>(
+          username: this.configService.getOrThrow<string>(
             'EMQX_DASHBOARD_ADMIN_USERNAME',
           ),
-          password: this.configService.get<string>(
+          password: this.configService.getOrThrow<string>(
             'EMQX_DASHBOARD_ADMIN_PASSWORD',
           ),
         },

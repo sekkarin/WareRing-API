@@ -185,7 +185,7 @@ export class AuthController {
   }
 
   @Get('refresh')
-  @Throttle({ default: { limit: 6, ttl: 60000 } })
+  @Throttle({ default: { limit: 12, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth('refresh_token')
   @ApiOperation({ summary: 'Refresh access token using a refresh token' }) // Operation summary
@@ -212,7 +212,7 @@ export class AuthController {
       const cookies = request.cookies;
       if (!cookies.refresh_token) {
         this.logger.warn(
-          `Logout attempt without refresh token from ip ${request.ip}`,
+          `User attempt without refresh token from ip ${request.ip}`,
           AuthController.name,
         );
         throw new UnauthorizedException();

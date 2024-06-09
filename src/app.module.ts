@@ -14,7 +14,7 @@ import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './utils/middlewares/logger.middleware';
 import configuration from './../conf/configuration';
 import { DeviceModule } from './device/device.module';
-import { ApiModule } from './api/api.module';
+import { ApiModule } from 'src/api/api.module';
 import { WidgetModule } from './widget/widget.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { LoggerModule } from './logger/logger.module';
@@ -71,7 +71,7 @@ const configService = new ConfigService();
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 60000,
+          ttl: 6000,
           limit: 250,
         },
       ],

@@ -64,7 +64,7 @@ export class CreateUserDto {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
-  // @Matches('^[a-zA-Z0-9\\s]+$', undefined)
+  @Matches('^[a-zA-Z0-9\\s]+$', undefined)
   readonly username?: string;
 }
 
