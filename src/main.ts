@@ -12,6 +12,7 @@ import { corsOptions } from './utils/corsOptions';
 import { AllExceptionsFilter } from './all-exceptionsFilter';
 import { WinstonLoggerService } from './logger/logger.service';
 
+
 const configService = new ConfigService();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
