@@ -54,10 +54,13 @@ export class AuthService {
         expiresIn: this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN'),
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
-      const access_token = await this.jwtService.signAsync(payload, {
-        expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      });
+      const access_token = await this.jwtService.signAsync(
+        { ...payload, profileUrl: user.profileUrl },
+        {
+          expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
+          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        },
+      );
       user.refreshToken = refresh_token;
       await user.save();
 
