@@ -114,7 +114,7 @@ export class AuthController {
         `User ${signInDto.username} logged in successfully`,
         AuthController.name,
       );
-      return res.status(200).json({ access_token: user.access_token });
+      return res.status(200).json({ access_token: user.access_token,userInfo:user.userInfo });
     } catch (error) {
       throw error;
     }
