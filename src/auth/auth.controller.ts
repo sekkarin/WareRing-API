@@ -99,15 +99,14 @@ export class AuthController {
         signInDto.username,
         signInDto.password,
       );
-      const expiresInSeconds = this.configService.getOrThrow<number>(
+      const expiresInSeconds = this.configService.getOrThrow<string>(
         'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
       );
-      const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
+      const maxAgeMilliseconds = parseInt(expiresInSeconds) * 24 * 60 * 60 * 1000;
 
       res.cookie('refresh_token', user.refresh_token, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        httpOnly: false,
+        secure: false,
         maxAge: maxAgeMilliseconds,
       });
       this.logger.info(
