@@ -23,3 +23,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: push image to docker hub
         run: docker push sekkarin/warering-api
+      - name: GitHub Action for DigitalOcean - doctl
+        uses: digitalocean/action-doctl@v2.5.1
+        with:
+          token: ${{secrets.DIGITALOCEAN_TOKEN}}
+      - name: rollout api deployment
+        run: doctl kubernetes cluster kubeconfig save k8s-1-30-1-do-0-sgp1-1718101032317 && kubectl rollout restart deployment api-warering-deployment
+      
+    
