@@ -1,32 +1,37 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 
 import { User } from './users/interfaces/user.interface';
+import { WinstonLoggerService } from './logger/logger.service';
 
 @Injectable()
-export class AppService {
-  logger: Logger;
+export class AppService implements OnApplicationBootstrap {
   constructor(
     @Inject('USER_MODEL')
     private userModel: Model<User>,
-    private jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-  ) {
-    this.logger = new Logger();
-  }
+    private readonly logger: WinstonLoggerService,
+  ) {}
   async seedData() {
+    this.logger.info('Seed data started', AppService.name);
     const { token } = await this.loginDashboard();
     const admin = await this.userModel.findOne({
       username: 'AdminWareringCaxknsa',
     });
     if (admin) {
+      this.logger.info('Seed data completed', AppService.name);
       return;
     }
-
+    this.logger.info('Seed data admin', AppService.name);
     const dataToSeed = [
       {
         firstName: 'admin',
@@ -58,7 +63,8 @@ export class AppService {
     if (findUser) {
       return;
     }
-    this.userModel.insertMany(dataToSeed);
+    await this.userModel.insertMany(dataToSeed);
+    this.logger.info('Seed data completed', AppService.name);
   }
 
   async onApplicationBootstrap() {

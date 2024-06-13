@@ -60,10 +60,16 @@ export class AuthService {
       });
       user.refreshToken = refresh_token;
       await user.save();
+      const userInfo = {
+        id: user.id,
+        email: user.email,
+        profileUrl: user.profileUrl,
+      };
 
       return {
         access_token: access_token,
         refresh_token: refresh_token,
+        userInfo,
       };
     } catch (error) {
       throw error;

@@ -23,6 +23,7 @@ import { ExportModule } from './export/export.module';
 import { WinstonLoggerService } from './logger/logger.service';
 import { ApiKeyModule } from './api-key/api-key.module';
 import { CustomThrottlerGuard } from './utils/guards/customThrottlerGuard';
+import { AppService } from './app.service';
 
 const configService = new ConfigService();
 
@@ -80,8 +81,10 @@ const configService = new ConfigService();
     DashboardModule,
     ExportModule,
     ApiKeyModule,
+    
   ],
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
