@@ -15,6 +15,6 @@ jobs:
       - name: Run tests
         run: npm test
       - name: build image
-        run: docker build -t sekkarin/warering-api
+        run: docker build -t sekkarin/warering-api .
       - name: docker authentication
         run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_USER }}
