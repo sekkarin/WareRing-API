@@ -134,6 +134,11 @@ describe('AuthService', () => {
       expect(result).toEqual({
         access_token: 'accessToken',
         refresh_token: 'refreshToken',
+        userInfo: {
+          email:undefined,
+          id: undefined,
+          profileUrl: undefined,
+        },
       });
     });
     it('should returnUnauthorizedException if password not math', async () => {

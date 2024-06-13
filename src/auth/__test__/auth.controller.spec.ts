@@ -121,9 +121,8 @@ describe('AuthController', () => {
         'refresh_token',
         mockUser.refresh_token,
         {
-          httpOnly: true,
-          sameSite: 'none',
-          secure: true,
+          httpOnly: false,
+          secure: false,
           maxAge: mockMaxAgeMilliseconds,
         },
       );
