@@ -2,7 +2,6 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -158,7 +157,7 @@ export class AuthService {
       },
     );
     try {
-      const clientUrl = this.configService.get<string>('CLIENT_URL');
+      const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
       await this.mailerService.sendMail({
         from: this.configService.get<string>('EMAIL_AUTH'),
         to: email,
@@ -200,6 +199,7 @@ export class AuthService {
   }
 
   public async sendMailResetPassword(email: string) {
+    const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
     const resetPassToken = await this.jwtService.signAsync(
       { email },
       {
@@ -213,7 +213,7 @@ export class AuthService {
       from: this.configService.get<string>('EMAIL_AUTH'),
       to: email,
       subject: 'Reset your password',
-      html: FORM_FORGET_PASS(resetPassToken),
+      html: FORM_FORGET_PASS(resetPassToken, clientUrl),
     });
     return mail;
   }

@@ -1,13 +1,13 @@
-export const FORM_FORGET_PASS1 = (token: string) => {
+export const FORM_FORGET_PASS1 = (token: string,clientUrl:string) => {
   return `
     <h2>Reset Password</h2>
     <p>token for reset password : ${token}</p>
     <p>put the token in param to api that route reset password and send http.body { newPassword: ... }</p>
     <br>
-    <p>http://localhost:3000/auth/reset-password/{token}</p>
+    <p>${clientUrl}/auth/reset-password/{token}</p>
     `;
 };
-export const FORM_FORGET_PASS = (token: string) => {
+export const FORM_FORGET_PASS = (token: string,clientUrl:string) => {
   return `<!DOCTYPE html>
   <html>
   <head>
@@ -147,7 +147,7 @@ export const FORM_FORGET_PASS = (token: string) => {
                       <table border="0" cellpadding="0" cellspacing="0">
                         <tr>
                           <td align="center" bgcolor="#1966fb" style="border-radius: 6px;">
-                            <a href="http://localhost:5173/reset-password/${token}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">Reset Password</a>
+                            <a href="${clientUrl}/reset-password/${token}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">Reset Password</a>
                           </td>
                         </tr>
                       </table>
