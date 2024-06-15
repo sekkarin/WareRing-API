@@ -56,7 +56,8 @@ export class DashboardController {
   @ApiOperation({ summary: 'Create a new dashboard' })
   create(@Req() req: Request, @Body() createDashboardDto: CreateDashboardDto) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} create Dashboard ${createDashboardDto.nameDashboard}`,
+      `User ${req['user'].sub} create Dashboard ${createDashboardDto.nameDashboard}`,
+      DashboardController.name
     );
     try {
       const { sub } = req['user'];
@@ -74,7 +75,8 @@ export class DashboardController {
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} add widget id ${widgetId} to  Dashboard id ${dashboardId}`,
+      `User ${req['user'].sub} add widget id ${widgetId} to  Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     try {
       return this.dashboardService.addWidget(dashboardId, widgetId);
@@ -113,8 +115,9 @@ export class DashboardController {
     @Req() req: Request,
     @Query() paginationQueryparamsDto: PaginationQueryparamsDto,
   ) {
-    this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} get Dashboards`,
+    this.logger.log(
+      `User ${req['user'].sub} get Dashboards`,
+      DashboardController.name
     );
     const { sub } = req['user'];
     try {
@@ -131,8 +134,9 @@ export class DashboardController {
     @Req() req: Request,
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
-    this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} get Dashboard id ${dashboardId}`,
+    this.logger.log(
+      `User ${req['user'].sub} get Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     const { sub } = req['user'];
     try {
@@ -150,7 +154,8 @@ export class DashboardController {
     @Req() req: Request,
   ) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} update Dashboard id ${dashboardId}`,
+      `User ${req['user'].sub} update Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     try {
       return this.dashboardService.update(dashboardId, updateDashboardDto);
@@ -166,7 +171,8 @@ export class DashboardController {
     @Req() req: Request,
   ) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} update position widget, Dashboard id ${dashboardId}`,
+      `User ${req['user'].sub} update position widget, Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     try {
       return this.dashboardService.updatePosition(
@@ -185,7 +191,8 @@ export class DashboardController {
     @Req() req: Request,
   ) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
+      `User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     try {
       return this.dashboardService.remove(dashboardId);
@@ -202,7 +209,8 @@ export class DashboardController {
     @Param('dashboardId', MongoDBObjectIdPipe) dashboardId: string,
   ) {
     this.logger.info(
-      `${DashboardController.name} User ${req['user'].sub} delete widget in Dashboard id ${dashboardId}`,
+      `User ${req['user'].sub} delete widget in Dashboard id ${dashboardId}`,
+      DashboardController.name
     );
     try {
       const { sub } = req['user'];

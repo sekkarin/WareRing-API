@@ -41,7 +41,8 @@ export class ExportController {
     @Param('deviceId', MongoDBObjectIdPipe) deviceId: string,
   ) {
     this.logger.info(
-      `${ExportController.name} User ${req['user'].sub} export data device id ${deviceId}`,
+      `User ${req['user'].sub} export data device id ${deviceId}`,
+      ExportController.name
     );
     try {
       const { sub } = req['user'];

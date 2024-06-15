@@ -86,13 +86,13 @@ export class AuthController {
     @Body() signInDto: BodyUserLoginDto,
     @Res() res: Response,
   ) {
-    this.logger.info(`${AuthController.name} Login attempt from IP: ${ip}`);
+    this.logger.info(`Login attempt from IP: ${ip}`,AuthController.name);
     try {
       const checkIsActive = await this.authService.checkIsActive(
         signInDto.username,
       );
       if (!checkIsActive) {
-        this.logger.warn(`User ${signInDto.username} is banned or inactive`);
+        this.logger.warn(`User ${signInDto.username} is banned or inactive`,AuthController.name);
         throw new UnauthorizedException('User is banned');
       }
       const user = await this.authService.signIn(
@@ -132,7 +132,7 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Ip() ip: string, @Body() signUpDto: CreateUserDto) {
-    this.logger.info(`${AuthController.name} Register attempt from IP: ${ip}`);
+    this.logger.info(`Register attempt from IP: ${ip}`,AuthController.name);
     try {
       const result = await this.authService.signUp(signUpDto);
       await this.sendEmailVerifyQueue.add(
@@ -164,7 +164,7 @@ export class AuthController {
   async logOut(@Req() req: Request, @Res() res: Response) {
     try {
       this.logger.info(
-        `${AuthController.name} User attempt from IP: ${req.ip}`,
+        `User attempt from IP: ${req.ip}`,AuthController.name
       );
       const token = req.cookies['refresh_token'];
       if (!token) {
@@ -210,7 +210,7 @@ export class AuthController {
     try {
       const cookies = request.cookies;
       if (!cookies.refresh_token) {
-        this.logger.warn(
+        this.logger.log(
           `User attempt without refresh token from ip ${request.ip}`,
           AuthController.name,
         );
@@ -252,10 +252,10 @@ export class AuthController {
   })
   async verifyEmail(@Param('token') token, @Res() res: Response) {
     try {
-      this.logger.info(`${AuthController.name} User attempt verify`);
+      this.logger.info(`User attempt verify`,AuthController.name);
       const verifyEmailResult = await this.authService.verifyEmail(token);
       this.logger.info(
-        `verification email ${verifyEmailResult.email} successfully`,
+        `verification email ${verifyEmailResult.email} successfully`,AuthController.name
       );
       res.status(200).json({ msg: 'Your email is verifired' });
     } catch (error) {

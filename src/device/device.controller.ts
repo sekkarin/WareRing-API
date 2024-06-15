@@ -72,7 +72,8 @@ export class DeviceController {
   ): Promise<DeviceResponseDto> {
     const { sub } = req['user'];
     this.logger.info(
-      `${DeviceController.name} User ${req['user'].sub} created device ${createDeviceDto.nameDevice}`,
+      `User ${req['user'].sub} created device ${createDeviceDto.nameDevice}`,
+      DeviceController.name
     );
     try {
       const device = await this.deviceService.create(createDeviceDto, sub);
@@ -170,8 +171,9 @@ export class DeviceController {
   })
   findOne(@Req() req: Request, @Param('id', MongoDBObjectIdPipe) id: string) {
     try {
-      this.logger.info(
-        `${DeviceController.name} User ${req['user'].sub} get device`,
+      this.logger.log(
+        `User ${req['user'].sub} get device`,
+        DeviceController.name
       );
       const { sub } = req['user'];
 
@@ -212,7 +214,8 @@ export class DeviceController {
     @Body() updateDeviceDto: UpdateDeviceDto,
   ) {
     this.logger.info(
-      `${DeviceController.name} User ${req['user'].sub} update device ${id}`,
+      `User ${req['user'].sub} update device ${id}`,
+      DeviceController.name
     );
     try {
       const { sub } = req['user'];
@@ -258,7 +261,8 @@ export class DeviceController {
     @Param('id', MongoDBObjectIdPipe) id: string,
   ) {
     this.logger.info(
-      `${DeviceController.name} User ${req['user'].sub} delete device ${id}`,
+      `User ${req['user'].sub} delete device ${id}`,
+      DeviceController.name
     );
     try {
       const { sub } = req['user'];
@@ -289,7 +293,8 @@ export class DeviceController {
     @Body() setPermissions: PermissionsDto,
   ) {
     this.logger.info(
-      `${DeviceController.name} User ${req['user'].sub} set permission device ${id}`,
+      `User ${req['user'].sub} set permission device ${id}`,
+      DeviceController.name
     );
     try {
       const { sub } = req['user'];
@@ -324,7 +329,8 @@ export class DeviceController {
     @Body() storeDataDto: StoreDataDto,
   ) {
     this.logger.info(
-      `${DeviceController.name} User ${req['user'].sub} set store device ${id}`,
+      `User ${req['user'].sub} set store device ${id}`,
+      DeviceController.name
     );
     try {
       const { sub } = req['user'];

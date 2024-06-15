@@ -22,16 +22,23 @@ export class AppService implements OnApplicationBootstrap {
     private readonly logger: WinstonLoggerService,
   ) {}
   async seedData() {
-    this.logger.info('Seed data started', AppService.name);
+    this.logger.info('Seeding data process started.', AppService.name);
+
     const { token } = await this.loginDashboard();
     const admin = await this.userModel.findOne({
       username: 'AdminWareringCaxknsa',
     });
     if (admin) {
-      this.logger.info('Seed data completed', AppService.name);
+      this.logger.info(
+        'Admin user already exists. Seed data process completed.',
+        AppService.name,
+      );
       return;
     }
-    this.logger.info('Seed data admin', AppService.name);
+    this.logger.info(
+      'Admin user not found. Proceeding with data seeding.',
+      AppService.name,
+    );
     const dataToSeed = [
       {
         firstName: 'admin',
@@ -45,17 +52,6 @@ export class AppService implements OnApplicationBootstrap {
         isActive: true,
         verifired: true,
       },
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-        username: 'ken',
-        password:
-          '$2b$10$E8BhNJ0UY2fet5LbhX0uZOoqeOwuouU/fEfqhrA8GMWLYOr475GHq',
-        email: 'sekkri1234@gmail.com',
-        roles: ['user'],
-        isActive: true,
-        verifired: true,
-      },
     ];
     const findUser = await this.userModel.findOne({
       username: dataToSeed[0].username,
@@ -64,7 +60,10 @@ export class AppService implements OnApplicationBootstrap {
       return;
     }
     await this.userModel.insertMany(dataToSeed);
-    this.logger.info('Seed data completed', AppService.name);
+    this.logger.info(
+      'Data seeding process completed successfully.',
+      AppService.name,
+    );
   }
 
   async onApplicationBootstrap() {
@@ -92,13 +91,4 @@ export class AppService implements OnApplicationBootstrap {
       throw error;
     }
   }
-
-  // create login  admin emqx
-  // create user
-  // "api_key": "c0049e401dbcf3d3",
-  // "api_secret": "YYFSbhNOUR6bSGN1Ibh9AhAK4u0sqO6RSxk6KTbtU3TH",
-
-  // curl -X GET http://localhost:18083/api/v5/nodes \
-  // -u 0023f119f5c7e0b4:oGWf6pcZx0wz9BzG9CKf7izliwqNnkX1J3c6f74SwplcG \
-  // -H "Content-Type: application/json"
 }
