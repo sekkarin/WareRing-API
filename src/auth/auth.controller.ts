@@ -86,13 +86,16 @@ export class AuthController {
     @Body() signInDto: BodyUserLoginDto,
     @Res() res: Response,
   ) {
-    this.logger.info(`Login attempt from IP: ${ip}`,AuthController.name);
+    this.logger.info(`Login attempt from IP: ${ip}`, AuthController.name);
     try {
       const checkIsActive = await this.authService.checkIsActive(
         signInDto.username,
       );
       if (!checkIsActive) {
-        this.logger.warn(`User ${signInDto.username} is banned or inactive`,AuthController.name);
+        this.logger.warn(
+          `User ${signInDto.username} is banned or inactive`,
+          AuthController.name,
+        );
         throw new UnauthorizedException('User is banned');
       }
       const user = await this.authService.signIn(
@@ -102,7 +105,8 @@ export class AuthController {
       const expiresInSeconds = this.configService.getOrThrow<string>(
         'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
       );
-      const maxAgeMilliseconds = parseInt(expiresInSeconds) * 24 * 60 * 60 * 1000;
+      const maxAgeMilliseconds =
+        parseInt(expiresInSeconds) * 24 * 60 * 60 * 1000;
 
       res.cookie('refresh_token', user.refresh_token, {
         httpOnly: false,
@@ -113,7 +117,9 @@ export class AuthController {
         `User ${signInDto.username} logged in successfully`,
         AuthController.name,
       );
-      return res.status(200).json({ access_token: user.access_token,userInfo:user.userInfo });
+      return res
+        .status(200)
+        .json({ access_token: user.access_token, userInfo: user.userInfo });
     } catch (error) {
       throw error;
     }
@@ -132,7 +138,7 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Ip() ip: string, @Body() signUpDto: CreateUserDto) {
-    this.logger.info(`Register attempt from IP: ${ip}`,AuthController.name);
+    this.logger.info(`Register attempt from IP: ${ip}`, AuthController.name);
     try {
       const result = await this.authService.signUp(signUpDto);
       await this.sendEmailVerifyQueue.add(
@@ -163,9 +169,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
   async logOut(@Req() req: Request, @Res() res: Response) {
     try {
-      this.logger.info(
-        `User attempt from IP: ${req.ip}`,AuthController.name
-      );
+      this.logger.info(`User attempt from IP: ${req.ip}`, AuthController.name);
       const token = req.cookies['refresh_token'];
       if (!token) {
         this.logger.warn(
@@ -252,10 +256,11 @@ export class AuthController {
   })
   async verifyEmail(@Param('token') token, @Res() res: Response) {
     try {
-      this.logger.info(`User attempt verify`,AuthController.name);
+      this.logger.info(`User attempt verify`, AuthController.name);
       const verifyEmailResult = await this.authService.verifyEmail(token);
       this.logger.info(
-        `verification email ${verifyEmailResult.email} successfully`,AuthController.name
+        `verification email ${verifyEmailResult.email} successfully`,
+        AuthController.name,
       );
       res.status(200).json({ msg: 'Your email is verifired' });
     } catch (error) {

@@ -85,7 +85,7 @@ export class ApiKeyController {
     @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateActiveApiKeyDto: UpdateActiveApiKeyDto,
   ) {
-    this.logger.info(`Admin change active id ${id}`,ApiKeyController.name);
+    this.logger.info(`Admin change active id ${id}`, ApiKeyController.name);
     return this.apiKeyService.updateStatus(id, updateActiveApiKeyDto);
   }
 

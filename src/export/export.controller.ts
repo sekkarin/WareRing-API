@@ -42,7 +42,7 @@ export class ExportController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} export data device id ${deviceId}`,
-      ExportController.name
+      ExportController.name,
     );
     try {
       const { sub } = req['user'];

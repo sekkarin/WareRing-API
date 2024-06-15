@@ -50,6 +50,7 @@ describe('AuthController', () => {
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
+    log: jest.fn(),
   };
   const mockRequest = {
     user: {
