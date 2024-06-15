@@ -57,7 +57,7 @@ export class DashboardController {
   create(@Req() req: Request, @Body() createDashboardDto: CreateDashboardDto) {
     this.logger.info(
       `User ${req['user'].sub} create Dashboard ${createDashboardDto.nameDashboard}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       const { sub } = req['user'];
@@ -76,7 +76,7 @@ export class DashboardController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} add widget id ${widgetId} to  Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       return this.dashboardService.addWidget(dashboardId, widgetId);
@@ -117,7 +117,7 @@ export class DashboardController {
   ) {
     this.logger.log(
       `User ${req['user'].sub} get Dashboards`,
-      DashboardController.name
+      DashboardController.name,
     );
     const { sub } = req['user'];
     try {
@@ -136,7 +136,7 @@ export class DashboardController {
   ) {
     this.logger.log(
       `User ${req['user'].sub} get Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     const { sub } = req['user'];
     try {
@@ -155,7 +155,7 @@ export class DashboardController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} update Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       return this.dashboardService.update(dashboardId, updateDashboardDto);
@@ -172,7 +172,7 @@ export class DashboardController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} update position widget, Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       return this.dashboardService.updatePosition(
@@ -192,7 +192,7 @@ export class DashboardController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} delete Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       return this.dashboardService.remove(dashboardId);
@@ -210,7 +210,7 @@ export class DashboardController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} delete widget in Dashboard id ${dashboardId}`,
-      DashboardController.name
+      DashboardController.name,
     );
     try {
       const { sub } = req['user'];

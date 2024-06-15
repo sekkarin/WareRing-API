@@ -135,7 +135,7 @@ describe('AuthService', () => {
         access_token: 'accessToken',
         refresh_token: 'refreshToken',
         userInfo: {
-          email:undefined,
+          email: undefined,
           id: undefined,
           profileUrl: undefined,
         },

@@ -1,4 +1,4 @@
-export const FORM_FORGET_PASS1 = (token: string,clientUrl:string) => {
+export const FORM_FORGET_PASS1 = (token: string, clientUrl: string) => {
   return `
     <h2>Reset Password</h2>
     <p>token for reset password : ${token}</p>
@@ -7,7 +7,7 @@ export const FORM_FORGET_PASS1 = (token: string,clientUrl:string) => {
     <p>${clientUrl}/auth/reset-password/{token}</p>
     `;
 };
-export const FORM_FORGET_PASS = (token: string,clientUrl:string) => {
+export const FORM_FORGET_PASS = (token: string, clientUrl: string) => {
   return `<!DOCTYPE html>
   <html>
   <head>
