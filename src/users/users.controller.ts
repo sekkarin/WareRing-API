@@ -138,7 +138,10 @@ export class UsersController {
   ) {
     try {
       const bannedState = banned.banned;
-      this.logger.info(`Admin is banned from ${id} state ${banned.banned}`, UsersController.name);
+      this.logger.info(
+        `Admin is banned from ${id} state ${banned.banned}`,
+        UsersController.name,
+      );
       return this.usersService.setBanned(bannedState, id);
     } catch (error) {
       console.log(error);

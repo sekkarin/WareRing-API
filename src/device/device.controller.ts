@@ -73,7 +73,7 @@ export class DeviceController {
     const { sub } = req['user'];
     this.logger.info(
       `User ${req['user'].sub} created device ${createDeviceDto.nameDevice}`,
-      DeviceController.name
+      DeviceController.name,
     );
     try {
       const device = await this.deviceService.create(createDeviceDto, sub);
@@ -173,7 +173,7 @@ export class DeviceController {
     try {
       this.logger.log(
         `User ${req['user'].sub} get device`,
-        DeviceController.name
+        DeviceController.name,
       );
       const { sub } = req['user'];
 
@@ -215,7 +215,7 @@ export class DeviceController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} update device ${id}`,
-      DeviceController.name
+      DeviceController.name,
     );
     try {
       const { sub } = req['user'];
@@ -262,7 +262,7 @@ export class DeviceController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} delete device ${id}`,
-      DeviceController.name
+      DeviceController.name,
     );
     try {
       const { sub } = req['user'];
@@ -294,7 +294,7 @@ export class DeviceController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} set permission device ${id}`,
-      DeviceController.name
+      DeviceController.name,
     );
     try {
       const { sub } = req['user'];
@@ -330,7 +330,7 @@ export class DeviceController {
   ) {
     this.logger.info(
       `User ${req['user'].sub} set store device ${id}`,
-      DeviceController.name
+      DeviceController.name,
     );
     try {
       const { sub } = req['user'];

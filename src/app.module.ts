@@ -81,7 +81,6 @@ const configService = new ConfigService();
     DashboardModule,
     ExportModule,
     ApiKeyModule,
-    
   ],
   providers: [
     AppService,

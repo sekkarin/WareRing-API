@@ -60,7 +60,7 @@ export class WidgetController {
     try {
       this.logger.info(
         `User ${req['user'].username} create widget ${createWidgetDto.label}`,
-        WidgetController.name
+        WidgetController.name,
       );
       return this.widgetService.create(createWidgetDto, deviceId);
     } catch (error) {
@@ -83,7 +83,7 @@ export class WidgetController {
     try {
       this.logger.log(
         `User ${req['user'].username} get widgets from device id ${deviceId}`,
-        WidgetController.name
+        WidgetController.name,
       );
       return this.widgetService.findAll(deviceId);
     } catch (error) {
@@ -130,7 +130,7 @@ export class WidgetController {
   ) {
     this.logger.info(
       `User ${req['user'].username} update widget id ${widgetId}`,
-      WidgetController.name
+      WidgetController.name,
     );
     try {
       return this.widgetService.update(widgetId, updateWidgetDto);
@@ -151,7 +151,7 @@ export class WidgetController {
   ) {
     this.logger.info(
       `User ${req['user'].username} delete widget id ${widgetId} device id ${deviceId}`,
-      WidgetController.name
+      WidgetController.name,
     );
     try {
       await this.widgetService.delete(widgetId, deviceId);
