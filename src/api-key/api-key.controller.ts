@@ -40,7 +40,8 @@ export class ApiKeyController {
   @Post()
   create(@Body() createApiKeyDto: CreateApiKeyDto) {
     this.logger.info(
-      `${ApiKeyController.name} Admin create a new api key name ${createApiKeyDto.name}`,
+      `Admin create a new api key name ${createApiKeyDto.name}`,
+      ApiKeyController.name,
     );
     return this.apiKeyService.create(createApiKeyDto);
   }
@@ -84,13 +85,13 @@ export class ApiKeyController {
     @Param('id', MongoDBObjectIdPipe) id: string,
     @Body() updateActiveApiKeyDto: UpdateActiveApiKeyDto,
   ) {
-    this.logger.info(`${ApiKeyController.name} Admin change active id ${id}`);
+    this.logger.info(`Admin change active id ${id}`,ApiKeyController.name);
     return this.apiKeyService.updateStatus(id, updateActiveApiKeyDto);
   }
 
   @Delete(':id')
   remove(@Param('id', MongoDBObjectIdPipe) id: string) {
-    this.logger.info(`${ApiKeyController.name} Admin delete api key id ${id}`);
+    this.logger.info(`Admin delete api key id ${id}`, ApiKeyController.name);
     return this.apiKeyService.remove(id);
   }
 }

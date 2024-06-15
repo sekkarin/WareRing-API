@@ -44,6 +44,7 @@ import { IsActivateUser } from './guard/active.guard';
 import * as multer from 'multer';
 import { ManageFileS3Service } from 'src/utils/services/up-load-file-s3/up-load-file-s3.service';
 import { ResetNewPasswordDTO } from './dto/reset-new-password.DTO';
+import { WinstonLoggerService } from 'src/logger/logger.service';
 
 @ApiTags('User')
 @Controller('users')
@@ -52,6 +53,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly uploadFileS3Service: ManageFileS3Service,
+    private readonly logger: WinstonLoggerService,
   ) {}
 
   @Put()
@@ -98,6 +100,7 @@ export class UsersController {
     try {
       const id = req['user'].sub;
       let nameFile: string | undefined = undefined;
+      this.logger.info(`User update profile from ${id}`, UsersController.name);
 
       if (file) {
         nameFile = await this.uploadFileS3Service.uploadFile(file);
@@ -135,6 +138,7 @@ export class UsersController {
   ) {
     try {
       const bannedState = banned.banned;
+      this.logger.info(`Admin is banned from ${id} state ${banned.banned}`, UsersController.name);
       return this.usersService.setBanned(bannedState, id);
     } catch (error) {
       console.log(error);
@@ -202,7 +206,7 @@ export class UsersController {
   async deleteUser(@Req() req: Request) {
     try {
       const { sub } = req['user'];
-
+      this.logger.info(`User deleted from ${sub}`, UsersController.name);
       await this.usersService.deleteUser(sub);
       return {
         message: 'delete user successfully',
@@ -287,7 +291,7 @@ export class UsersController {
   ) {
     try {
       const { sub } = req['user'];
-
+      this.logger.info(`User reset password from ${sub}`, UsersController.name);
       return this.usersService.resetNewPassword(sub, resetNewPasswordDTO);
     } catch (error) {
       throw error;

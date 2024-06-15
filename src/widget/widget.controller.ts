@@ -59,7 +59,8 @@ export class WidgetController {
   ): Promise<WidgetResponseDto> {
     try {
       this.logger.info(
-        `${WidgetController.name} User ${req['user'].username} create widget ${createWidgetDto.label}`,
+        `User ${req['user'].username} create widget ${createWidgetDto.label}`,
+        WidgetController.name
       );
       return this.widgetService.create(createWidgetDto, deviceId);
     } catch (error) {
@@ -80,8 +81,9 @@ export class WidgetController {
     @Req() req: Request,
   ): Promise<WidgetResponseDto[]> {
     try {
-      this.logger.info(
-        `${WidgetController.name} User ${req['user'].username} get widgets from device id ${deviceId}`,
+      this.logger.log(
+        `User ${req['user'].username} get widgets from device id ${deviceId}`,
+        WidgetController.name
       );
       return this.widgetService.findAll(deviceId);
     } catch (error) {
@@ -103,7 +105,7 @@ export class WidgetController {
     @Req() req: Request,
   ): Promise<WidgetResponseDto> {
     try {
-      this.logger.info(
+      this.logger.log(
         `${WidgetController.name} User ${req['user'].username} get widget id ${widgetId}`,
       );
       return this.widgetService.findOne(widgetId);
@@ -127,7 +129,8 @@ export class WidgetController {
     @Req() req: Request,
   ) {
     this.logger.info(
-      `${WidgetController.name} User ${req['user'].username} update widget id ${widgetId}`,
+      `User ${req['user'].username} update widget id ${widgetId}`,
+      WidgetController.name
     );
     try {
       return this.widgetService.update(widgetId, updateWidgetDto);
@@ -147,7 +150,8 @@ export class WidgetController {
     @Req() req: Request,
   ) {
     this.logger.info(
-      `${WidgetController.name} User ${req['user'].username} delete widget id ${widgetId} device id ${deviceId}`,
+      `User ${req['user'].username} delete widget id ${widgetId} device id ${deviceId}`,
+      WidgetController.name
     );
     try {
       await this.widgetService.delete(widgetId, deviceId);

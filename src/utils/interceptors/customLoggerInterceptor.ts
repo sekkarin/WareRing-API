@@ -24,7 +24,7 @@ export class CustomLoggerInterceptor implements NestInterceptor {
       userAgent,
     };
 
-    this.logger.info(
+    this.logger.log(
       `Incoming request: ${method} ${originalUrl} from IP: ${ip}`,
       JSON.stringify(logContext),
     );
