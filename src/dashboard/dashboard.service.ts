@@ -44,14 +44,14 @@ export class DashboardService {
   ) {
     try {
       let dashboardsQuery = this.dashboardModel.find({
-        _id: { $ne: currentUserId },
+        userID: currentUserId ,
         $or: [
           { nameDashboard: { $regex: query, $options: 'i' } },
           { description: { $regex: query, $options: 'i' } },
         ],
       });
       const itemCount = await this.dashboardModel.countDocuments({
-        _id: { $ne: currentUserId },
+        userID: currentUserId ,
         $or: [
           { nameDashboard: { $regex: query, $options: 'i' } },
           { description: { $regex: query, $options: 'i' } },
