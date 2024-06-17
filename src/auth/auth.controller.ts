@@ -102,11 +102,10 @@ export class AuthController {
         signInDto.username,
         signInDto.password,
       );
-      const expiresInSeconds = this.configService.getOrThrow<string>(
+      const expiresInSeconds = this.configService.getOrThrow<number>(
         'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
       );
-      const maxAgeMilliseconds =
-        parseInt(expiresInSeconds) * 24 * 60 * 60 * 1000;
+      const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
 
       res.cookie('refresh_token', user.refresh_token, {
         httpOnly: false,
