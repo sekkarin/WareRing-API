@@ -10,6 +10,6 @@ export const DataSchema = new mongoose.Schema({
   },
   timestamps: {
     type: Date,
-    default: new Date(),
+    default: Date.now,
   },
 });
