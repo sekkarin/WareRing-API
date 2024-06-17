@@ -28,6 +28,6 @@ jobs:
         with:
           token: ${{secrets.DIGITALOCEAN_TOKEN}}
       - name: rollout api deployment
-        run: doctl kubernetes cluster kubeconfig save warering && kubectl rollout restart deployment client-depl
+        run: doctl kubernetes cluster kubeconfig save warering && kubectl rollout restart deployment api-warering-deployment
       
     
