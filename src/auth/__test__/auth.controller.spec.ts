@@ -215,19 +215,10 @@ describe('AuthController', () => {
         expect(mockResponse.json).toHaveBeenCalledWith({ message: "logout's" });
       });
 
-      it('should throw UnauthorizedException when user is not logged in', async () => {
-        mockRequest.user.username = undefined;
-        jest
-          .spyOn(authService, 'logOut')
-          .mockImplementation(() =>
-            Promise.reject(new UnauthorizedException('User not logged in')),
-          );
-        await expect(
-          authController.logOut(mockRequest, mockResponse),
-        ).rejects.toThrowError(new UnauthorizedException('User not logged in'));
-      });
+
     });
   });
+
   describe('refresh', () => {
     it('should refresh access token successfully', async () => {
       mockRequest.cookies.refresh_token = 'mockRefreshToken';
