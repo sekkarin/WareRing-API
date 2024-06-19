@@ -41,9 +41,6 @@ const UserSchema = new mongoose.Schema(
     tokenEMQX: {
       type: String,
     },
-    refreshToken: {
-      type: String,
-    },
     verifired: {
       type: Boolean,
       default: false,

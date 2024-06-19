@@ -9,6 +9,7 @@ import {
   IsEnum,
   Length,
   IsOptional,
+  Max,
 } from 'class-validator';
 
 export class CreateDeviceDto {
@@ -43,7 +44,7 @@ export class CreateDeviceDto {
     example: 'Smart home controller',
     description: 'Description of the device',
   })
-  @Length(0, 255)
+  @Max(255)
   @IsString()
   @IsOptional()
   description?: string;

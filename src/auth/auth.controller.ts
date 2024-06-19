@@ -20,6 +20,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
@@ -177,9 +178,8 @@ export class AuthController {
         );
         throw new NotFoundException('Refresh token not found');
       }
-      const user = await this.authService.logOut(token);
       res.clearCookie('refresh_token');
-      this.logger.info(`User ${user._id} logged out`, AuthController.name);
+      this.logger.info(`User ${req.ip} logged out`, AuthController.name);
       res.status(200).json({ message: "logout's" });
     } catch (error) {
       throw error;
@@ -190,6 +190,7 @@ export class AuthController {
   @Throttle({ default: { limit: 12, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth('refresh_token')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Refresh access token using a refresh token' }) // Operation summary
   @ApiResponse({
     status: 200,
