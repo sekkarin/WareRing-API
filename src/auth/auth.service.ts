@@ -57,7 +57,6 @@ export class AuthService {
         expiresIn: this.configService.get<string>('EXPIRES_IN_ACCESS_TOKEN'),
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       });
-      user.refreshToken = refresh_token;
       await user.save();
       const userInfo = {
         id: user.id,
@@ -99,40 +98,16 @@ export class AuthService {
     }
   }
 
-  async logOut(refreshToken: string) {
-    try {
-      const fondUser = await this.usersService.findRefreshToken(refreshToken);
-      if (!fondUser) {
-        throw new NotFoundException('user not found');
-      }
-      fondUser.refreshToken = '';
-      await fondUser.save();
-      return fondUser;
-    } catch (error) {
-      if (error instanceof TokenExpiredError) {
-        throw new ForbiddenException('Token expired');
-      }
-      throw error;
-    }
-  }
-
   async refresh(refreshToken: string) {
     try {
-      const foundUser = await this.usersService.findOneToken(refreshToken);
-      if (!foundUser) {
-        throw new NotFoundException('user not found');
-      }
       const verifyToken = await this.jwtService.verify(refreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      if (verifyToken.username != foundUser.username) {
-        throw new ForbiddenException('invalid token');
-      }
       const payload = {
-        sub: foundUser.id,
-        username: foundUser.username,
-        roles: foundUser.roles,
+        sub: verifyToken.sub,
+        username: verifyToken.username,
+        roles: verifyToken.roles,
       };
 
       const access_token = await this.jwtService.signAsync(payload, {

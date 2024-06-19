@@ -33,12 +33,6 @@ export class UsersService {
   async findOne(username: string) {
     return this.userModel.findOne({ username: username });
   }
-  async findRefreshToken(token: string) {
-    return this.userModel.findOne({ refreshToken: token }).exec();
-  }
-  async findOneToken(token: string) {
-    return this.userModel.findOne({ refreshToken: token });
-  }
   async findByEmail(email: string) {
     return this.userModel.findOne({ email: email }).exec();
   }
@@ -54,7 +48,7 @@ export class UsersService {
   async getUserByUsername(username: string): Promise<User | undefined> {
     return await this.userModel
       .findOne({ username: username })
-      .select('-password -refreshToken -isAlive -role')
+      .select('-password  -isAlive -role')
       .exec();
   }
   async getAll(

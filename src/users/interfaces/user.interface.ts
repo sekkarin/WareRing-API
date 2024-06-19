@@ -11,6 +11,5 @@ export interface User extends Document {
   tokenEMQX: string;
   isActive: boolean;
   verifired: boolean;
-  refreshToken: string;
   createdAt: string;
 }
