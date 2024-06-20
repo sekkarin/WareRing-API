@@ -44,8 +44,8 @@ export class CreateDeviceDto {
     example: 'Smart home controller',
     description: 'Description of the device',
   })
-  @Max(255)
   @IsString()
+  @Length(0,255)
   @IsOptional()
   description?: string;
 
