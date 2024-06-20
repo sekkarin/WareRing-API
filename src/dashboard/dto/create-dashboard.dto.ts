@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length, MAX, Max } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length,  Max } from 'class-validator';
 
 export class CreateDashboardDto {
   @ApiProperty({
@@ -18,7 +18,7 @@ export class CreateDashboardDto {
     example: 'This is a sample dashboard',
   })
   @IsString()
-  @IsNotEmpty()
-  @Max(255)
-  description: string;
+  @Length(0,255)
+  @IsOptional()
+  description?: string;
 }
