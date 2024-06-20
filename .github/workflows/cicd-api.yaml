@@ -4,10 +4,12 @@ on:
     branches:
       - main
 jobs:
+  
   build:
     runs-on: ubuntu-latest
-
+  
     steps:
+      
       - name: checkout repository
         uses: actions/checkout@v2
       - name: install dependencies
@@ -29,5 +31,4 @@ jobs:
           token: ${{secrets.DIGITALOCEAN_TOKEN}}
       - name: rollout api deployment
         run: doctl kubernetes cluster kubeconfig save warering && kubectl rollout restart deployment api-warering-deployment
-      
-    
+
