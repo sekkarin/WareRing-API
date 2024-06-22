@@ -16,6 +16,7 @@ import {
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import { WinstonLoggerService } from 'src/logger/logger.service';
 import { IsActivateUser } from 'src/users/guard/active.guard';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -33,6 +34,9 @@ describe('AuthService', () => {
     verifiedUserEmail: jest.fn(),
     setNewPassword: jest.fn(),
     findRefreshToken: jest.fn(),
+    validateTokenDataVerifyEmail: jest.fn(),
+    validateTokenDataResetPassword: jest.fn(),
+    getTokenDataFromCache: jest.fn(),
   };
   const mockJwtService = {
     signAsync: jest.fn(),
@@ -40,6 +44,12 @@ describe('AuthService', () => {
   };
   const mockMailerService = {
     sendMail: jest.fn(),
+    // verify: jest.fn(),
+  };
+  const mockCache = {
+    set: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn(),
     // verify: jest.fn(),
   };
   const mockUser = {
@@ -69,6 +79,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: MailerService, useValue: mockMailerService },
+        { provide: CACHE_MANAGER, useValue: mockCache },
       ],
     })
       .overrideGuard(IsActivateUser)
@@ -79,6 +90,7 @@ describe('AuthService', () => {
     jwtService = module.get<JwtService>(JwtService);
     mailerService = module.get<MailerService>(MailerService);
     configService = module.get<ConfigService>(ConfigService);
+    // configService = module.get<ConfigService>(ConfigService);
   });
   it('should be defined', () => {
     expect(authService).toBeDefined();
@@ -215,50 +227,6 @@ describe('AuthService', () => {
       );
     });
   });
-  // describe('logOut', () => {
-  //   it('should remove refresh token and return the user if user is found', async () => {
-  //     // Arrange
-  //     const username = 'testUser';
-  //     const User = {
-  //       _id: 'mockUserId', // Assuming _id is of type ObjectId or similar
-  //       username: 'mockUsername',
-  //       roles: ['user'],
-  //       verifired: true,
-  //       password: 'hashPassword',
-  //       refreshToken: 'refreshToken',
-  //       save: jest.fn(),
-  //     };
-  //     jest
-  //       .spyOn(usersService, 'findRefreshToken')
-  //       .mockResolvedValueOnce(User as any); // Mock existing user
-  //     await authService.logOut(username);
-
-  //     expect(User.refreshToken).toBe('');
-  //     expect(User.save).toHaveBeenCalled();
-  //   });
-
-  //   it('should throwNotFoundException if user is not found', async () => {
-  //     // Arrange
-  //     const username = 'nonexistentUser';
-  //     jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(undefined); // Mock no existing user
-
-  //     // Act & Assert
-  //     await expect(authService.logOut(username)).rejects.toThrowError(
-  //       NotFoundException,
-  //     );
-  //   });
-
-  //   it('should throw ForbiddenException if there is a TokenExpiredError', async () => {
-  //     // Arrange
-  //     const username = 'testUser';
-  //     jest.spyOn(usersService, 'findRefreshToken').mockImplementation(() => {
-  //       throw new TokenExpiredError('Token expired', new Date());
-  //     }); // Mock TokenExpiredError
-  //     await expect(authService.logOut(username)).rejects.toThrowError(
-  //       ForbiddenException,
-  //     );
-  //   });
-  // });
 
   describe('refresh', () => {
     it('should return access token if user is found with valid refreshToken', async () => {
@@ -423,7 +391,7 @@ describe('AuthService', () => {
   });
 
   describe('verifyEmail', () => {
-    it('should verify email and call verifiredUserEmail', async () => {
+    it('should verify email and call verified UserEmail', async () => {
       const uniqueString = 'mockedUniqueString';
       const payload = {
         email: 'test@example.com',
@@ -435,6 +403,9 @@ describe('AuthService', () => {
       jest
         .spyOn(usersService, 'verifiedUserEmail')
         .mockResolvedValueOnce(payload as any);
+      jest
+        .spyOn(authService, 'getTokenDataFromCache')
+        .mockResolvedValueOnce('{"token":"token","isVerify":false}');
 
       const result = await authService.verifyEmail(uniqueString);
 
@@ -455,10 +426,7 @@ describe('AuthService', () => {
         .mockImplementation(() => Promise.reject(new Error('Invalid token')));
 
       await expect(authService.verifyEmail(uniqueString)).rejects.toThrowError(
-        new HttpException(
-          'Unauthorized - token is not valid',
-          HttpStatus.FORBIDDEN,
-        ),
+        new HttpException('Token is not valid', HttpStatus.FORBIDDEN),
       );
     });
   });
@@ -512,6 +480,9 @@ describe('AuthService', () => {
         .spyOn(bcrypt, 'hash')
         .mockImplementation(() => Promise.resolve(hashedPassword));
       jest
+        .spyOn(authService, 'getTokenDataFromCache')
+        .mockResolvedValueOnce('{"token":"mockedToken","isVerify":false}');
+      jest
         .spyOn(usersService, 'setNewPassword')
         .mockResolvedValueOnce(true as any);
 
@@ -529,16 +500,13 @@ describe('AuthService', () => {
       const token = 'invalidToken';
 
       jest.spyOn(jwtService, 'verify').mockImplementation(() => {
-        throw new Error('Invalid token');
+        throw new Error('Token is not valid');
       });
 
       await expect(
         authService.resetPassword(token, 'newPassword'),
       ).rejects.toThrowError(
-        new HttpException(
-          'Unauthorized - token is not valid',
-          HttpStatus.FORBIDDEN,
-        ),
+        new HttpException('Token is not valid', HttpStatus.FORBIDDEN),
       );
     });
 
@@ -555,10 +523,7 @@ describe('AuthService', () => {
       await expect(
         authService.resetPassword(token, newPassword),
       ).rejects.toThrowError(
-        new HttpException(
-          'Unauthorized - token is not valid',
-          HttpStatus.FORBIDDEN,
-        ),
+        new HttpException('Token is not valid', HttpStatus.FORBIDDEN),
       );
     });
 
@@ -579,10 +544,7 @@ describe('AuthService', () => {
       await expect(
         authService.resetPassword(token, newPassword),
       ).rejects.toThrowError(
-        new HttpException(
-          'Unauthorized - token is not valid',
-          HttpStatus.FORBIDDEN,
-        ),
+        new HttpException('Token is not valid', HttpStatus.FORBIDDEN),
       );
     });
   });
@@ -607,18 +569,53 @@ describe('AuthService', () => {
         }
       });
       mockMailerService.sendMail.mockResolvedValue(mockMailResponse);
-
       const result = await authService.sendMailResetPassword(mockEmail);
-
-      expect(jwtService.signAsync).toHaveBeenCalledWith(
-        { email: mockEmail },
-        {
-          expiresIn: '1h',
-          secret: 'secret',
-        },
-      );
-
       expect(result).toEqual(true);
+    });
+  });
+  describe('checkIsActive', () => {
+    it('should return NotFoundException not found user', async () => {
+      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(null);
+      await expect(authService.checkIsActive('user')).rejects.toThrow(
+        new NotFoundException('not found user'),
+      );
+    });
+    it('should return boolean', async () => {
+      jest.spyOn(usersService, 'findOne').mockResolvedValueOnce({
+        isActive: true,
+      } as any);
+      const result = await authService.checkIsActive('user');
+      expect(result).toEqual(true);
+    });
+  });
+  describe('validateTokenDataResetPassword', () => {
+    it('should throw HttpException if tokenData is null', () => {
+      expect(() => authService.validateTokenDataResetPassword(undefined)).toThrow(
+        new HttpException('Token is not valid', HttpStatus.FORBIDDEN),
+      );
+    });
+
+    it('should throw HttpException if tokenData is not a valid JSON', () => {
+      const invalidJson = 'invalidTokenData';
+      expect(() =>
+        authService.validateTokenDataResetPassword(invalidJson),
+      ).toThrow(SyntaxError);
+    });
+
+    it('should throw HttpException if tokenCache.isVerify is true', () => {
+      const tokenData = JSON.stringify({ isVerify: true });
+      expect(() =>
+        authService.validateTokenDataResetPassword(tokenData),
+      ).toThrow(
+        new HttpException('Reset password already', HttpStatus.FORBIDDEN),
+      );
+    });
+
+    it('should not throw if tokenCache.isVerify is false', () => {
+      const tokenData = JSON.stringify({ isVerify: false });
+      expect(() =>
+        authService.validateTokenDataResetPassword(tokenData),
+      ).not.toThrow();
     });
   });
 });

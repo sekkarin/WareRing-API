@@ -214,8 +214,22 @@ describe('AuthController', () => {
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({ message: "logout's" });
       });
-
-
+      it('should throw NotFoundException not have token', async () => {
+        const mockRequestNotHaveRefreshToken = {
+          user: {
+            username: 'testUser',
+          },
+          cookies: {
+            refresh_token: false,
+          },
+        } as unknown as Request;
+        await expect(
+          authController.logOut(
+            mockRequestNotHaveRefreshToken,
+            mockResponse,
+          ),
+        ).rejects.toThrow(new NotFoundException('Refresh token not found'));
+      });
     });
   });
 
