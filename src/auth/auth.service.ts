@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -18,14 +19,18 @@ import { CreateUserDto } from './../users/dto/user.dto';
 import { UserResponseDto } from './dto/auth.dto';
 import { FORM_FORGET_PASS } from './../utils/forgetPassForm';
 import { FORM_VERIFY_EMAIL } from './../utils/emailVerification';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
+  private ttlCacheToken = 15 * 50 * 1000;
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async signIn(username: string, pass: string) {
@@ -131,6 +136,7 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       },
     );
+
     try {
       const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
       await this.mailerService.sendMail({
@@ -139,6 +145,11 @@ export class AuthService {
         subject: 'Verify Your Email',
         html: FORM_VERIFY_EMAIL(uniqueString, clientUrl),
       });
+      await this.cacheManager.set(
+        uniqueString,
+        JSON.stringify({ token: uniqueString, isVerify: false }),
+        this.ttlCacheToken,
+      );
       return true;
     } catch (err) {
       throw err;
@@ -147,16 +158,23 @@ export class AuthService {
 
   async verifyEmail(uniqueString: string) {
     try {
+      const tokenData = await this.getTokenDataFromCache(uniqueString);
+      this.validateTokenDataVerifyEmail(tokenData);
+
       const { email } = await this.jwtService.verify(uniqueString, {
         secret: this.configService.get<string>('SECRET_VERIFY_EMAIL'),
       });
+      await this.cacheManager.del(uniqueString);
+      // create new cache object
+      await this.cacheManager.set(
+        uniqueString,
+        JSON.stringify({ tokenData, isVerify: true }),
+        this.ttlCacheToken,
+      );
 
       return await this.usersService.verifiedUserEmail(email);
     } catch (err) {
-      throw new HttpException(
-        'Unauthorized - token is not valid',
-        HttpStatus.FORBIDDEN,
-      );
+      throw err;
     }
   }
 
@@ -166,7 +184,6 @@ export class AuthService {
       if (!user) {
         throw new HttpException('LOGIN_USER_NOT_FOUND', HttpStatus.NOT_FOUND);
       }
-
       return user;
     } catch (err) {
       throw err;
@@ -184,6 +201,13 @@ export class AuthService {
         secret: this.configService.get<string>('SECRET_RESET_PASS'),
       },
     );
+
+    await this.cacheManager.set(
+      resetPassToken,
+      JSON.stringify({ token: resetPassToken, isVerify: false }),
+      this.ttlCacheToken,
+    );
+
     const mail = await this.mailerService.sendMail({
       from: this.configService.get<string>('EMAIL_AUTH'),
       to: email,
@@ -195,20 +219,34 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string) {
     try {
+      const tokenData = await this.getTokenDataFromCache(token);
+
+      this.validateTokenDataResetPassword(tokenData);
+
       const payload = this.jwtService.verify(token, {
         secret: this.configService.get<string>('SECRET_RESET_PASS'),
       });
+
       const hashPassword = await bcrypt.hash(newPassword, 10);
+      // delete data old
+      await this.cacheManager.del(token);
+      // create new cache object
+      await this.cacheManager.set(
+        token,
+        JSON.stringify({ token, isVerify: true }),
+        this.ttlCacheToken,
+      );
+
       return await this.usersService.setNewPassword(
         payload.email,
         hashPassword,
       );
     } catch (error) {
-      throw new HttpException(
-        'Unauthorized - token is not valid',
-        HttpStatus.FORBIDDEN,
-      );
+      throw error;
     }
+  }
+  async getTokenDataFromCache(token: string): Promise<string | null> {
+    return await this.cacheManager.get(token);
   }
 
   async checkIsActive(username: string): Promise<boolean> {
@@ -218,5 +256,31 @@ export class AuthService {
       throw new NotFoundException('not found user');
     }
     return user.isActive;
+  }
+
+   validateTokenDataResetPassword(tokenData: string | null) {
+    if (!tokenData) {
+      throw new HttpException('Token is not valid', HttpStatus.FORBIDDEN);
+    }
+
+    const tokenCache = JSON.parse(tokenData as string);
+
+    if (tokenCache.isVerify) {
+      throw new HttpException('Reset password already', HttpStatus.FORBIDDEN);
+    }
+  }
+   validateTokenDataVerifyEmail(tokenData: string | null) {
+    if (!tokenData) {
+      throw new HttpException('Token is not valid', HttpStatus.FORBIDDEN);
+    }
+
+    const tokenCache = JSON.parse(tokenData as string);
+
+    if (tokenCache.isVerify) {
+      throw new HttpException(
+        'Email verified successfully',
+        HttpStatus.FORBIDDEN,
+      );
+    }
   }
 }
