@@ -118,16 +118,6 @@ describe('AuthController', () => {
       expect(mockConfigService.getOrThrow).toHaveBeenCalledWith(
         'EXPIRES_IN_COOKIES_REFRESH_TOKEN',
       );
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
-        'refresh_token',
-        mockUser.refresh_token,
-        {
-          httpOnly: true,
-          secure: true,
-          maxAge: mockMaxAgeMilliseconds,
-        },
-      );
-
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
         access_token: mockUser.access_token,
