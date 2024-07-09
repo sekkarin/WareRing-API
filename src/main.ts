@@ -27,6 +27,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.setGlobalPrefix("api")
   if (process.env.NODE_ENV == 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Warering api')
