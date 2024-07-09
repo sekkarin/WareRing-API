@@ -109,8 +109,8 @@ export class AuthController {
       const maxAgeMilliseconds = expiresInSeconds * 24 * 60 * 60 * 1000;
 
       res.cookie('refresh_token', user.refresh_token, {
-        httpOnly: true,
-        secure: true,
+        httpOnly: false,
+        secure: false,
         maxAge: maxAgeMilliseconds,
       });
       this.logger.info(
