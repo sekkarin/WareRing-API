@@ -6,7 +6,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { BullModule } from '@nestjs/bull';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
@@ -20,7 +20,6 @@ import { WebhookModule } from './webhook/webhook.module';
 import { LoggerModule } from './logger/logger.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ExportModule } from './export/export.module';
-import { WinstonLoggerService } from './logger/logger.service';
 import { ApiKeyModule } from './api-key/api-key.module';
 import { CustomThrottlerGuard } from './utils/guards/customThrottlerGuard';
 import { AppService } from './app.service';
@@ -76,6 +75,12 @@ const configService = new ConfigService();
           limit: 250,
         },
       ],
+      skipIf(context) {
+        if (process.env.NODE_ENV === 'dev') {
+          return true;
+        }
+        return false;
+      },
     }),
     LoggerModule,
     DashboardModule,
