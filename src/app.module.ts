@@ -76,7 +76,7 @@ const configService = new ConfigService();
         },
       ],
       skipIf(context) {
-        if (process.env.NODE_ENV === 'dev') {
+        if (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test') {
           return true;
         }
         return false;
