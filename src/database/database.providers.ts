@@ -11,6 +11,8 @@ export const databaseProviders = [
         configService.get<string>('DATABASE_URL') || process.env.DATABASE_URL,
         {
           dbName: 'warering-project',
+          maxPoolSize: 500,
+          minPoolSize: 150,
         },
       );
     },
